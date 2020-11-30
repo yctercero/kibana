@@ -38,6 +38,8 @@ import { SetupPlugins } from '../plugin';
 import { ConfigType } from '../config';
 import { installPrepackedTimelinesRoute } from '../lib/timeline/routes/install_prepacked_timelines_route';
 import { getTimelineRoute } from '../lib/timeline/routes/get_timeline_route';
+import { createPreviewIndexRoute } from '../lib/detection_engine/routes/index/create_index_preview_route';
+import { readPreviewIndexRoute } from '../lib/detection_engine/routes/index/read_preview_index_route';
 
 export const initRoutes = (
   router: IRouter,
@@ -85,8 +87,10 @@ export const initRoutes = (
 
   // Detection Engine index routes that have the REST endpoints of /api/detection_engine/index
   // All REST index creation, policy management for spaces
+  createPreviewIndexRoute(router);
   createIndexRoute(router);
   readIndexRoute(router);
+  readPreviewIndexRoute(router);
   deleteIndexRoute(router);
 
   // Detection Engine tags routes that have the REST endpoints of /api/detection_engine/tags

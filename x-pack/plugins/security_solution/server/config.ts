@@ -7,7 +7,12 @@
 import { Observable } from 'rxjs';
 import { schema, TypeOf } from '@kbn/config-schema';
 import { PluginInitializerContext } from '../../../../src/core/server';
-import { SIGNALS_INDEX_KEY, DEFAULT_SIGNALS_INDEX } from '../common/constants';
+import {
+  SIGNALS_INDEX_KEY,
+  SIGNALS_PREVIEW_INDEX_KEY,
+  DEFAULT_SIGNALS_PREVIEW_INDEX,
+  DEFAULT_SIGNALS_INDEX,
+} from '../common/constants';
 
 export const configSchema = schema.object({
   enabled: schema.boolean({ defaultValue: true }),
@@ -16,6 +21,7 @@ export const configSchema = schema.object({
   maxTimelineImportExportSize: schema.number({ defaultValue: 10000 }),
   maxTimelineImportPayloadBytes: schema.number({ defaultValue: 10485760 }),
   [SIGNALS_INDEX_KEY]: schema.string({ defaultValue: DEFAULT_SIGNALS_INDEX }),
+  [SIGNALS_PREVIEW_INDEX_KEY]: schema.string({ defaultValue: DEFAULT_SIGNALS_PREVIEW_INDEX }),
   /**
    * Host Endpoint Configuration
    */

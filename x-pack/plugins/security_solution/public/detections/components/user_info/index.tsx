@@ -10,6 +10,7 @@ import React, { useEffect, useReducer, Dispatch, createContext, useContext } fro
 import { usePrivilegeUser } from '../../containers/detection_engine/alerts/use_privilege_user';
 import { useSignalIndex } from '../../containers/detection_engine/alerts/use_signal_index';
 import { useKibana } from '../../../common/lib/kibana';
+import { useSignalPreviewIndex } from '../../containers/detection_engine/alerts/use_signal_preview_index';
 
 export interface State {
   canUserCRUD: boolean | null;
@@ -174,6 +175,13 @@ export const useUserInfo = (): State => {
     signalIndexMappingOutdated: apiSignalIndexMappingOutdated,
     createDeSignalIndex: createSignalIndex,
   } = useSignalIndex();
+  const {
+    loading: previewIndexNameLoading,
+    signalPreviewIndexExists,
+    signalPreviewIndexName,
+    signalPreviewIndexMappingOutdated,
+    createDeSignalPreviewIndex,
+  } = useSignalPreviewIndex();
 
   const uiCapabilities = useKibana().services.application.capabilities;
   const capabilitiesCanUserCRUD: boolean =
@@ -263,6 +271,21 @@ export const useUserInfo = (): State => {
     hasIndexManage,
     signalIndexMappingOutdated,
   ]);
+
+  useEffect(() => {
+    // if (
+    //   isAuthenticated &&
+    //   hasEncryptionKey &&
+    //   hasIndexManage &&
+    //   ((signalPreviewIndexExists != null && !signalPreviewIndexExists) ||
+    //     (signalPreviewIndexMappingOutdated != null && signalPreviewIndexMappingOutdated)) &&
+    //   createDeSignalPreviewIndex != null
+    // ) {
+    if (createDeSignalPreviewIndex != null) {
+      createDeSignalPreviewIndex();
+    }
+    // }
+  }, [createDeSignalPreviewIndex]);
 
   return {
     loading,

@@ -42,6 +42,8 @@ export const ENDPOINT_METADATA_INDEX = 'metrics-endpoint.metadata-*';
 export const DEFAULT_RULE_REFRESH_INTERVAL_ON = true;
 export const DEFAULT_RULE_REFRESH_INTERVAL_VALUE = 60000; // ms
 export const DEFAULT_RULE_REFRESH_IDLE_VALUE = 2700000; // ms
+export const DEFAULT_SIGNALS_PREVIEW_INDEX = '.security-solution-signals-preview';
+export const DEFAULT_SEARCH_AFTER_PREVIEW_PAGE_SIZE = 5;
 
 export enum SecurityPageName {
   detections = 'detections',
@@ -125,6 +127,7 @@ export const DETECTION_ENGINE_INDEX_URL = `${DETECTION_ENGINE_URL}/index`;
 export const DETECTION_ENGINE_TAGS_URL = `${DETECTION_ENGINE_URL}/tags`;
 export const DETECTION_ENGINE_RULES_STATUS_URL = `${DETECTION_ENGINE_RULES_URL}/_find_statuses`;
 export const DETECTION_ENGINE_PREPACKAGED_RULES_STATUS_URL = `${DETECTION_ENGINE_RULES_URL}/prepackaged/_status`;
+export const DETECTION_ENGINE_PREVIEW_INDEX_URL = `${DETECTION_ENGINE_RULES_URL}/index/preview`;
 
 export const TIMELINE_URL = '/api/timeline';
 export const TIMELINE_DRAFT_URL = `${TIMELINE_URL}/_draft`;
@@ -136,6 +139,7 @@ export const TIMELINE_PREPACKAGED_URL = `${TIMELINE_URL}/_prepackaged`;
  * Default signals index key for kibana.dev.yml
  */
 export const SIGNALS_INDEX_KEY = 'signalsIndex';
+export const SIGNALS_PREVIEW_INDEX_KEY = 'signalsPreviewIndex';
 export const DETECTION_ENGINE_SIGNALS_URL = `${DETECTION_ENGINE_URL}/signals`;
 export const DETECTION_ENGINE_SIGNALS_STATUS_URL = `${DETECTION_ENGINE_SIGNALS_URL}/status`;
 export const DETECTION_ENGINE_QUERY_SIGNALS_URL = `${DETECTION_ENGINE_SIGNALS_URL}/search`;
