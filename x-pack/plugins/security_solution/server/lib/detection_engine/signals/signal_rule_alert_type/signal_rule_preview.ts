@@ -22,15 +22,13 @@ export const signalPreviewRules = async ({
   spaceId,
   soAttributes,
 }) => {
-  const { from, ruleId, maxSignals, exceptionsList, output_index: outputIndex, version } = params;
+  const { from, ruleId, maxSignals, exceptionsList, outputIndex, version } = params;
 
   // these values are mocked out as we are circumventing alerting
   const alertId = 'security_solution_preview_mock_alert_id';
   const previousStartedAt = datemath.parse(from).toDate();
-  const startedAt = Date.now();
   const eventsTelemetry = undefined;
   const gap = null;
-  console.log('---------------> SIGNAL RULE PREVIEW', outputIndex);
   const {
     actions,
     name,
@@ -94,18 +92,20 @@ export const signalPreviewRules = async ({
       );
     } else {
       const errorMessage = buildRuleMessage(
-        'Bulk Indexing of signals failed:',
+        'Bulk Indexing of preview signals failed:',
         result.errors.join()
       );
       logger.error(errorMessage);
+      throw new Error(errorMessage);
     }
   } catch (error) {
     const errorMessage = error.message ?? '(no error message given)';
     const message = buildRuleMessage(
-      'An error occurred during rule execution:',
+      'An error occurred during rule preview execution:',
       `message: "${errorMessage}"`
     );
 
     logger.error(message);
+    throw new Error(message);
   }
 };

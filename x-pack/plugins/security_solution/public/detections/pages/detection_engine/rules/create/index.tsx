@@ -16,8 +16,7 @@ import React, { useCallback, useRef, useState, useMemo } from 'react';
 import { useHistory } from 'react-router-dom';
 import styled, { StyledComponent } from 'styled-components';
 
-import { DEFAULT_SIGNALS_PREVIEW_INDEX } from '../../../../../../common/constants';
-import { previewRule, useCreateRule } from '../../../../containers/detection_engine/rules';
+import { useCreateRule } from '../../../../containers/detection_engine/rules';
 import { CreateRulesSchema } from '../../../../../../common/detection_engine/schemas/request';
 import { useListsConfig } from '../../../../containers/detection_engine/lists/use_lists_config';
 
@@ -236,6 +235,7 @@ const CreateRulePageComponent: React.FC = () => {
     const defineStep = stepsData.current[RuleStep.defineRule];
     const aboutStep = stepsData.current[RuleStep.aboutRule];
     const scheduleStep = stepsData.current[RuleStep.scheduleRule];
+    // Dry run isn't testing out actions, so used default values here
     const actionsStep = {
       isValid: true,
       data: {
@@ -463,7 +463,7 @@ const CreateRulePageComponent: React.FC = () => {
               >
                 <EuiHorizontalRule margin="m" />
                 <StepPreviewComponent
-                  isDisabled={false}
+                  isUpdateView={false}
                   onPreview={handlePreview}
                   onNext={() => submitStep(RuleStep.scheduleRule)}
                 />

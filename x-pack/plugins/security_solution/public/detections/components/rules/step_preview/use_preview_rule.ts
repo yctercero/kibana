@@ -19,6 +19,7 @@ export type ReturnPreviewRule = [boolean, any, Func | null];
  */
 export const usePreviewRule = (): ReturnPreviewRule => {
   const [signals, setSignals] = useState([]);
+  const [errors, setError] = useState(null);
   const fetchPreview = useRef<Func | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -43,6 +44,7 @@ export const usePreviewRule = (): ReturnPreviewRule => {
         if (isSubscribed) {
           setSignals([]);
           setLoading(false);
+          setError(error.body.message);
         }
       }
     };
@@ -54,5 +56,5 @@ export const usePreviewRule = (): ReturnPreviewRule => {
     };
   }, []);
 
-  return [loading, signals, fetchPreview.current];
+  return [loading, signals, errors, fetchPreview.current];
 };

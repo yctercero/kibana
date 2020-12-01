@@ -14,6 +14,7 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiTitle,
+  EuiTextColor,
 } from '@elastic/eui';
 
 import * as i18n from './translations';
@@ -33,7 +34,7 @@ export const StepPreviewComponent: FC<StepPreviewProps> = ({
   onNext,
   onPreview,
 }) => {
-  const [isLoading, signals, getSignals] = usePreviewRule();
+  const [isLoading, signals, rulePreviewErrors, getSignals] = usePreviewRule();
   const [itemIdToExpandedRowMap, setItemIdToExpandedRowMap] = useState<Record<string, JSX.Element>>(
     {}
   );
@@ -66,6 +67,17 @@ export const StepPreviewComponent: FC<StepPreviewProps> = ({
     []
   );
 
+  const parseErrors = useCallback((err) => {
+    const message = JSON.stringify(err).split('::');
+    return (
+      <>
+        <EuiText size="s" textAlign="center" color="danger">
+          <p>{message[0] ?? 'Error occurred'}</p>
+        </EuiText>
+      </>
+    );
+  }, []);
+
   const columns = useMemo((): EuiBasicTableColumn[] => {
     return getColumns({ expandedItems: itemIdToExpandedRowMap, onToggle: toggleDetails });
   }, [itemIdToExpandedRowMap, toggleDetails]);
@@ -86,10 +98,14 @@ export const StepPreviewComponent: FC<StepPreviewProps> = ({
   const noItemsMessage = useMemo((): JSX.Element => {
     return (
       <EuiText>
-        <p>{i18n.NO_SIGNALS_MESSAGE}</p>
+        {rulePreviewErrors == null ? (
+          <p>{i18n.NO_SIGNALS_MESSAGE}</p>
+        ) : (
+          <p>{parseErrors(rulePreviewErrors)}</p>
+        )}
       </EuiText>
     );
-  }, []);
+  }, [parseErrors, rulePreviewErrors]);
 
   return (
     <>

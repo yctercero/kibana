@@ -150,6 +150,8 @@ export const convertPreviewCreateAPIToInternalSchema = (
   input: CreateRulesSchema,
   siemClient: AppClient
 ): InternalRuleResponse => {
+  // Rule preview circumvents alerting, so values that are normally
+  // set by alerting, are being hardcoded here
   const rule = convertCreateAPIToInternalSchema(input, siemClient);
   const newRuleId = input.id ?? uuid.v4();
 
@@ -158,10 +160,7 @@ export const convertPreviewCreateAPIToInternalSchema = (
     params: {
       ...rule.params,
       outputIndex: input.output_index ?? siemClient.getSignalsPreviewIndex(),
-      createdBy: 'elastic',
-      createdAt: new Date().toISOString(),
-      updatedBy: null,
-      updatedAt: new Date().toISOString(),
+      maxSignals: 10,
     },
     id: newRuleId,
     enabled: true,

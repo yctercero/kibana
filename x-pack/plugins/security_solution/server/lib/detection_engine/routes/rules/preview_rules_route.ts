@@ -4,7 +4,6 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { PARAMETERS_OPTIONS } from '../../../../../../index_management/public/application/components/mappings_editor/constants';
 import { SetupPlugins } from '../../../../plugin';
 import { buildRouteValidation } from '../../../../utils/build_validation/route_validation';
 import { IRouter } from '../../../../../../../../src/core/server';
@@ -47,9 +46,8 @@ export const previewRulesRoute = (
         const clusterClient = context.core.elasticsearch.legacy.client;
         const savedObjectsClient = context.core.savedObjects.client;
         const siemClient = context.securitySolution?.getAppClient();
-        console.log('--------->, IN ROUTE');
+
         if (!siemClient || !alertsClient) {
-          console.log('--------->, NO CLIENT');
           return siemResponse.error({ statusCode: 404 });
         }
 
@@ -57,12 +55,10 @@ export const previewRulesRoute = (
           request.body,
           siemClient
         );
-        console.log('--------->, RULEID', params.ruleId, DEFAULT_SIGNALS_PREVIEW_INDEX);
 
-        const rule = { ...params, created_at: Date.now() };
         await signalPreviewRules({
           logger,
-          params: rule,
+          params,
           ml,
           lists,
           services: {
@@ -72,31 +68,17 @@ export const previewRulesRoute = (
           soAttributes: { ...rest },
           spaceId: 'default',
         });
-        console.log('--------->, GETTING SIGNALS');
 
         // get signals
-        const signals = await clusterClient.callAsCurrentUser(
-          'search',
-          buildSignalsSearchQuery({
+        const signals = await clusterClient.callAsCurrentUser('search', {
+          ...buildSignalsSearchQuery({
             ruleId: params.ruleId,
             index: siemClient.getSignalsPreviewIndex(),
             from: 'now-1h',
             to: 'now',
-          })
-        );
-        console.log(
-          '--------->, SIGNALS',
-          JSON.stringify(
-            buildSignalsSearchQuery({
-              ruleId: params.ruleId,
-              index: siemClient.getSignalsPreviewIndex(),
-              from: 'now-1h',
-              to: 'now',
-            })
-          )
-        );
-
-        console.log('--------->, SIGNALS2', JSON.stringify(signals));
+          }),
+          size: 10,
+        });
 
         // delete signals
         await clusterClient.callAsCurrentUser(
@@ -108,11 +90,11 @@ export const previewRulesRoute = (
             to: 'now',
           })
         );
-        console.log('--------->, DELETED');
 
         return response.ok({ body: { signals } });
       } catch (err) {
         const error = transformError(err);
+
         return siemResponse.error({
           body: error.message,
           statusCode: error.statusCode,

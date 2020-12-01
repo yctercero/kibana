@@ -43,7 +43,7 @@ export const DEFAULT_RULE_REFRESH_INTERVAL_ON = true;
 export const DEFAULT_RULE_REFRESH_INTERVAL_VALUE = 60000; // ms
 export const DEFAULT_RULE_REFRESH_IDLE_VALUE = 2700000; // ms
 export const DEFAULT_SIGNALS_PREVIEW_INDEX = '.security-solution-signals-preview';
-export const DEFAULT_SEARCH_AFTER_PREVIEW_PAGE_SIZE = 5;
+export const DEFAULT_SEARCH_AFTER_PREVIEW_PAGE_SIZE = 10;
 
 export enum SecurityPageName {
   detections = 'detections',

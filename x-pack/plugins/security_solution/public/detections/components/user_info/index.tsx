@@ -176,9 +176,7 @@ export const useUserInfo = (): State => {
     createDeSignalIndex: createSignalIndex,
   } = useSignalIndex();
   const {
-    loading: previewIndexNameLoading,
     signalPreviewIndexExists,
-    signalPreviewIndexName,
     signalPreviewIndexMappingOutdated,
     createDeSignalPreviewIndex,
   } = useSignalPreviewIndex();
@@ -272,20 +270,25 @@ export const useUserInfo = (): State => {
     signalIndexMappingOutdated,
   ]);
 
-  // useEffect(() => {
-  //   // if (
-  //   //   isAuthenticated &&
-  //   //   hasEncryptionKey &&
-  //   //   hasIndexManage &&
-  //   //   ((signalPreviewIndexExists != null && !signalPreviewIndexExists) ||
-  //   //     (signalPreviewIndexMappingOutdated != null && signalPreviewIndexMappingOutdated)) &&
-  //   //   createDeSignalPreviewIndex != null
-  //   // ) {
-  //   if (createDeSignalPreviewIndex != null) {
-  //     createDeSignalPreviewIndex();
-  //   }
-  //   // }
-  // }, [createDeSignalPreviewIndex]);
+  useEffect(() => {
+    if (
+      isAuthenticated &&
+      hasEncryptionKey &&
+      hasIndexManage &&
+      ((signalPreviewIndexExists != null && !signalPreviewIndexExists) ||
+        (signalPreviewIndexMappingOutdated != null && signalPreviewIndexMappingOutdated)) &&
+      createDeSignalPreviewIndex != null
+    ) {
+      createDeSignalPreviewIndex();
+    }
+  }, [
+    createDeSignalPreviewIndex,
+    isAuthenticated,
+    hasEncryptionKey,
+    signalPreviewIndexExists,
+    hasIndexManage,
+    signalPreviewIndexMappingOutdated,
+  ]);
 
   return {
     loading,
