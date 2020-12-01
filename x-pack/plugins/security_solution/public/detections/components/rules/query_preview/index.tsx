@@ -312,6 +312,7 @@ export const PreviewQuery = ({
           inspect={inspect}
           refetch={refetch}
           isLoading={isMatrixHistogramLoading}
+          data-test-subj="previewNonEqlQueryHistogram"
         />
       )}
       {ruleType === 'threshold' && thresholdFieldExists && showHistogram && (
@@ -320,6 +321,7 @@ export const PreviewQuery = ({
           buckets={buckets}
           inspect={inspect}
           refetch={refetch}
+          data-test-subj="previewThresholdQueryHistogram"
         />
       )}
       {ruleType === 'eql' && showHistogram && (
@@ -331,6 +333,7 @@ export const PreviewQuery = ({
           inspect={eqlQueryInspect}
           refetch={eqlQueryRefetch}
           isLoading={eqlQueryLoading}
+          data-test-subj="previewEqlQueryHistogram"
         />
       )}
       {showHistogram &&

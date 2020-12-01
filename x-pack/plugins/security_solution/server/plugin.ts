@@ -40,7 +40,7 @@ import { initServer } from './init_server';
 import { compose } from './lib/compose/kibana';
 import { initRoutes } from './routes';
 import { isAlertExecutor } from './lib/detection_engine/signals/types';
-import { signalRulesAlertType } from './lib/detection_engine/signals/signal_rule_alert_type';
+import { signalRulesAlertType } from './lib/detection_engine/signals/signal_rule_alert_type/signal_rule_alert_type';
 import { rulesNotificationAlertType } from './lib/detection_engine/notifications/rules_notification_alert_type';
 import { isNotificationAlertExecutor } from './lib/detection_engine/notifications/types';
 import { ManifestTask } from './endpoint/lib/artifacts';
@@ -185,7 +185,9 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
       config,
       plugins.encryptedSavedObjects?.usingEphemeralEncryptionKey ?? false,
       plugins.security,
-      plugins.ml
+      plugins.ml,
+      plugins.lists,
+      this.logger
     );
     registerEndpointRoutes(router, endpointContext);
     registerLimitedConcurrencyRoutes(core);

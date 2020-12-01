@@ -11,6 +11,7 @@ import {
   DETECTION_ENGINE_RULES_STATUS_URL,
   DETECTION_ENGINE_PREPACKAGED_RULES_STATUS_URL,
   DETECTION_ENGINE_TAGS_URL,
+  DETECTION_ENGINE_PREVIEW_URL,
 } from '../../../../../common/constants';
 import {
   UpdateRulesProps,
@@ -407,3 +408,21 @@ export const getPrePackagedRulesStatus = async ({
       signal,
     }
   );
+
+/**
+ * Preview rule dry run
+ *
+ * @param rule CreateRulesSchema to add
+ * @param signal to cancel request
+ *
+ * @throws An error if response is not OK
+ */
+export const previewRule = async ({
+  rule,
+  signal,
+}: CreateRulesProps): Promise<FullResponseSchema> =>
+  KibanaServices.get().http.fetch<FullResponseSchema>(DETECTION_ENGINE_PREVIEW_URL, {
+    method: 'POST',
+    body: JSON.stringify(rule),
+    signal,
+  });

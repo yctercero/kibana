@@ -151,6 +151,7 @@ export const singleBulkCreate = async ({
     }),
   ]);
   const start = performance.now();
+  console.log('------------>', signalsIndex);
   const response: BulkResponse = await services.callCluster('bulk', {
     index: signalsIndex,
     refresh,

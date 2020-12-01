@@ -27,6 +27,13 @@ export const EDIT_RULE = i18n.translate(
   }
 );
 
+export const EXPAND = i18n.translate(
+  'xpack.securitySolution.detectionEngine.createRule.expandRuleButton',
+  {
+    defaultMessage: 'Expand',
+  }
+);
+
 export const SUCCESSFULLY_CREATED_RULES = (ruleName: string) =>
   i18n.translate(
     'xpack.securitySolution.detectionEngine.rules.create.successfullyCreatedRuleTitle',

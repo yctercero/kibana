@@ -441,6 +441,13 @@ export const SCHEDULE_RULE = i18n.translate(
   }
 );
 
+export const PREVIEW_RULE = i18n.translate(
+  'xpack.securitySolution.detectionEngine.rules.previewRuleTitle',
+  {
+    defaultMessage: 'Preview rule',
+  }
+);
+
 export const RULE_ACTIONS = i18n.translate(
   'xpack.securitySolution.detectionEngine.rules.ruleActionsTitle',
   {

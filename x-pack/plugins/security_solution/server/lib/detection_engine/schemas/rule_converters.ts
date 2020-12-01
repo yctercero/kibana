@@ -146,6 +146,32 @@ export const convertCreateAPIToInternalSchema = (
   };
 };
 
+export const convertPreviewCreateAPIToInternalSchema = (
+  input: CreateRulesSchema,
+  siemClient: AppClient
+): InternalRuleResponse => {
+  const rule = convertCreateAPIToInternalSchema(input, siemClient);
+  const newRuleId = input.id ?? uuid.v4();
+
+  return {
+    ...rule,
+    params: {
+      ...rule.params,
+      outputIndex: input.output_index ?? siemClient.getSignalsPreviewIndex(),
+      createdBy: 'elastic',
+      createdAt: new Date().toISOString(),
+      updatedBy: null,
+      updatedAt: new Date().toISOString(),
+    },
+    id: newRuleId,
+    enabled: true,
+    createdBy: 'elastic',
+    createdAt: new Date().toISOString(),
+    updatedBy: null,
+    updatedAt: new Date().toISOString(),
+  };
+};
+
 // Converts the internal rule data structure to the response API schema
 export const typeSpecificCamelToSnake = (params: TypeSpecificRuleParams): ResponseTypeSpecific => {
   switch (params.type) {

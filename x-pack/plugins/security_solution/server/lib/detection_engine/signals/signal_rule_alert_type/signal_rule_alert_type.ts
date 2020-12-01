@@ -12,24 +12,23 @@ import {
   SIGNALS_ID,
   DEFAULT_SEARCH_AFTER_PAGE_SIZE,
   SERVER_APP_ID,
-} from '../../../../common/constants';
-import { isJobStarted, isMlRule } from '../../../../common/machine_learning/helpers';
+} from '../../../../../common/constants';
+import { isJobStarted, isMlRule } from '../../../../../common/machine_learning/helpers';
 import {
   isThresholdRule,
   isEqlRule,
   isThreatMatchRule,
-} from '../../../../common/detection_engine/utils';
-import { parseScheduleDates } from '../../../../common/detection_engine/parse_schedule_dates';
-import { SetupPlugins } from '../../../plugin';
-import { getInputIndex } from './get_input_output_index';
-import { searchAfterAndBulkCreate } from './search_after_bulk_create';
-import { getFilter } from './get_filter';
+} from '../../../../../common/detection_engine/utils';
+import { parseScheduleDates } from '../../../../../common/detection_engine/parse_schedule_dates';
+import { SetupPlugins } from '../../../../plugin';
+import { getInputIndex } from '../get_input_output_index';
+import { getFilter } from '../get_filter';
 import {
   SignalRuleAlertTypeDefinition,
   RuleAlertAttributes,
   EqlSignalSearchResponse,
   BaseSignalHit,
-} from './types';
+} from '../types';
 import {
   getGapBetweenRuns,
   getListsClient,
@@ -41,28 +40,29 @@ import {
   createSearchAfterReturnType,
   mergeReturns,
   createSearchAfterReturnTypeFromResponse,
-} from './utils';
-import { signalParamsSchema } from './signal_params_schema';
-import { siemRuleActionGroups } from './siem_rule_action_groups';
-import { findMlSignals } from './find_ml_signals';
-import { findThresholdSignals } from './find_threshold_signals';
-import { bulkCreateMlSignals } from './bulk_create_ml_signals';
-import { bulkCreateThresholdSignals } from './bulk_create_threshold_signals';
+} from '../utils';
+import { signalParamsSchema } from '../signal_params_schema';
+import { siemRuleActionGroups } from '../siem_rule_action_groups';
+import { findMlSignals } from '../find_ml_signals';
+import { findThresholdSignals } from '../find_threshold_signals';
+import { bulkCreateMlSignals } from '../bulk_create_ml_signals';
+import { bulkCreateThresholdSignals } from '../bulk_create_threshold_signals';
 import {
   scheduleNotificationActions,
   NotificationRuleTypeParams,
-} from '../notifications/schedule_notification_actions';
-import { ruleStatusServiceFactory } from './rule_status_service';
-import { buildRuleMessageFactory } from './rule_messages';
-import { ruleStatusSavedObjectsClientFactory } from './rule_status_saved_objects_client';
-import { getNotificationResultsLink } from '../notifications/utils';
-import { TelemetryEventsSender } from '../../telemetry/sender';
-import { buildEqlSearchRequest } from '../../../../common/detection_engine/get_query_filter';
-import { bulkInsertSignals, filterDuplicateSignals } from './single_bulk_create';
-import { buildSignalFromEvent, buildSignalGroupFromSequence } from './build_bulk_body';
-import { createThreatSignals } from './threat_mapping/create_threat_signals';
-import { getIndexVersion } from '../routes/index/get_index_version';
-import { MIN_EQL_RULE_INDEX_VERSION } from '../routes/index/get_signals_template';
+} from '../../notifications/schedule_notification_actions';
+import { ruleStatusServiceFactory } from '../rule_status_service';
+import { buildRuleMessageFactory } from '../rule_messages';
+import { ruleStatusSavedObjectsClientFactory } from '../rule_status_saved_objects_client';
+import { getNotificationResultsLink } from '../../notifications/utils';
+import { TelemetryEventsSender } from '../../../telemetry/sender';
+import { buildEqlSearchRequest } from '../../../../../common/detection_engine/get_query_filter';
+import { bulkInsertSignals, filterDuplicateSignals } from '../single_bulk_create';
+import { buildSignalFromEvent, buildSignalGroupFromSequence } from '../build_bulk_body';
+import { createThreatSignals } from '../threat_mapping/create_threat_signals';
+import { getIndexVersion } from '../../routes/index/get_index_version';
+import { MIN_EQL_RULE_INDEX_VERSION } from '../../routes/index/get_signals_template';
+import { executeCustomRuleType } from './custom_query_rule';
 
 export const signalRulesAlertType = ({
   logger,
@@ -410,44 +410,24 @@ export const signalRulesAlertType = ({
             itemsPerSearch: itemsPerSearch ?? 9000,
           });
         } else if (type === 'query' || type === 'saved_query') {
-          const inputIndex = await getInputIndex(services, version, index);
-          const esFilter = await getFilter({
-            type,
-            filters,
-            language,
-            query,
-            savedId,
-            services,
-            index: inputIndex,
-            lists: exceptionItems ?? [],
-          });
-
-          result = await searchAfterAndBulkCreate({
-            gap,
-            previousStartedAt,
-            listClient,
-            exceptionsList: exceptionItems ?? [],
-            ruleParams: params,
+          result = await executeCustomRuleType({
+            params,
             services,
             logger,
-            eventsTelemetry,
-            id: alertId,
-            inputIndexPattern: inputIndex,
-            signalsIndex: outputIndex,
-            filter: esFilter,
-            actions,
-            name,
-            createdBy,
-            createdAt,
-            updatedBy,
-            updatedAt,
-            interval,
-            enabled,
-            pageSize: searchAfterSize,
-            refresh,
-            tags,
-            throttle,
             buildRuleMessage,
+            eventsTelemetry,
+            version,
+            gap,
+            soAttributes: savedObject.attributes,
+            listClient,
+            exceptionItems,
+            searchAfterSize,
+            alert: {
+              alertId,
+              previousStartedAt,
+              updatedAt,
+              refresh,
+            },
           });
         } else if (isEqlRule(type)) {
           if (query === undefined) {

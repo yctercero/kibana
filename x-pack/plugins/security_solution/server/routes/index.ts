@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the Elastic License.
  */
 
-import { IRouter } from '../../../../../src/core/server';
+import { IRouter, Logger } from '../../../../../src/core/server';
 
 import { createRulesRoute } from '../lib/detection_engine/routes/rules/create_rules_route';
 import { createIndexRoute } from '../lib/detection_engine/routes/index/create_index_route';
@@ -40,13 +40,16 @@ import { installPrepackedTimelinesRoute } from '../lib/timeline/routes/install_p
 import { getTimelineRoute } from '../lib/timeline/routes/get_timeline_route';
 import { createPreviewIndexRoute } from '../lib/detection_engine/routes/index/create_index_preview_route';
 import { readPreviewIndexRoute } from '../lib/detection_engine/routes/index/read_preview_index_route';
+import { previewRulesRoute } from '../lib/detection_engine/routes/rules/preview_rules_route';
 
 export const initRoutes = (
   router: IRouter,
   config: ConfigType,
   usingEphemeralEncryptionKey: boolean,
   security: SetupPlugins['security'],
-  ml: SetupPlugins['ml']
+  ml: SetupPlugins['ml'],
+  lists: SetupPlugins['lists'],
+  logger: Logger
 ) => {
   // Detection Engine Rule routes that have the REST endpoints of /api/detection_engine/rules
   // All REST rule creation, deletion, updating, etc......
@@ -98,4 +101,6 @@ export const initRoutes = (
 
   // Privileges API to get the generic user privileges
   readPrivilegesRoute(router, security, usingEphemeralEncryptionKey);
+
+  previewRulesRoute(router, ml, lists, logger);
 };

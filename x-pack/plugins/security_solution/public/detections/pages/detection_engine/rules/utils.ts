@@ -26,6 +26,7 @@ export const ruleStepsOrder: RuleStepsOrder = [
   RuleStep.defineRule,
   RuleStep.aboutRule,
   RuleStep.scheduleRule,
+  RuleStep.previewRule,
   RuleStep.ruleActions,
 ];
 

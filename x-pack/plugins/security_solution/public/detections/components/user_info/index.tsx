@@ -272,20 +272,20 @@ export const useUserInfo = (): State => {
     signalIndexMappingOutdated,
   ]);
 
-  useEffect(() => {
-    // if (
-    //   isAuthenticated &&
-    //   hasEncryptionKey &&
-    //   hasIndexManage &&
-    //   ((signalPreviewIndexExists != null && !signalPreviewIndexExists) ||
-    //     (signalPreviewIndexMappingOutdated != null && signalPreviewIndexMappingOutdated)) &&
-    //   createDeSignalPreviewIndex != null
-    // ) {
-    if (createDeSignalPreviewIndex != null) {
-      createDeSignalPreviewIndex();
-    }
-    // }
-  }, [createDeSignalPreviewIndex]);
+  // useEffect(() => {
+  //   // if (
+  //   //   isAuthenticated &&
+  //   //   hasEncryptionKey &&
+  //   //   hasIndexManage &&
+  //   //   ((signalPreviewIndexExists != null && !signalPreviewIndexExists) ||
+  //   //     (signalPreviewIndexMappingOutdated != null && signalPreviewIndexMappingOutdated)) &&
+  //   //   createDeSignalPreviewIndex != null
+  //   // ) {
+  //   if (createDeSignalPreviewIndex != null) {
+  //     createDeSignalPreviewIndex();
+  //   }
+  //   // }
+  // }, [createDeSignalPreviewIndex]);
 
   return {
     loading,

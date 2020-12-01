@@ -47,12 +47,14 @@ export enum RuleStep {
   defineRule = 'define-rule',
   aboutRule = 'about-rule',
   scheduleRule = 'schedule-rule',
+  previewRule = 'preview-rule',
   ruleActions = 'rule-actions',
 }
 export type RuleStepsOrder = [
   RuleStep.defineRule,
   RuleStep.aboutRule,
   RuleStep.scheduleRule,
+  RuleStep.previewRule,
   RuleStep.ruleActions
 ];
 
@@ -60,6 +62,7 @@ export interface RuleStepsData {
   [RuleStep.defineRule]: DefineStepRule;
   [RuleStep.aboutRule]: AboutStepRule;
   [RuleStep.scheduleRule]: ScheduleStepRule;
+  [RuleStep.previewRule]: PreviewRule;
   [RuleStep.ruleActions]: ActionsStepRule;
 }
 
@@ -144,6 +147,12 @@ export interface ActionsStepRule {
   enabled: boolean;
   kibanaSiemAppUrl?: string;
   throttle?: string | null;
+}
+
+export interface PreviewRule {
+  isUpdateView: boolean;
+  onPreview: () => void;
+  onNext: () => void;
 }
 
 export interface DefineStepRuleJson {

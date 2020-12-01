@@ -16,7 +16,8 @@ import React, { useCallback, useRef, useState, useMemo } from 'react';
 import { useHistory } from 'react-router-dom';
 import styled, { StyledComponent } from 'styled-components';
 
-import { useCreateRule } from '../../../../containers/detection_engine/rules';
+import { DEFAULT_SIGNALS_PREVIEW_INDEX } from '../../../../../../common/constants';
+import { previewRule, useCreateRule } from '../../../../containers/detection_engine/rules';
 import { CreateRulesSchema } from '../../../../../../common/detection_engine/schemas/request';
 import { useListsConfig } from '../../../../containers/detection_engine/lists/use_lists_config';
 
@@ -46,6 +47,7 @@ import { formatRule, stepIsValid } from './helpers';
 import * as i18n from './translations';
 import { SecurityPageName } from '../../../../../app/types';
 import { ruleStepsOrder } from '../utils';
+import { StepPreviewComponent } from '../../../../components/rules/step_preview';
 
 const formHookNoop = async (): Promise<undefined> => undefined;
 
@@ -106,11 +108,13 @@ const CreateRulePageComponent: React.FC = () => {
   const defineRuleRef = useRef<EuiAccordion | null>(null);
   const aboutRuleRef = useRef<EuiAccordion | null>(null);
   const scheduleRuleRef = useRef<EuiAccordion | null>(null);
+  const previewRuleRef = useRef<EuiAccordion | null>(null);
   const ruleActionsRef = useRef<EuiAccordion | null>(null);
   const formHooks = useRef<RuleStepsFormHooks>({
     [RuleStep.defineRule]: formHookNoop,
     [RuleStep.aboutRule]: formHookNoop,
     [RuleStep.scheduleRule]: formHookNoop,
+    [RuleStep.previewRule]: formHookNoop,
     [RuleStep.ruleActions]: formHookNoop,
   });
   const setFormHook = useCallback(
@@ -123,6 +127,7 @@ const CreateRulePageComponent: React.FC = () => {
     [RuleStep.defineRule]: { isValid: false, data: undefined },
     [RuleStep.aboutRule]: { isValid: false, data: undefined },
     [RuleStep.scheduleRule]: { isValid: false, data: undefined },
+    [RuleStep.previewRule]: { isValid: false, data: undefined },
     [RuleStep.ruleActions]: { isValid: false, data: undefined },
   });
   const setStepData = <K extends keyof RuleStepsFormData>(
@@ -135,6 +140,7 @@ const CreateRulePageComponent: React.FC = () => {
     [RuleStep.defineRule]: false,
     [RuleStep.aboutRule]: false,
     [RuleStep.scheduleRule]: false,
+    [RuleStep.previewRule]: false,
     [RuleStep.ruleActions]: false,
   });
   const [{ isLoading, isSaved }, setRule] = useCreateRule();
@@ -168,6 +174,8 @@ const CreateRulePageComponent: React.FC = () => {
       aboutRuleRef.current?.onToggle();
     } else if (step === RuleStep.scheduleRule) {
       scheduleRuleRef.current?.onToggle();
+    } else if (step === RuleStep.previewRule) {
+      previewRuleRef.current?.onToggle();
     } else if (step === RuleStep.ruleActions) {
       ruleActionsRef.current?.onToggle();
     }
@@ -177,7 +185,10 @@ const CreateRulePageComponent: React.FC = () => {
     async (step: RuleStep) => {
       const activeStepData = await formHooks.current[activeStep]();
 
-      if (activeStepData?.isValid) {
+      if (activeStep === RuleStep.previewRule) {
+        setStepData(RuleStep.previewRule, { isValid: true, data: undefined });
+        goToStep(step);
+      } else if (activeStepData?.isValid) {
         setStepData(activeStep, activeStepData);
         goToStep(step);
       }
@@ -221,6 +232,35 @@ const CreateRulePageComponent: React.FC = () => {
     [goToStep, setRule]
   );
 
+  const handlePreview = useCallback(() => {
+    const defineStep = stepsData.current[RuleStep.defineRule];
+    const aboutStep = stepsData.current[RuleStep.aboutRule];
+    const scheduleStep = stepsData.current[RuleStep.scheduleRule];
+    const actionsStep = {
+      isValid: true,
+      data: {
+        enabled: true,
+        actions: [],
+        kibanaSiemAppUrl: '',
+        throttle: null,
+      },
+    };
+
+    if (
+      stepIsValid(defineStep) &&
+      stepIsValid(aboutStep) &&
+      stepIsValid(scheduleStep) &&
+      stepIsValid(actionsStep)
+    ) {
+      return formatRule<CreateRulesSchema>(
+        defineStep.data,
+        aboutStep.data,
+        scheduleStep.data,
+        actionsStep.data
+      );
+    }
+  }, []);
+
   const getAccordionType = useCallback(
     (step: RuleStep) => {
       if (step === activeStep) {
@@ -254,9 +294,16 @@ const CreateRulePageComponent: React.FC = () => {
       type={getAccordionType(RuleStep.scheduleRule)}
     />
   );
-  const ruleActionsButton = (
+  const previewRuleButton = (
     <AccordionTitle
       name="4"
+      title={RuleI18n.PREVIEW_RULE}
+      type={getAccordionType(RuleStep.previewRule)}
+    />
+  );
+  const ruleActionsButton = (
+    <AccordionTitle
+      name="5"
       title={RuleI18n.RULE_ACTIONS}
       type={getAccordionType(RuleStep.ruleActions)}
     />
@@ -298,7 +345,7 @@ const CreateRulePageComponent: React.FC = () => {
               isLoading={isLoading || loading}
               title={i18n.PAGE_TITLE}
             />
-            <MyEuiPanel zindex={4}>
+            <MyEuiPanel zindex={5}>
               <StepDefineRuleAccordion
                 initialIsOpen={true}
                 id={RuleStep.defineRule}
@@ -332,7 +379,7 @@ const CreateRulePageComponent: React.FC = () => {
               </StepDefineRuleAccordion>
             </MyEuiPanel>
             <EuiSpacer size="l" />
-            <MyEuiPanel zindex={3}>
+            <MyEuiPanel zindex={4}>
               <EuiAccordion
                 initialIsOpen={false}
                 id={RuleStep.aboutRule}
@@ -367,7 +414,7 @@ const CreateRulePageComponent: React.FC = () => {
               </EuiAccordion>
             </MyEuiPanel>
             <EuiSpacer size="l" />
-            <MyEuiPanel zindex={2}>
+            <MyEuiPanel zindex={3}>
               <EuiAccordion
                 initialIsOpen={false}
                 id={RuleStep.scheduleRule}
@@ -396,6 +443,29 @@ const CreateRulePageComponent: React.FC = () => {
                   isLoading={isLoading || loading}
                   setForm={setFormHook}
                   onSubmit={() => submitStep(RuleStep.scheduleRule)}
+                />
+              </EuiAccordion>
+            </MyEuiPanel>
+            <EuiSpacer size="l" />
+            <MyEuiPanel zindex={2}>
+              <EuiAccordion
+                initialIsOpen={false}
+                id={RuleStep.previewRule}
+                buttonContent={previewRuleButton}
+                paddingSize="xs"
+                ref={previewRuleRef}
+                onToggle={handleAccordionToggle.bind(null, RuleStep.previewRule)}
+                extraAction={
+                  <EuiButtonEmpty size="xs" onClick={() => editStep(RuleStep.previewRule)}>
+                    {i18n.EXPAND}
+                  </EuiButtonEmpty>
+                }
+              >
+                <EuiHorizontalRule margin="m" />
+                <StepPreviewComponent
+                  isDisabled={false}
+                  onPreview={handlePreview}
+                  onNext={() => submitStep(RuleStep.scheduleRule)}
                 />
               </EuiAccordion>
             </MyEuiPanel>
