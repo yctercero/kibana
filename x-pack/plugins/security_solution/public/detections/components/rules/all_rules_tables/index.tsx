@@ -22,6 +22,10 @@ import {
 } from '../../../pages/detection_engine/rules/all/columns';
 import { Rule, Rules, RulesSortingFields } from '../../../containers/detection_engine/rules/types';
 import { AllRulesTabs } from '../../../pages/detection_engine/rules/all';
+import { useExceptionLists } from '../../../../../../lists/public';
+import { useKibana } from '../../../../common/lib/kibana';
+import { AllExceptionListsColumns } from '../../../pages/detection_engine/rules/all/exceptions/columns';
+import { useAllExceptionLists } from '../../../containers/detection_engine/rules/use_all_exception_lists';
 
 // EuiBasicTable give me a hardtime with adding the ref attributes so I went the easy way
 // after few hours of fight with typescript !!!! I lost :(
@@ -39,6 +43,7 @@ interface AllRulesTablesProps {
   euiBasicTableSelectionProps: EuiTableSelectionType<Rule>;
   hasNoPermissions: boolean;
   monitoringColumns: Array<EuiBasicTableColumn<RuleStatusRowItemType>>;
+  exceptionColumns: AllExceptionListsColumns[];
   pagination: {
     pageIndex: number;
     pageSize: number;
@@ -58,6 +63,7 @@ export const AllRulesTablesComponent: React.FC<AllRulesTablesProps> = ({
   euiBasicTableSelectionProps,
   hasNoPermissions,
   monitoringColumns,
+  exceptionColumns,
   pagination,
   rules,
   rulesColumns,
@@ -67,6 +73,14 @@ export const AllRulesTablesComponent: React.FC<AllRulesTablesProps> = ({
   tableRef,
   selectedTab,
 }) => {
+  const { services } = useKibana();
+  const [loadingExceptions, exceptions, pagination2, refreshExceptions] = useExceptionLists({
+    http: services.http,
+  });
+  const [loadingRules] = useAllExceptionLists({
+    exceptionLists: exceptions ?? [],
+  });
+
   const emptyPrompt = useMemo(() => {
     return (
       <EuiEmptyPrompt title={<h3>{i18n.NO_RULES}</h3>} titleSize="xs" body={i18n.NO_RULES_BODY} />
@@ -97,6 +111,19 @@ export const AllRulesTablesComponent: React.FC<AllRulesTablesProps> = ({
           isSelectable={!hasNoPermissions ?? false}
           itemId="id"
           items={rulesStatuses}
+          noItemsMessage={emptyPrompt}
+          onChange={tableOnChangeCallback}
+          pagination={pagination}
+          sorting={sorting}
+        />
+      )}
+      {selectedTab === AllRulesTabs.exceptions && (
+        <MyEuiBasicTable
+          data-test-subj="exceptions-table"
+          columns={exceptionColumns}
+          isSelectable={!hasNoPermissions ?? false}
+          itemId="id"
+          items={exceptions}
           noItemsMessage={emptyPrompt}
           onChange={tableOnChangeCallback}
           pagination={pagination}

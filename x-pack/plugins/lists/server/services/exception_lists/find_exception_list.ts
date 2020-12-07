@@ -16,7 +16,11 @@ import {
   SortFieldOrUndefined,
   SortOrderOrUndefined,
 } from '../../../common/schemas';
-import { SavedObjectType } from '../../saved_objects';
+import {
+  SavedObjectType,
+  exceptionListAgnosticSavedObjectType,
+  exceptionListSavedObjectType,
+} from '../../saved_objects';
 
 import { getSavedObjectType, transformSavedObjectsToFoundExceptionList } from './utils';
 
@@ -41,13 +45,14 @@ export const findExceptionList = async ({
 }: FindExceptionListOptions): Promise<FoundExceptionListSchema> => {
   const savedObjectType = getSavedObjectType({ namespaceType });
   const savedObjectsFindResponse = await savedObjectsClient.find<ExceptionListSoSchema>({
-    filter: getExceptionListFilter({ filter, savedObjectType }),
+    // filter: getExceptionListFilter({ filter, savedObjectType }),
     page,
     perPage,
     sortField,
     sortOrder,
-    type: savedObjectType,
+    type: [exceptionListAgnosticSavedObjectType, exceptionListSavedObjectType],
   });
+  console.log(JSON.stringify(savedObjectsFindResponse, null, 2));
   return transformSavedObjectsToFoundExceptionList({ savedObjectsFindResponse });
 };
 

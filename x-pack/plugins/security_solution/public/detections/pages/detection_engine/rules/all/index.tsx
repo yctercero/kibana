@@ -55,6 +55,7 @@ import { isBoolean } from '../../../../../common/utils/privileges';
 import { AllRulesUtilityBar } from './utility_bar';
 import { LastUpdatedAt } from '../../../../../common/components/last_updated';
 import { DEFAULT_RULES_TABLE_REFRESH_SETTING } from '../../../../../../common/constants';
+import { getAllExceptionListsColumns } from './exceptions/columns';
 
 const INITIAL_SORT_FIELD = 'enabled';
 const initialState: State = {
@@ -93,6 +94,7 @@ interface AllRulesProps {
 
 export enum AllRulesTabs {
   rules = 'rules',
+  exceptions = 'exceptions',
   monitoring = 'monitoring',
 }
 
@@ -105,6 +107,11 @@ const allRulesTabs = [
   {
     id: AllRulesTabs.monitoring,
     name: i18n.MONITORING_TAB,
+    disabled: false,
+  },
+  {
+    id: AllRulesTabs.exceptions,
+    name: i18n.EXCEPTIONS_TAB,
     disabled: false,
   },
 ];
@@ -311,6 +318,8 @@ export const AllRules = React.memo<AllRulesProps>(
       formatUrl,
     ]);
 
+    const exceptionColumns = useMemo(() => getAllExceptionListsColumns(null, null), []);
+
     useEffect(() => {
       if (reFetchRulesData != null) {
         setRefreshRulesData(reFetchRulesData);
@@ -491,7 +500,7 @@ export const AllRules = React.memo<AllRulesProps>(
             <HeaderSection
               split
               growLeftSplit={false}
-              title={i18n.ALL_RULES}
+              title={allRulesTab === AllRulesTabs.exceptions ? i18n.EXCEPTIONS_TAB : i18n.ALL_RULES}
               subtitle={
                 <LastUpdatedAt
                   showUpdating={loading || isLoadingRules || isLoadingRulesStatuses}
@@ -499,11 +508,13 @@ export const AllRules = React.memo<AllRulesProps>(
                 />
               }
             >
-              <RulesTableFilters
-                onFilterChanged={onFilterChangedCallback}
-                rulesCustomInstalled={rulesCustomInstalled}
-                rulesInstalled={rulesInstalled}
-              />
+              {allRulesTab !== AllRulesTabs.exceptions && (
+                <RulesTableFilters
+                  onFilterChanged={onFilterChangedCallback}
+                  rulesCustomInstalled={rulesCustomInstalled}
+                  rulesInstalled={rulesInstalled}
+                />
+              )}
             </HeaderSection>
 
             {isLoadingAnActionOnRule && !initLoading && (
@@ -543,12 +554,14 @@ export const AllRules = React.memo<AllRulesProps>(
                   onRefresh={handleRefreshData}
                   isAutoRefreshOn={isRefreshOn}
                   onRefreshSwitch={handleAutoRefreshSwitch}
+                  showBulkActions={allRulesTab !== AllRulesTabs.exceptions}
                 />
                 <AllRulesTables
                   selectedTab={allRulesTab}
                   euiBasicTableSelectionProps={euiBasicTableSelectionProps}
                   hasNoPermissions={hasNoPermissions}
                   monitoringColumns={monitoringColumns}
+                  exceptionColumns={exceptionColumns}
                   pagination={paginationMemo}
                   rules={rules}
                   rulesColumns={rulesColumns}
@@ -565,5 +578,3 @@ export const AllRules = React.memo<AllRulesProps>(
     );
   }
 );
-
-AllRules.displayName = 'AllRules';

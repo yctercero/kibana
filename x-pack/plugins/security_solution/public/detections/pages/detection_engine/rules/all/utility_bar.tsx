@@ -21,6 +21,7 @@ interface AllRulesUtilityBarProps {
   numberSelectedRules: number;
   paginationTotal: number;
   isAutoRefreshOn: boolean;
+  showBulkActions: boolean;
   onRefresh: (refreshRule: boolean) => void;
   onGetBatchItemsPopoverContent: (closePopover: () => void) => JSX.Element[];
   onRefreshSwitch: (checked: boolean) => void;
@@ -32,6 +33,7 @@ export const AllRulesUtilityBar = React.memo<AllRulesUtilityBarProps>(
     onRefresh,
     paginationTotal,
     numberSelectedRules,
+    showBulkActions,
     onGetBatchItemsPopoverContent,
     isAutoRefreshOn,
     onRefreshSwitch,
@@ -73,24 +75,34 @@ export const AllRulesUtilityBar = React.memo<AllRulesUtilityBarProps>(
       <UtilityBar>
         <UtilityBarSection>
           <UtilityBarGroup>
-            <UtilityBarText dataTestSubj="showingRules">
-              {i18n.SHOWING_RULES(paginationTotal)}
-            </UtilityBarText>
+            {showBulkActions ? (
+              <UtilityBarText dataTestSubj="showingRules">
+                {i18n.SHOWING_RULES(paginationTotal)}
+              </UtilityBarText>
+            ) : (
+              <UtilityBarText dataTestSubj="showingRules">
+                {i18n.SHOWING_EXCEPTION_LISTS(paginationTotal)}
+              </UtilityBarText>
+            )}
           </UtilityBarGroup>
 
           <UtilityBarGroup>
-            <UtilityBarText dataTestSubj="selectedRules">
-              {i18n.SELECTED_RULES(numberSelectedRules)}
-            </UtilityBarText>
-            {!userHasNoPermissions && (
-              <UtilityBarAction
-                dataTestSubj="bulkActions"
-                iconSide="right"
-                iconType="arrowDown"
-                popoverContent={handleGetBatchItemsPopoverContent}
-              >
-                {i18n.BATCH_ACTIONS}
-              </UtilityBarAction>
+            {showBulkActions && (
+              <>
+                <UtilityBarText dataTestSubj="selectedRules">
+                  {i18n.SELECTED_RULES(numberSelectedRules)}
+                </UtilityBarText>
+                {!userHasNoPermissions && (
+                  <UtilityBarAction
+                    dataTestSubj="bulkActions"
+                    iconSide="right"
+                    iconType="arrowDown"
+                    popoverContent={handleGetBatchItemsPopoverContent}
+                  >
+                    {i18n.BATCH_ACTIONS}
+                  </UtilityBarAction>
+                )}
+              </>
             )}
             <UtilityBarAction
               dataTestSubj="refreshRulesAction"

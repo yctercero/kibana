@@ -201,6 +201,12 @@ export const SHOWING_RULES = (totalRules: number) =>
     defaultMessage: 'Showing {totalRules} {totalRules, plural, =1 {rule} other {rules}}',
   });
 
+export const SHOWING_EXCEPTION_LISTS = (totalLists: number) =>
+  i18n.translate('xpack.securitySolution.detectionEngine.rules.allRules.showingExceptionLists', {
+    values: { totalLists },
+    defaultMessage: 'Showing {totalLists} {totalLists, plural, =1 {list} other {lists}}',
+  });
+
 export const SELECTED_RULES = (selectedRules: number) =>
   i18n.translate('xpack.securitySolution.detectionEngine.rules.allRules.selectedRulesTitle', {
     values: { selectedRules },
@@ -365,16 +371,23 @@ export const COLUMN_LAST_LOOKBACK_DATE = i18n.translate(
 );
 
 export const RULES_TAB = i18n.translate(
-  'xpack.securitySolution.detectionEngine.rules.allRules.tabs.rules',
+  'xpack.securitySolution.detectionEngine.rules.allRules.tabs.rulesTab',
   {
     defaultMessage: 'Rules',
   }
 );
 
-export const MONITORING_TAB = i18n.translate(
-  'xpack.securitySolution.detectionEngine.rules.allRules.tabs.monitoring',
+export const EXCEPTIONS_TAB = i18n.translate(
+  'xpack.securitySolution.detectionEngine.rules.allRules.tabs.exceptionsTab',
   {
-    defaultMessage: 'Monitoring',
+    defaultMessage: 'Exceptions',
+  }
+);
+
+export const MONITORING_TAB = i18n.translate(
+  'xpack.securitySolution.detectionEngine.rules.allRules.tabs.monitoringTab',
+  {
+    defaultMessage: 'Rules Monitoring',
   }
 );
 

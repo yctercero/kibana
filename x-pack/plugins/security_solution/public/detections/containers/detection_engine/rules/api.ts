@@ -109,7 +109,7 @@ export const fetchRules = async ({
   signal,
 }: FetchRulesProps): Promise<FetchRulesResponse> => {
   const filtersWithoutTags = [
-    ...(filterOptions.filter.length ? [`alert.attributes.name: ${filterOptions.filter}`] : []),
+    ...(filterOptions.filter.length ? [`${filterOptions.filter}`] : []),
     ...(filterOptions.showCustomRules
       ? [`alert.attributes.tags: "__internal_immutable:false"`]
       : []),

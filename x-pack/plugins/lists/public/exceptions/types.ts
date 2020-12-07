@@ -10,6 +10,7 @@ import {
   ExceptionListItemSchema,
   ExceptionListSchema,
   ExceptionListType,
+  FoundExceptionListSchema,
   NamespaceType,
   Page,
   PerPage,
@@ -46,6 +47,22 @@ export interface ExceptionList extends ExceptionListSchema {
 export interface UseExceptionListSuccess {
   exceptions: ExceptionListItemSchema[];
   pagination: Pagination;
+}
+
+export interface UseExceptionListsSuccess {
+  exceptions: ExceptionListSchema[];
+  pagination: Pagination;
+}
+
+export interface UseExceptionListsProps {
+  http: HttpStart;
+  filterOptions?: FilterExceptionsOptions[];
+  matchFilters?: boolean;
+  onError?: (arg: string[]) => void;
+  onSuccess?: (arg: UseExceptionListsSuccess) => void;
+  pagination?: Pagination;
+  showEndpointListsOnly?: boolean;
+  showDetectionsListsOnly?: boolean;
 }
 
 export interface UseExceptionListProps {
@@ -98,6 +115,13 @@ export interface ApiCallFindListsItemsMemoProps {
   showEndpointListsOnly: boolean;
   onError: (arg: string[]) => void;
   onSuccess: (arg: UseExceptionListSuccess) => void;
+}
+
+export interface ApiCallFetchExceptionListsProps {
+  http: HttpStart;
+  namespaceType: NamespaceType;
+  pagination: Partial<Pagination>;
+  signal: AbortSignal;
 }
 
 export interface AddExceptionListProps {
