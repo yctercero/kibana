@@ -468,12 +468,16 @@ export const AllRules = React.memo<AllRulesProps>(
 
     return (
       <>
-        <EuiWindowEvent event="mousemove" handler={debounceResetIdleTimer} />
-        <EuiWindowEvent event="mousedown" handler={debounceResetIdleTimer} />
-        <EuiWindowEvent event="click" handler={debounceResetIdleTimer} />
-        <EuiWindowEvent event="keydown" handler={debounceResetIdleTimer} />
-        <EuiWindowEvent event="scroll" handler={debounceResetIdleTimer} />
-        <EuiWindowEvent event="load" handler={debounceResetIdleTimer} />
+        {allRulesTab !== AllRulesTabs.exceptions && (
+          <>
+            <EuiWindowEvent event="mousemove" handler={debounceResetIdleTimer} />
+            <EuiWindowEvent event="mousedown" handler={debounceResetIdleTimer} />
+            <EuiWindowEvent event="click" handler={debounceResetIdleTimer} />
+            <EuiWindowEvent event="keydown" handler={debounceResetIdleTimer} />
+            <EuiWindowEvent event="scroll" handler={debounceResetIdleTimer} />
+            <EuiWindowEvent event="load" handler={debounceResetIdleTimer} />
+          </>
+        )}
         <GenericDownloader
           filename={`${i18n.EXPORT_FILENAME}.ndjson`}
           ids={exportRuleIds}
