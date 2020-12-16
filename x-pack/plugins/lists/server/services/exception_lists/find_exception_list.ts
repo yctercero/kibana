@@ -6,13 +6,8 @@
 
 import { SavedObjectsClientContract } from 'kibana/server';
 
+import { SavedObjectType } from '../../../common/types';
 import { NamespaceTypeArray } from '../../../common/schemas/types/default_namespace_array';
-import {
-  SavedObjectType,
-  exceptionListAgnosticSavedObjectType,
-  exceptionListSavedObjectType,
-} from '../../../common/types';
-import { getSavedObjectTypes } from '../../../common/utils';
 import {
   ExceptionListSoSchema,
   FilterOrUndefined,
@@ -22,6 +17,7 @@ import {
   SortFieldOrUndefined,
   SortOrderOrUndefined,
 } from '../../../common/schemas';
+import { getSavedObjectTypes } from '../../../common/utils';
 
 import { transformSavedObjectsToFoundExceptionList } from './utils';
 
@@ -51,7 +47,7 @@ export const findExceptionList = async ({
     perPage,
     sortField,
     sortOrder,
-    type: [exceptionListAgnosticSavedObjectType, exceptionListSavedObjectType],
+    type: savedObjectTypes,
   });
 
   return transformSavedObjectsToFoundExceptionList({ savedObjectsFindResponse });
