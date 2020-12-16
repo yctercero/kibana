@@ -11,6 +11,7 @@ import {
   exceptionListAgnosticSavedObjectType,
   exceptionListSavedObjectType,
 } from '../../../common/types';
+import { NamespaceTypeArray } from '../../../common/schemas/types/default_namespace_array';
 import {
   CommentsArray,
   CreateComment,
@@ -48,6 +49,16 @@ export const getExceptionListType = ({
   } else {
     return 'single';
   }
+};
+
+export const getSavedObjectTypes = ({
+  namespaceType,
+}: {
+  namespaceType: NamespaceTypeArray;
+}): SavedObjectType[] => {
+  return namespaceType.map((singleNamespaceType) =>
+    getSavedObjectType({ namespaceType: singleNamespaceType })
+  );
 };
 
 export const transformSavedObjectToExceptionList = ({

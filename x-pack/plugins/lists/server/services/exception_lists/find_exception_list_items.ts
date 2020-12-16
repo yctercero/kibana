@@ -5,7 +5,6 @@
  */
 import { SavedObjectsClientContract } from 'kibana/server';
 
-import { getSavedObjectTypes } from '../../../common/utils';
 import {
   SavedObjectType,
   exceptionListAgnosticSavedObjectType,
@@ -24,7 +23,7 @@ import {
   SortOrderOrUndefined,
 } from '../../../common/schemas';
 
-import { transformSavedObjectsToFoundExceptionListItem } from './utils';
+import { getSavedObjectTypes, transformSavedObjectsToFoundExceptionListItem } from './utils';
 import { getExceptionList } from './get_exception_list';
 
 interface FindExceptionListItemsOptions {
