@@ -68,6 +68,7 @@ export const BuilderEntryItem: React.FC<EntryItemProps> = ({
 
   const handleFieldChange = useCallback(
     ([newField]: IFieldType[]): void => {
+      console.log('NEW', newField);
       const { updatedEntry, index } = getEntryOnFieldChange(entry, newField);
       onChange(updatedEntry, index);
     },
@@ -138,7 +139,11 @@ export const BuilderEntryItem: React.FC<EntryItemProps> = ({
           </EuiFormRow>
         );
       } else {
-        return comboBox;
+        return (
+          <EuiFormRow label={''} data-test-subj="exceptionBuilderEntryFieldFormRow">
+            {comboBox}
+          </EuiFormRow>
+        );
       }
     },
     [handleFieldChange, indexPattern, entry, listType]
@@ -176,7 +181,11 @@ export const BuilderEntryItem: React.FC<EntryItemProps> = ({
         </EuiFormRow>
       );
     } else {
-      return comboBox;
+      return (
+        <EuiFormRow label={''} data-test-subj="exceptionBuilderEntryFieldFormRow">
+          {comboBox}
+        </EuiFormRow>
+      );
     }
   };
 

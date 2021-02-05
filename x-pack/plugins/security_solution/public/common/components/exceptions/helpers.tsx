@@ -42,6 +42,7 @@ import { validate } from '../../../../common/validate';
 import { Ecs } from '../../../../common/ecs';
 import { CodeSignature } from '../../../../common/ecs/file';
 import { WithCopyToClipboard } from '../../lib/clipboard/with_copy_to_clipboard';
+import { addIdToItem } from '../../../../common/add_remove_id_to_item';
 
 /**
  * Returns the operator type, may not need this if using io-ts types
@@ -148,12 +149,12 @@ export const getNewExceptionItem = ({
     comments: [],
     description: `${ruleName} - exception list item`,
     entries: [
-      {
+      addIdToItem({
         field: '',
         operator: 'included',
         type: 'match',
         value: '',
-      },
+      }),
     ],
     item_id: undefined,
     list_id: listId,
@@ -411,42 +412,42 @@ export const getPrepopulatedItem = ({
   return {
     ...getNewExceptionItem({ listId, namespaceType: listNamespace, ruleName }),
     entries: [
-      {
+      addIdToItem({
         field: 'file.Ext.code_signature',
         type: 'nested',
         entries: [
-          {
+          addIdToItem({
             field: 'subject_name',
             operator: 'included',
             type: 'match',
             value: codeSignature != null ? codeSignature.subjectName : '',
-          },
-          {
+          }),
+          addIdToItem({
             field: 'trusted',
             operator: 'included',
             type: 'match',
             value: codeSignature != null ? codeSignature.trusted : '',
-          },
+          }),
         ],
-      },
-      {
+      }),
+      addIdToItem({
         field: 'file.path.caseless',
         operator: 'included',
         type: 'match',
         value: filePath ?? '',
-      },
-      {
+      }),
+      addIdToItem({
         field: 'file.hash.sha256',
         operator: 'included',
         type: 'match',
         value: sha256Hash ?? '',
-      },
-      {
+      }),
+      addIdToItem({
         field: 'event.code',
         operator: 'included',
         type: 'match',
         value: eventCode ?? '',
-      },
+      }),
     ],
   };
 };

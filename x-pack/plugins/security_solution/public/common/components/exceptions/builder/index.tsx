@@ -240,8 +240,6 @@ export const ExceptionBuilderComponent = ({
         entries: [...entries, isNested ? getDefaultNestedEmptyEntry() : getDefaultEmptyEntry()],
       };
 
-      // setAndLogicIncluded(updatedException.entries.length > 1);
-
       setUpdateExceptions([...exceptions.slice(0, exceptions.length - 1), { ...updatedException }]);
     },
     [setUpdateExceptions, exceptions]
@@ -287,12 +285,12 @@ export const ExceptionBuilderComponent = ({
             ...lastEntry,
             entries: [
               ...lastEntry.entries,
-              {
+              addIdToItem({
                 field: '',
                 type: OperatorTypeEnum.MATCH,
                 operator: OperatorEnum.INCLUDED,
                 value: '',
-              },
+              }),
             ],
           },
         ],

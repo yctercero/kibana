@@ -51,6 +51,7 @@ export const FieldComponent: React.FC<OperatorProps> = ({
 
   const handleValuesChange = useCallback(
     (newOptions: EuiComboBoxOptionOption[]): void => {
+      console.log('YO', newOptions);
       const newValues: IFieldType[] = newOptions.map(
         ({ label }) => availableFields[labels.indexOf(label)]
       );

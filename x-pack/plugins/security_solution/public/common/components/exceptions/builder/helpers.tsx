@@ -37,6 +37,7 @@ import {
 } from '../types';
 import { getEntryValue, getExceptionOperatorSelect } from '../helpers';
 import exceptionableFields from '../exceptionable_fields.json';
+import { addIdToItem } from '../../../../../common/add_remove_id_to_item';
 
 /**
  * Returns filtered index patterns based on the field - if a user selects to
@@ -154,7 +155,7 @@ export const getFormattedBuilderEntry = (
   });
 
   if (parent != null && parentIndex != null) {
-    return {
+    return addIdToItem({
       field:
         foundField != null
           ? { ...foundField, name: foundField.name.split('.').slice(-1)[0] }
@@ -165,9 +166,9 @@ export const getFormattedBuilderEntry = (
       nested: 'child',
       parent: { parent, parentIndex },
       entryIndex: itemIndex,
-    };
+    });
   } else {
-    return {
+    return addIdToItem({
       field: foundField,
       correspondingKeywordField,
       operator: getExceptionOperatorSelect(item),
@@ -175,7 +176,7 @@ export const getFormattedBuilderEntry = (
       nested: undefined,
       parent: undefined,
       entryIndex: itemIndex,
-    };
+    });
   }
 };
 
@@ -603,18 +604,20 @@ export const getEntryOnListChange = (
   };
 };
 
-export const getDefaultEmptyEntry = (): EmptyEntry => ({
-  field: '',
-  type: OperatorTypeEnum.MATCH,
-  operator: OperatorEnum.INCLUDED,
-  value: '',
-});
+export const getDefaultEmptyEntry = (): EmptyEntry =>
+  addIdToItem({
+    field: '',
+    type: OperatorTypeEnum.MATCH,
+    operator: OperatorEnum.INCLUDED,
+    value: '',
+  });
 
-export const getDefaultNestedEmptyEntry = (): EmptyNestedEntry => ({
-  field: '',
-  type: OperatorTypeEnum.NESTED,
-  entries: [],
-});
+export const getDefaultNestedEmptyEntry = (): EmptyNestedEntry =>
+  addIdToItem({
+    field: '',
+    type: OperatorTypeEnum.NESTED,
+    entries: [],
+  });
 
 export const containsValueListEntry = (items: ExceptionsBuilderExceptionItem[]): boolean =>
   items.some((item) => item.entries.some((entry) => entry.type === OperatorTypeEnum.LIST));
