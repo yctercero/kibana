@@ -4,7 +4,6 @@
  * 2.0; you may not use this file except in compliance with the Elastic License
  * 2.0.
  */
-
 import {
   AlertInstanceContext,
   AlertInstanceState,
@@ -38,3 +37,20 @@ export type AlertTypeWithExecutor<
 > & {
   executor: AlertTypeExecutor<TParams, TAlertInstanceContext, TServices>;
 };
+
+export type FieldMapOf<
+  TRuleRegistry extends RuleRegistry<any>
+> = TRuleRegistry extends RuleRegistry<infer TFieldMap> ? TFieldMap : never;
+/**
+ * @public
+ */
+export interface RacApiRequestHandlerContext {
+  getRacClient: () => RacClient;
+}
+
+/**
+ * @internal
+ */
+export interface RacRequestHandlerContext extends RequestHandlerContext {
+  rac: RacApiRequestHandlerContext;
+}
