@@ -5,7 +5,7 @@
  * 2.0.
  */
 import { Type, TypeOf } from '@kbn/config-schema';
-import { Logger } from 'kibana/server';
+import { Logger, RequestHandlerContext } from 'kibana/server';
 import {
   ActionVariable,
   AlertInstanceContext,
@@ -14,6 +14,7 @@ import {
   AlertTypeState,
 } from '../../alerting/common';
 import { ActionGroup, AlertExecutorOptions } from '../../alerting/server';
+import { RacClient } from './rac_client/rac_client';
 import { ScopedRuleRegistryClient } from './rule_registry/create_scoped_rule_registry_client/types';
 import { DefaultFieldMap } from './rule_registry/defaults/field_map';
 
@@ -93,3 +94,17 @@ export type RuleType<
     TAdditionalRuleExecutorServices
   >;
 };
+
+/**
+ * @public
+ */
+export interface RacApiRequestHandlerContext {
+  getRacClient: () => RacClient;
+}
+
+/**
+ * @internal
+ */
+export interface RacRequestHandlerContext extends RequestHandlerContext {
+  rac: RacApiRequestHandlerContext;
+}
