@@ -16,9 +16,13 @@ const allOperations: string[] = [...readOperations, ...writeOperations];
 
 export class FeaturePrivilegeAlertsBuilder extends BaseFeaturePrivilegeBuilder {
   public getActions(privilegeDefinition: FeatureKibanaPrivileges): string[] {
-    const getAlertsPrivilege = (operations: string[], owners: readonly string[]) => {
+    const getAlertsPrivilege = (
+      spaceId: string[],
+      owners: readonly string[],
+      operations: string[]
+    ) => {
       return owners.flatMap((owner) =>
-        operations.map((operation) => this.actions.alerts.get(operation, owner))
+        operations.map((operation) => this.actions.alerts.get(spaceId, operation, owner))
       );
     };
 

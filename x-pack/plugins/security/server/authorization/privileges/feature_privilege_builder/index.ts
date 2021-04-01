@@ -31,6 +31,7 @@ export const featurePrivilegeBuilderFactory = (actions: Actions): FeaturePrivile
     new FeaturePrivilegeSavedObjectBuilder(actions),
     new FeaturePrivilegeUIBuilder(actions),
     new FeaturePrivilegeAlertingBuilder(actions),
+    new FeaturePrivilegeAlertsBuilder(actions),
   ];
 
   return {

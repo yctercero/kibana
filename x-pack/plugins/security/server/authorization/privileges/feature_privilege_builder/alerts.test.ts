@@ -16,7 +16,7 @@ describe(`alerts`, () => {
   describe(`feature_privilege_builder`, () => {
     it('grants no privileges by default', () => {
       const actions = new Actions(version);
-      const alertsFeaturePrivileges = new FeaturePrivilegealertsBuilder(actions);
+      const alertsFeaturePrivileges = new FeaturePrivilegeAlertsBuilder(actions);
 
       const privilege: FeatureKibanaPrivileges = {
         savedObject: {
@@ -43,7 +43,7 @@ describe(`alerts`, () => {
     describe(`within feature`, () => {
       it('grants `read` privileges under feature', () => {
         const actions = new Actions(version);
-        const alertsFeaturePrivilege = new FeaturePrivilegealertsBuilder(actions);
+        const alertsFeaturePrivilege = new FeaturePrivilegeAlertsBuilder(actions);
 
         const privilege: FeatureKibanaPrivileges = {
           alerts: {
@@ -78,7 +78,7 @@ describe(`alerts`, () => {
 
       it('grants `all` privileges under feature', () => {
         const actions = new Actions(version);
-        const alertsFeaturePrivilege = new FeaturePrivilegealertsBuilder(actions);
+        const alertsFeaturePrivilege = new FeaturePrivilegeAlertsBuilder(actions);
 
         const privilege: FeatureKibanaPrivileges = {
           alerts: {
@@ -116,7 +116,7 @@ describe(`alerts`, () => {
 
       it('grants both `all` and `read` privileges under feature', () => {
         const actions = new Actions(version);
-        const alertsFeaturePrivilege = new FeaturePrivilegealertsBuilder(actions);
+        const alertsFeaturePrivilege = new FeaturePrivilegeAlertsBuilder(actions);
 
         const privilege: FeatureKibanaPrivileges = {
           alerts: {
@@ -157,7 +157,7 @@ describe(`alerts`, () => {
 
       it('grants both `all` and `read` privileges under feature with multiple values in alerts array', () => {
         const actions = new Actions(version);
-        const alertsFeaturePrivilege = new FeaturePrivilegealertsBuilder(actions);
+        const alertsFeaturePrivilege = new FeaturePrivilegeAlertsBuilder(actions);
 
         const privilege: FeatureKibanaPrivileges = {
           alerts: {
