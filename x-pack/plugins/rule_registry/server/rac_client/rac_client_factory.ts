@@ -5,55 +5,33 @@
  * 2.0.
  */
 
-import {
-  KibanaRequest,
-  Logger,
-  SavedObjectsServiceStart,
-  PluginInitializerContext,
-} from 'src/core/server';
-import { PluginStartContract as ActionsPluginStartContract } from '../../actions/server';
-import { RacClient } from './alerts_client';
-import { ALERTS_FEATURE_ID } from '../common';
-import { AlertTypeRegistry, SpaceIdToNamespaceFunction } from './types';
-import { SecurityPluginSetup, SecurityPluginStart } from '../../security/server';
-import { EncryptedSavedObjectsClient } from '../../encrypted_saved_objects/server';
-import { TaskManagerStartContract } from '../../task_manager/server';
-import { PluginStartContract as FeaturesPluginStart } from '../../features/server';
+import { KibanaRequest, Logger, PluginInitializerContext } from 'src/core/server';
+import { RacClient } from './rac_client';
+import { SecurityPluginSetup, SecurityPluginStart } from '../../../security/server';
+import { PluginStartContract as FeaturesPluginStart } from '../../../features/server';
+// TODO: implement this class and audit logger
 import { AlertsAuthorization } from './authorization/alerts_authorization';
 import { AlertsAuthorizationAuditLogger } from './authorization/audit_logger';
-import { Space } from '../../spaces/server';
-import { IEventLogClientService } from '../../../plugins/event_log/server';
+import { Space } from '../../../spaces/server';
 
-export interface AlertsClientFactoryOpts {
+export interface RacClientFactoryOpts {
   logger: Logger;
-  taskManager: TaskManagerStartContract;
-  alertTypeRegistry: AlertTypeRegistry;
   securityPluginSetup?: SecurityPluginSetup;
   securityPluginStart?: SecurityPluginStart;
   getSpaceId: (request: KibanaRequest) => string | undefined;
   getSpace: (request: KibanaRequest) => Promise<Space | undefined>;
-  spaceIdToNamespace: SpaceIdToNamespaceFunction;
-  encryptedSavedObjectsClient: EncryptedSavedObjectsClient;
-  actions: ActionsPluginStartContract;
   features: FeaturesPluginStart;
-  eventLog: IEventLogClientService;
   kibanaVersion: PluginInitializerContext['env']['packageInfo']['version'];
 }
 
-export class AlertsClientFactory {
+export class RacClientFactory {
   private isInitialized = false;
   private logger!: Logger;
-  private taskManager!: TaskManagerStartContract;
-  private alertTypeRegistry!: AlertTypeRegistry;
   private securityPluginSetup?: SecurityPluginSetup;
   private securityPluginStart?: SecurityPluginStart;
   private getSpaceId!: (request: KibanaRequest) => string | undefined;
   private getSpace!: (request: KibanaRequest) => Promise<Space | undefined>;
-  private spaceIdToNamespace!: SpaceIdToNamespaceFunction;
-  private encryptedSavedObjectsClient!: EncryptedSavedObjectsClient;
-  private actions!: ActionsPluginStartContract;
   private features!: FeaturesPluginStart;
-  private eventLog!: IEventLogClientService;
   private kibanaVersion!: PluginInitializerContext['env']['packageInfo']['version'];
 
   public initialize(options: RacClientFactoryOpts) {
@@ -69,10 +47,9 @@ export class AlertsClientFactory {
     this.features = options.features;
     this.securityPluginSetup = options.securityPluginSetup;
     this.securityPluginStart = options.securityPluginStart;
-    this.spaceIdToNamespace = options.spaceIdToNamespace;
   }
 
-  public create(request: KibanaRequest, savedObjects: SavedObjectsServiceStart): RacClient {
+  public create(request: KibanaRequest): RacClient {
     const { features, securityPluginSetup, securityPluginStart } = this;
     const spaceId = this.getSpaceId(request);
 
@@ -87,49 +64,8 @@ export class AlertsClientFactory {
       spaceId,
       kibanaVersion: this.kibanaVersion,
       logger: this.logger,
-      taskManager: this.taskManager,
-      alertTypeRegistry: this.alertTypeRegistry,
-      unsecuredSavedObjectsClient: savedObjects.getScopedClient(request, {
-        excludedWrappers: ['security'],
-        includedHiddenTypes: ['alert', 'api_key_pending_invalidation'],
-      }),
       authorization,
-      actionsAuthorization: actions.getActionsAuthorizationWithRequest(request),
-      namespace: this.spaceIdToNamespace(spaceId),
-      encryptedSavedObjectsClient: this.encryptedSavedObjectsClient,
       auditLogger: securityPluginSetup?.audit.asScoped(request),
-      async getUserName() {
-        if (!securityPluginStart) {
-          return null;
-        }
-        const user = await securityPluginStart.authc.getCurrentUser(request);
-        return user ? user.username : null;
-      },
-      async createAPIKey(name: string) {
-        if (!securityPluginStart) {
-          return { apiKeysEnabled: false };
-        }
-        // Create an API key using the new grant API - in this case the Kibana system user is creating the
-        // API key for the user, instead of having the user create it themselves, which requires api_key
-        // privileges
-        const createAPIKeyResult = await securityPluginStart.authc.apiKeys.grantAsInternalUser(
-          request,
-          { name, role_descriptors: {} }
-        );
-        if (!createAPIKeyResult) {
-          return { apiKeysEnabled: false };
-        }
-        return {
-          apiKeysEnabled: true,
-          result: createAPIKeyResult,
-        };
-      },
-      async getActionsClient() {
-        return actions.getActionsClientWithRequest(request);
-      },
-      async getEventLogClient() {
-        return eventLog.getClient(request);
-      },
     });
   }
 }

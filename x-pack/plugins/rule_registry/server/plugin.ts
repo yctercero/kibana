@@ -5,13 +5,27 @@
  * 2.0.
  */
 
-import { PluginInitializerContext, Plugin, CoreSetup, SharedGlobalConfig } from 'src/core/server';
-import { SecurityPluginSetup } from '../../security/server';
+import {
+  Logger,
+  PluginInitializerContext,
+  Plugin,
+  CoreSetup,
+  CoreStart,
+  SharedGlobalConfig,
+  KibanaRequest,
+  IContextProvider,
+} from 'src/core/server';
+import { SecurityPluginSetup, SecurityPluginStart } from '../../security/server';
 import { PluginSetupContract as AlertingPluginSetupContract } from '../../alerting/server';
+import { SpacesPluginStart } from '../../spaces/server';
+import { PluginStartContract as FeaturesPluginStart } from '../../features/server';
+
 import { RuleRegistry } from './rule_registry';
 import { defaultIlmPolicy } from './rule_registry/defaults/ilm_policy';
 import { defaultFieldMap } from './rule_registry/defaults/field_map';
-import { RacClientFactory } from './rac_client/rac_client';
+import { RacClientFactory } from './rac_client/rac_client_factory';
+import { RuleRegistryConfig } from '.';
+import { RacRequestHandlerContext } from './types';
 export interface RacPluginsSetup {
   security?: SecurityPluginSetup;
   alerting: AlertingPluginSetupContract;
@@ -19,22 +33,24 @@ export interface RacPluginsSetup {
 export interface RacPluginsStart {
   security?: SecurityPluginStart;
   spaces?: SpacesPluginStart;
-  alerting: AlertingPluginStartContract;
+  features: FeaturesPluginStart;
 }
 
 export type RacPluginSetupContract = RuleRegistry<typeof defaultFieldMap>;
 
 export class RuleRegistryPlugin implements Plugin<RacPluginSetupContract> {
-  private readonly config: Promise<SharedGlobalConfig>;
+  private readonly globalConfig: SharedGlobalConfig;
+  private readonly config: RuleRegistryConfig;
   private readonly racClientFactory: RacClientFactory;
   private security?: SecurityPluginSetup;
   private readonly logger: Logger;
   private readonly kibanaVersion: PluginInitializerContext['env']['packageInfo']['version'];
 
   constructor(private readonly initContext: PluginInitializerContext) {
-    this.config = initContext.config.legacy.get();
     this.initContext = initContext;
     this.racClientFactory = new RacClientFactory();
+    this.globalConfig = this.initContext.config.legacy.get();
+    this.config = initContext.config.get<RuleRegistryConfig>();
     this.logger = initContext.logger.get('root');
     this.kibanaVersion = initContext.env.packageInfo.version;
   }
@@ -47,25 +63,25 @@ export class RuleRegistryPlugin implements Plugin<RacPluginSetupContract> {
       core,
       ilmPolicy: defaultIlmPolicy,
       fieldMap: defaultFieldMap,
-      kibanaIndex: this.config.kibana.index,
-      namespace: 'alert-history',
+      kibanaIndex: this.globalConfig.kibana.index,
+      name: 'alert-history',
       kibanaVersion: this.kibanaVersion,
       logger: this.logger,
       alertingPluginSetupContract: plugins.alerting,
-      writeEnabled: config.writeEnabled,
+      writeEnabled: this.config.writeEnabled,
     });
 
     // ALERTS ROUTES
     core.http.registerRouteHandlerContext<RacRequestHandlerContext, 'rac'>(
       'rac',
-      this.createRouteHandlerContext(core)
+      this.createRouteHandlerContext()
     );
 
     return rootRegistry;
   }
 
   public start(core: CoreStart, plugins: RacPluginsStart) {
-    const { logger, licenseState, security, racClientFactory } = this;
+    const { logger, security, racClientFactory } = this;
 
     racClientFactory.initialize({
       logger,
@@ -82,12 +98,7 @@ export class RuleRegistryPlugin implements Plugin<RacPluginSetupContract> {
     });
 
     const getRacClientWithRequest = (request: KibanaRequest) => {
-      if (isESOCanEncrypt !== true) {
-        throw new Error(
-          `Unable to create rac client because the Encrypted Saved Objects plugin is missing encryption key. Please set xpack.encryptedSavedObjects.encryptionKey in the kibana.yml or use the bin/kibana-encryption-keys command.`
-        );
-      }
-      return racClientFactory!.create(request, core.savedObjects);
+      return racClientFactory!.create(request);
     };
 
     return {
@@ -95,19 +106,13 @@ export class RuleRegistryPlugin implements Plugin<RacPluginSetupContract> {
     };
   }
 
-  private createRouteHandlerContext = (
-    core: CoreSetup
-  ): IContextProvider<AlertingRequestHandlerContext, 'alerting'> => {
-    const { alertTypeRegistry, alertsClientFactory } = this;
+  private createRouteHandlerContext = (): IContextProvider<RacRequestHandlerContext, 'rac'> => {
+    const { racClientFactory } = this;
     return async function alertsRouteHandlerContext(context, request) {
-      const [{ savedObjects }] = await core.getStartServices();
       return {
-        getAlertsClient: () => {
-          return alertsClientFactory!.create(request, savedObjects);
+        getRacClient: () => {
+          return racClientFactory!.create(request);
         },
-        listTypes: alertTypeRegistry!.list.bind(alertTypeRegistry!),
-        getFrameworkHealth: async () =>
-          await getHealth(savedObjects.createInternalRepository(['alert'])),
       };
     };
   };
