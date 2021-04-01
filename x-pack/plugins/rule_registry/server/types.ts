@@ -93,3 +93,17 @@ export type RuleType<
     TAdditionalRuleExecutorServices
   >;
 };
+
+/**
+ * @public
+ */
+export interface RacApiRequestHandlerContext {
+  getRacClient: () => RacClient;
+}
+
+/**
+ * @internal
+ */
+export interface RacRequestHandlerContext extends RequestHandlerContext {
+  rac: RacApiRequestHandlerContext;
+}
