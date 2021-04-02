@@ -81,6 +81,14 @@ export class RuleRegistryPlugin implements Plugin<RacPluginSetupContract> {
       this.createRouteHandlerContext()
     );
 
+    const router = core.http.createRouter<RacRequestHandlerContext>();
+    // handler is called when '/path' resource is requested with `GET` method
+    router.get({ path: '/rac-myfakepath', validate: false }, (context, req, res) => {
+      const racClient = context.rac?.getRacClient();
+      racClient.get({ id: 'hello world' });
+      return res.ok();
+    });
+
     return rootRegistry;
   }
 
@@ -115,8 +123,12 @@ export class RuleRegistryPlugin implements Plugin<RacPluginSetupContract> {
     const { racClientFactory } = this;
     return async function alertsRouteHandlerContext(context, request) {
       return {
-        getRacClient: () => {
-          return racClientFactory!.create(request);
+        getRacClient: async () => {
+          const createdClient = await racClientFactory!.create(request);
+          console.error(
+            `********\nDID WE CREATE A CLIENT: ${JSON.stringify(createdClient)}\n********`
+          );
+          return createdClient;
         },
       };
     };

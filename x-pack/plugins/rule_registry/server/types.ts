@@ -99,7 +99,7 @@ export type RuleType<
  * @public
  */
 export interface RacApiRequestHandlerContext {
-  getRacClient: () => RacClient;
+  getRacClient: () => Promise<RacClient>;
 }
 
 /**
