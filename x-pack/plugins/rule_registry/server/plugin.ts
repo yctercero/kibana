@@ -22,7 +22,10 @@ export type RuleRegistryPluginSetupContract = RuleDataPluginService;
 export type RuleRegistryPluginStartContract = void;
 
 import { SecurityPluginSetup, SecurityPluginStart } from '../../security/server';
-import { PluginSetupContract as AlertingPluginSetupContract } from '../../alerting/server';
+import {
+  PluginSetupContract as AlertingPluginSetupContract,
+  PluginStartContract as AlertPluginStartContract,
+} from '../../alerting/server';
 import { SpacesPluginStart } from '../../spaces/server';
 import { PluginStartContract as FeaturesPluginStart } from '../../features/server';
 
@@ -40,6 +43,7 @@ export interface RacPluginsStart {
   security?: SecurityPluginStart;
   spaces?: SpacesPluginStart;
   features: FeaturesPluginStart;
+  alerting: AlertPluginStartContract;
 }
 
 export type RuleRegistryPluginSetupContract = RuleRegistry<BaseRuleFieldMap>;
@@ -117,6 +121,7 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
 
     return {
       getRacClientWithRequest,
+      alerting: plugins.alerting,
     };
   }
 

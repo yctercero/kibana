@@ -85,6 +85,8 @@ import { securitySolutionTimelineEqlSearchStrategyProvider } from './search_stra
 import { parseExperimentalConfigValue } from '../common/experimental_features';
 import { migrateArtifactsToFleet } from './endpoint/lib/artifacts/migrate_artifacts_to_fleet';
 
+export type SecurityRuleRegistry = SetupPlugins['ruleRegistry'];
+
 export interface SetupPlugins {
   alerting: AlertingSetup;
   data: DataPluginSetup;
@@ -262,6 +264,9 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
       alerting: ruleTypes,
       privileges: {
         all: {
+          rac: {
+            all: ['securitySolution'],
+          },
           app: [...securitySubPlugins, 'kibana'],
           catalogue: ['securitySolution'],
           api: ['securitySolution', 'lists-all', 'lists-read'],
