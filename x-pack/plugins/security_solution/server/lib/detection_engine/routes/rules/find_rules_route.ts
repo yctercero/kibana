@@ -47,6 +47,13 @@ export const findRulesRoute = (
         const { query } = request;
         const alertsClient = context.alerting?.getAlertsClient();
         const savedObjectsClient = context.core.savedObjects.client;
+        const something = context.ruleRegistry?.rac.getRacClient();
+        try {
+          something?.find();
+          console.error('SOMETHING DID NOT THROW AN ERROR', JSON.stringify(something));
+        } catch (exc) {
+          console.error('SOMETHING THREW AN ERROR');
+        }
 
         if (!alertsClient) {
           return siemResponse.error({ statusCode: 404 });

@@ -129,8 +129,12 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
     const { racClientFactory } = this;
     return async function alertsRouteHandlerContext(context, request) {
       return {
-        getRacClient: () => {
-          return racClientFactory!.create(request);
+        getRacClient: async () => {
+          const createdClient = await racClientFactory!.create(request);
+          console.error(
+            `********\nDID WE CREATE A CLIENT: ${JSON.stringify(createdClient)}\n********`
+          );
+          return createdClient;
         },
       };
     };

@@ -95,6 +95,13 @@ export class AlertsAuthorization {
     this.authorization = authorization;
     this.alertTypeRegistry = alertTypeRegistry;
     this.auditLogger = auditLogger;
+    // console.error(
+    //   `*********\nALERTING FEATURES: ${JSON.stringify(
+    //     features.getKibanaFeatures(),
+    //     null,
+    //     2
+    //   )}\n*********`
+    // );
 
     // List of consumer ids that are exempt from privilege check. This should be used sparingly.
     // An example of this is the Rules Management `consumer` as we don't want to have to
@@ -115,7 +122,10 @@ export class AlertsAuthorization {
                   // ignore features which don't grant privileges to alerting
                   (alerting?.length ?? 0 > 0)
               )
-              .map((feature) => feature.id)
+              .map((feature) => {
+                // console.error('INSIDE FEATURE ID:', feature.id);
+                return feature.id;
+              })
           )
       )
       .catch(() => {
@@ -123,6 +133,13 @@ export class AlertsAuthorization {
         // active space at all, which means that their list of features should be empty
         return new Set();
       });
+    console.error(
+      `*********\nALERTING THIS.FEATUREIDS: ${JSON.stringify(
+        Array.from(this.featuresIds),
+        null,
+        2
+      )}\n*********`
+    );
 
     this.allPossibleConsumers = this.featuresIds.then((featuresIds) =>
       featuresIds.size

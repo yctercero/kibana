@@ -94,7 +94,7 @@ export interface SetupPlugins {
   features: FeaturesSetup;
   lists?: ListPluginSetup;
   ml?: MlSetup;
-  ruleRegistry: RuleRegistryPluginSetupContract;
+  ruleRegistry: RacPluginSetupContract;
   security?: SecuritySetup;
   spaces?: SpacesSetup;
   taskManager?: TaskManagerSetupContract;
@@ -107,7 +107,7 @@ export interface StartPlugins {
   data: DataPluginStart;
   fleet?: FleetStartContract;
   licensing: LicensingPluginStart;
-  ruleRegistry: RuleRegistryPluginSetupContract;
+  ruleRegistry: RacPluginSetupContract;
   taskManager?: TaskManagerStartContract;
   telemetry?: TelemetryPluginStart;
 }
@@ -250,6 +250,38 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
     const ruleTypes = [SIGNALS_ID, NOTIFICATIONS_ID, ...referenceRuleTypes];
 
     plugins.features.registerKibanaFeature({
+      id: 'rac',
+      name: 'RAC',
+      order: 1100,
+      app: [...securitySubPlugins, 'kibana'],
+      category: DEFAULT_APP_CATEGORIES.security,
+      rac: ['securitySolution'],
+      privileges: {
+        all: {
+          app: [...securitySubPlugins, 'kibana'],
+          rac: {
+            all: ['securitySolution'],
+          },
+          savedObject: {
+            all: [
+              'alert',
+              ...caseSavedObjects,
+              'exception-list',
+              'exception-list-agnostic',
+              ...savedObjectTypes,
+            ],
+            read: ['config'],
+          },
+          ui: ['show', 'crud'],
+        },
+        read: {
+          savedObject: { all: [], read: [] },
+          ui: ['show'],
+        },
+      },
+    });
+
+    plugins.features.registerKibanaFeature({
       id: SERVER_APP_ID,
       name: i18n.translate('xpack.securitySolution.featureRegistry.linkSecuritySolutionTitle', {
         defaultMessage: 'Security',
@@ -262,6 +294,7 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
         insightsAndAlerting: ['triggersActions'],
       },
       alerting: ruleTypes,
+      rac: ['securitySolution'],
       privileges: {
         all: {
           rac: {

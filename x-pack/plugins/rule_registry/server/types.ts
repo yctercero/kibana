@@ -45,7 +45,7 @@ export type FieldMapOf<
  * @public
  */
 export interface RacApiRequestHandlerContext {
-  getRacClient: () => RacClient;
+  getRacClient: () => Promise<RacClient>;
 }
 
 /**
