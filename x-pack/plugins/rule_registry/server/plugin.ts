@@ -119,6 +119,7 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
       },
       features: plugins.features,
       kibanaVersion: this.kibanaVersion,
+      esClient: core.elasticsearch.client.asInternalUser,
     });
 
     const getRacClientWithRequest = (request: KibanaRequest) => {
