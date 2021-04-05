@@ -47,12 +47,12 @@ export const findRulesRoute = (
         const { query } = request;
         const alertsClient = context.alerting?.getAlertsClient();
         const savedObjectsClient = context.core.savedObjects.client;
-        const something = context.ruleRegistry?.rac.getRacClient();
+        const racClient = await context.ruleRegistry?.getRacClient();
         try {
-          something?.find();
-          console.error('SOMETHING DID NOT THROW AN ERROR', JSON.stringify(something));
+          const helloWorld = await racClient?.get({ id: 'hello world!!!' });
+          console.error('RESPONSE FROM RAC CLIENT', helloWorld);
         } catch (exc) {
-          console.error('SOMETHING THREW AN ERROR');
+          console.error('SOMETHING THREW AN ERROR', exc);
         }
 
         if (!alertsClient) {

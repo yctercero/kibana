@@ -52,5 +52,9 @@ export interface RacApiRequestHandlerContext {
  * @internal
  */
 export interface RacRequestHandlerContext extends RequestHandlerContext {
-  rac: RacApiRequestHandlerContext;
+  ruleRegistry?: RacApiRequestHandlerContext;
 }
+/**
+ * @internal
+ */
+export type ContextProviderReturn = RacApiRequestHandlerContext;

@@ -34,7 +34,12 @@ import { defaultIlmPolicy } from './rule_registry/defaults/ilm_policy';
 import { BaseRuleFieldMap, baseRuleFieldMap } from '../common';
 import { RacClientFactory } from './rac_client/rac_client_factory';
 import { RuleRegistryConfig } from '.';
-import { RacRequestHandlerContext } from './types';
+import {
+  ContextProviderReturn,
+  RacApiRequestHandlerContext,
+  RacRequestHandlerContext,
+} from './types';
+import { RacClient } from './rac_client/rac_client';
 export interface RacPluginsSetup {
   security?: SecurityPluginSetup;
   alerting: AlertingPluginSetupContract;
@@ -44,6 +49,7 @@ export interface RacPluginsStart {
   spaces?: SpacesPluginStart;
   features: FeaturesPluginStart;
   alerting: AlertPluginStartContract;
+  getRacClientWithRequest(request: KibanaRequest): PublicMethodsOf<RacClient>;
 }
 
 export type RuleRegistryPluginSetupContract = RuleRegistry<BaseRuleFieldMap>;
@@ -90,8 +96,8 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
     });
 
     // ALERTS ROUTES
-    core.http.registerRouteHandlerContext<RacRequestHandlerContext, 'rac'>(
-      'rac',
+    core.http.registerRouteHandlerContext<RacRequestHandlerContext, 'ruleRegistry'>(
+      'ruleRegistry',
       this.createRouteHandlerContext()
     );
 
@@ -125,15 +131,18 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
     };
   }
 
-  private createRouteHandlerContext = (): IContextProvider<RacRequestHandlerContext, 'rac'> => {
+  private createRouteHandlerContext = (): IContextProvider<
+    RacRequestHandlerContext,
+    'ruleRegistry'
+  > => {
     const { racClientFactory } = this;
-    return async function alertsRouteHandlerContext(context, request) {
+    return async function alertsRouteHandlerContext(
+      context,
+      request
+    ): Promise<RacApiRequestHandlerContext> {
       return {
         getRacClient: async () => {
-          const createdClient = await racClientFactory!.create(request);
-          console.error(
-            `********\nDID WE CREATE A CLIENT: ${JSON.stringify(createdClient)}\n********`
-          );
+          const createdClient = racClientFactory!.create(request);
           return createdClient;
         },
       };
