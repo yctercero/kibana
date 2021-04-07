@@ -5,49 +5,30 @@
  * 2.0.
  */
 
-import { isEqual, pick } from 'lodash';
 import { estypes } from '@elastic/elasticsearch';
 import {
   Logger,
-  SavedObject,
   PluginInitializerContext,
-  SavedObjectsUtils,
+  ElasticsearchClient,
 } from '../../../../../src/core/server';
-import { esKuery } from '../../../../../src/plugins/data/server';
-import {
-  Alert,
-  PartialAlert,
-  RawAlert,
-  AlertTypeRegistry,
-  AlertAction,
-  IntervalSchedule,
-  SanitizedAlert,
-  AlertTaskState,
-  AlertInstanceSummary,
-  AlertExecutionStatusValues,
-  AlertNotifyWhenType,
-  AlertTypeParams,
-} from '../types';
-import {
-  validateAlertTypeParams,
-  alertExecutionStatusFromRaw,
-  getAlertNotifyWhenType,
-} from '../lib';
 import {
   GrantAPIKeyResult as SecurityPluginGrantAPIKeyResult,
   InvalidateAPIKeyResult as SecurityPluginInvalidateAPIKeyResult,
 } from '../../../security/server';
-
-// TODO: implement the authorization class
-import { AlertsAuthorization, WriteOperations, ReadOperations } from '../authorization';
+import {
+  RacAuthorization,
+  WriteOperations,
+  ReadOperations,
+} from '../authorization/rac_authorization';
 import { AuditLogger, EventOutcome } from '../../../security/server';
-import { alertAuditEvent, AlertAuditAction } from './audit_events';
+// TODO: later
+// import { alertAuditEvent, AlertAuditAction } from './audit_events';
 import { nodeBuilder } from '../../../../../src/plugins/data/common';
 
-export interface RegistryAlertTypeWithAuth extends RegistryAlertType {
-  authorizedConsumers: string[];
-}
-type NormalizedAlertAction = Omit<AlertAction, 'actionTypeId'>;
+// export interface RegistryAlertTypeWithAuth extends RegistryAlertType {
+//   authorizedConsumers: string[];
+// }
+// type NormalizedAlertAction = Omit<AlertAction, 'actionTypeId'>;
 export type CreateAPIKeyResult =
   | { apiKeysEnabled: false }
   | { apiKeysEnabled: true; result: SecurityPluginGrantAPIKeyResult };
@@ -57,10 +38,11 @@ export type InvalidateAPIKeyResult =
 
 export interface ConstructorOptions {
   logger: Logger;
-  authorization: AlertsAuthorization;
+  authorization: RacAuthorization;
   spaceId?: string;
   kibanaVersion: PluginInitializerContext['env']['packageInfo']['version'];
   auditLogger?: AuditLogger;
+  esClient: ElasticsearchClient;
 }
 
 export interface FindOptions extends IndexType {
@@ -94,37 +76,10 @@ export interface FindResult<Params extends AlertTypeParams> {
   data: Array<SanitizedAlert<Params>>;
 }
 
-export interface CreateOptions<Params extends AlertTypeParams> {
-  data: Omit<
-    Alert<Params>,
-    | 'id'
-    | 'createdBy'
-    | 'updatedBy'
-    | 'createdAt'
-    | 'updatedAt'
-    | 'apiKey'
-    | 'apiKeyOwner'
-    | 'muteAll'
-    | 'mutedInstanceIds'
-    | 'actions'
-    | 'executionStatus'
-  > & { actions: NormalizedAlertAction[] };
-  options?: {
-    id?: string;
-    migrationVersion?: Record<string, string>;
-  };
-}
-
 export interface UpdateOptions<Params extends AlertTypeParams> {
   id: string;
   data: {
-    name: string;
-    tags: string[];
-    schedule: IntervalSchedule;
-    actions: NormalizedAlertAction[];
-    params: Params;
-    throttle: string | null;
-    notifyWhen: AlertNotifyWhenType | null;
+    status: string;
   };
 }
 
@@ -136,133 +91,67 @@ export interface GetAlertInstanceSummaryParams {
 export class RacClient {
   private readonly logger: Logger;
   private readonly spaceId?: string;
-  private readonly authorization: AlertsAuthorization;
-  private readonly alertTypeRegistry: AlertTypeRegistry;
+  private readonly authorization: RacAuthorization;
   private readonly kibanaVersion!: PluginInitializerContext['env']['packageInfo']['version'];
   private readonly auditLogger?: AuditLogger;
+  private readonly esClient: ElasticsearchClient;
 
-  constructor({ authorization, logger, spaceId, kibanaVersion, auditLogger }: ConstructorOptions) {
+  constructor({
+    authorization,
+    logger,
+    spaceId,
+    kibanaVersion,
+    auditLogger,
+    esClient,
+  }: ConstructorOptions) {
     this.logger = logger;
     this.spaceId = spaceId;
     this.authorization = authorization;
     this.kibanaVersion = kibanaVersion;
     this.auditLogger = auditLogger;
+    this.esClient = esClient;
   }
 
-  public async create<Params extends AlertTypeParams = never>({
-    data,
-    options,
-  }: CreateOptions<Params>): Promise<SanitizedAlert<Params>> {
-    // const id = options?.id || SavedObjectsUtils.generateId();
-    // try {
-    //   await this.authorization.ensureAuthorized(
-    //     data.alertTypeId,
-    //     data.consumer,
-    //     WriteOperations.Create
-    //   );
-    // } catch (error) {
-    //   this.auditLogger?.log(
-    //     alertAuditEvent({
-    //       action: AlertAuditAction.CREATE,
-    //       savedObject: { type: 'alert', id },
-    //       error,
-    //     })
-    //   );
-    //   throw error;
-    // }
-    // this.alertTypeRegistry.ensureAlertTypeEnabled(data.alertTypeId);
-    // // Throws an error if alert type isn't registered
-    // const alertType = this.alertTypeRegistry.get(data.alertTypeId);
-    // const validatedAlertTypeParams = validateAlertTypeParams(
-    //   data.params,
-    //   alertType.validate?.params
-    // );
-    // const username = await this.getUserName();
-    // const createdAPIKey = data.enabled
-    //   ? await this.createAPIKey(this.generateAPIKeyName(alertType.id, data.name))
-    //   : null;
-    // this.validateActions(alertType, data.actions);
-    // const createTime = Date.now();
-    // const { references, actions } = await this.denormalizeActions(data.actions);
-    // const notifyWhen = getAlertNotifyWhenType(data.notifyWhen, data.throttle);
-    // const rawAlert: RawAlert = {
-    //   ...data,
-    //   ...this.apiKeyAsAlertAttributes(createdAPIKey, username),
-    //   actions,
-    //   createdBy: username,
-    //   updatedBy: username,
-    //   createdAt: new Date(createTime).toISOString(),
-    //   updatedAt: new Date(createTime).toISOString(),
-    //   params: validatedAlertTypeParams as RawAlert['params'],
-    //   muteAll: false,
-    //   mutedInstanceIds: [],
-    //   notifyWhen,
-    //   executionStatus: {
-    //     status: 'pending',
-    //     lastExecutionDate: new Date().toISOString(),
-    //     error: null,
-    //   },
-    // };
+  public async get<Params>({ id }: { id: string }): Promise<unknown> {
+    console.error('\n\n\n\n\nHELLO WORLD!!!!\n\n\n\n\n');
+    // TODO: type alert for the get method
+    const thing = await this.esClient.ping();
+    console.error('PING RESULT', JSON.stringify(thing, null, 2));
+    const result = await this.esClient.search({
+      index: '.siem*',
+      body: { query: { match_all: {} } },
+    });
+    console.error(`************\nRESULT ${JSON.stringify(result, null, 2)}\n************`);
+    // .get<RawAlert>('alert', id);
+    try {
+      await this.authorization.ensureAuthorized(
+        // TODO: add spaceid here.. I think
+        // result.body._source?.owner,
+        'securitySolution',
+        ReadOperations.Get
+      );
+    } catch (error) {
+      // this.auditLogger?.log(
+      //   alertAuditEvent({
+      //     action: AlertAuditAction.GET,
+      //     savedObject: { type: 'alert', id },
+      //     error,
+      //   })
+      // );
+      throw error;
+    }
     // this.auditLogger?.log(
     //   alertAuditEvent({
-    //     action: AlertAuditAction.CREATE,
-    //     outcome: EventOutcome.UNKNOWN,
+    //     action: AlertAuditAction.GET,
     //     savedObject: { type: 'alert', id },
     //   })
     // );
-    // let createdAlert: SavedObject<RawAlert>;
-    // try {
-    //   createdAlert = await this.unsecuredSavedObjectsClient.create(
-    //     'alert',
-    //     this.updateMeta(rawAlert),
-    //     {
-    //       ...options,
-    //       references,
-    //       id,
-    //     }
-    //   );
-    // } catch (e) {
-    //   // Avoid unused API key
-    //   markApiKeyForInvalidation(
-    //     { apiKey: rawAlert.apiKey },
-    //     this.logger,
-    //     this.unsecuredSavedObjectsClient
-    //   );
-    //   throw e;
-    // }
-    // if (data.enabled) {
-    //   let scheduledTask;
-    //   try {
-    //     scheduledTask = await this.scheduleAlert(
-    //       createdAlert.id,
-    //       rawAlert.alertTypeId,
-    //       data.schedule
-    //     );
-    //   } catch (e) {
-    //     // Cleanup data, something went wrong scheduling the task
-    //     try {
-    //       await this.unsecuredSavedObjectsClient.delete('alert', createdAlert.id);
-    //     } catch (err) {
-    //       // Skip the cleanup error and throw the task manager error to avoid confusion
-    //       this.logger.error(
-    //         `Failed to cleanup alert "${createdAlert.id}" after scheduling task failed. Error: ${err.message}`
-    //       );
-    //     }
-    //     throw e;
-    //   }
-    //   await this.unsecuredSavedObjectsClient.update<RawAlert>('alert', createdAlert.id, {
-    //     scheduledTaskId: scheduledTask.id,
-    //   });
-    //   createdAlert.attributes.scheduledTaskId = scheduledTask.id;
-    // }
-    // return this.getAlertFromRaw<Params>(createdAlert.id, createdAlert.attributes, references);
-  }
+    // TODO: strip out owner field maybe?
+    // this.getAlertFromRaw<Params>(result.id, result.attributes, result.references);
 
-  public async get<Params extends AlertTypeParams = never>({
-    id,
-  }: {
-    id: string;
-  }): Promise<SanitizedAlert<Params>> {
+    return result;
+
+    // return Promise.resolve({ id: 'hello world!!!' });
     // const result = await this.unsecuredSavedObjectsClient.get<RawAlert>('alert', id);
     // try {
     //   await this.authorization.ensureAuthorized(

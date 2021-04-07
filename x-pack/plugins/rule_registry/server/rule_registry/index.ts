@@ -43,12 +43,15 @@ export class RuleRegistry<TFieldMap extends DefaultFieldMap> {
     index: string;
   }>;
   private readonly children: Array<RuleRegistry<TFieldMap>> = [];
+  public readonly alertingPluginSetupContract: AlertingPluginSetupContract;
 
   constructor(private readonly options: RuleRegistryOptions<TFieldMap>) {
     const { logger, core } = options;
 
     const { wait, signal } = createReadySignal<boolean>();
-
+    // Exposing alerting client temporarily to allow consumers to register rules
+    // both against the registry and alerting client directly
+    this.alertingPluginSetupContract = options.alertingPluginSetupContract;
     this.esAdapter = new ClusterClientAdapter<{
       body: OutputOfFieldMap<TFieldMap>;
       index: string;

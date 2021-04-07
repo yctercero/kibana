@@ -7,11 +7,11 @@
 
 import { isString } from 'lodash';
 
-export class AlertsActions {
+export class RacActions {
   private readonly prefix: string;
 
-  constructor(versionNumber: string, spaceId: string) {
-    this.prefix = `alerts:${spaceId}:${versionNumber}`;
+  constructor(versionNumber: string) {
+    this.prefix = `rac:${versionNumber}`;
   }
 
   public get(owner: string, operation: string): string {

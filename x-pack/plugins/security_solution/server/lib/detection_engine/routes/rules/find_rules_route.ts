@@ -5,6 +5,7 @@
  * 2.0.
  */
 
+import { SetupPlugins } from '../../../../plugin';
 import { findRuleValidateTypeDependents } from '../../../../../common/detection_engine/schemas/request/find_rules_type_dependents';
 import {
   findRulesSchema,
@@ -19,7 +20,10 @@ import { ruleStatusSavedObjectsClientFactory } from '../../signals/rule_status_s
 import { buildRouteValidation } from '../../../../utils/build_validation/route_validation';
 import { transformFindAlerts } from './utils';
 
-export const findRulesRoute = (router: SecuritySolutionPluginRouter) => {
+export const findRulesRoute = (
+  router: SecuritySolutionPluginRouter,
+  rulesRegistry: SetupPlugins['ruleRegistry']
+) => {
   router.get(
     {
       path: `${DETECTION_ENGINE_RULES_URL}/_find`,
@@ -43,6 +47,13 @@ export const findRulesRoute = (router: SecuritySolutionPluginRouter) => {
         const { query } = request;
         const alertsClient = context.alerting?.getAlertsClient();
         const savedObjectsClient = context.core.savedObjects.client;
+        const racClient = await context.ruleRegistry?.getRacClient();
+        try {
+          const helloWorld = await racClient?.get({ id: 'hello world!!!' });
+          console.error('RESPONSE FROM RAC CLIENT', helloWorld);
+        } catch (exc) {
+          console.error('SOMETHING THREW AN ERROR', JSON.stringify(exc, null, 2));
+        }
 
         if (!alertsClient) {
           return siemResponse.error({ statusCode: 404 });

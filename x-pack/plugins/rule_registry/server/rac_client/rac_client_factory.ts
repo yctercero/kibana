@@ -5,14 +5,20 @@
  * 2.0.
  */
 
-import { KibanaRequest, Logger, PluginInitializerContext } from 'src/core/server';
+import {
+  ElasticsearchClient,
+  KibanaRequest,
+  Logger,
+  PluginInitializerContext,
+} from 'src/core/server';
 import { RacClient } from './rac_client';
 import { SecurityPluginSetup, SecurityPluginStart } from '../../../security/server';
 import { PluginStartContract as FeaturesPluginStart } from '../../../features/server';
 // TODO: implement this class and audit logger
-import { AlertsAuthorization } from './authorization/alerts_authorization';
-import { AlertsAuthorizationAuditLogger } from './authorization/audit_logger';
+import { RacAuthorization } from '../authorization/rac_authorization';
+// import { AlertsAuthorizationAuditLogger } from './authorization/audit_logger';
 import { Space } from '../../../spaces/server';
+import { RacAuthorizationAuditLogger } from '../authorization/audit_logger';
 
 export interface RacClientFactoryOpts {
   logger: Logger;
@@ -22,6 +28,7 @@ export interface RacClientFactoryOpts {
   getSpace: (request: KibanaRequest) => Promise<Space | undefined>;
   features: FeaturesPluginStart;
   kibanaVersion: PluginInitializerContext['env']['packageInfo']['version'];
+  esClient: ElasticsearchClient;
 }
 
 export class RacClientFactory {
@@ -33,6 +40,7 @@ export class RacClientFactory {
   private getSpace!: (request: KibanaRequest) => Promise<Space | undefined>;
   private features!: FeaturesPluginStart;
   private kibanaVersion!: PluginInitializerContext['env']['packageInfo']['version'];
+  private esClient!: ElasticsearchClient;
 
   public initialize(options: RacClientFactoryOpts) {
     /**
@@ -47,25 +55,28 @@ export class RacClientFactory {
     this.features = options.features;
     this.securityPluginSetup = options.securityPluginSetup;
     this.securityPluginStart = options.securityPluginStart;
+    this.esClient = options.esClient;
   }
 
-  public create(request: KibanaRequest): RacClient {
+  public async create(request: KibanaRequest): Promise<RacClient> {
     const { features, securityPluginSetup, securityPluginStart } = this;
     const spaceId = this.getSpaceId(request);
 
-    const authorization = new AlertsAuthorization({
+    const authorization = await RacAuthorization.create({
       authorization: securityPluginStart?.authz,
       request,
       getSpace: this.getSpace,
       features: features!,
+      isAuthEnabled: true,
+      auditLogger: new RacAuthorizationAuditLogger(securityPluginSetup?.audit.asScoped(request)),
     });
-
     return new RacClient({
       spaceId,
       kibanaVersion: this.kibanaVersion,
       logger: this.logger,
       authorization,
       auditLogger: securityPluginSetup?.audit.asScoped(request),
+      esClient: this.esClient,
     });
   }
 }
