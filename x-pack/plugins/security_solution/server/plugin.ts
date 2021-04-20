@@ -94,7 +94,7 @@ export interface SetupPlugins {
   features: FeaturesSetup;
   lists?: ListPluginSetup;
   ml?: MlSetup;
-  ruleRegistry: RacPluginSetupContract;
+  ruleRegistry: RuleRegistryPluginSetupContract;
   security?: SecuritySetup;
   spaces?: SpacesSetup;
   taskManager?: TaskManagerSetupContract;
@@ -107,7 +107,7 @@ export interface StartPlugins {
   data: DataPluginStart;
   fleet?: FleetStartContract;
   licensing: LicensingPluginStart;
-  ruleRegistry: RacPluginSetupContract;
+  ruleRegistry: RuleRegistryPluginSetupContract;
   taskManager?: TaskManagerStartContract;
   telemetry?: TelemetryPluginStart;
 }
