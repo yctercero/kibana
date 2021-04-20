@@ -9,38 +9,20 @@ import Boom from '@hapi/boom';
 import { KibanaRequest } from 'src/core/server';
 import { EventType, SecurityPluginStart } from '../../../security/server';
 import { PluginStartContract as FeaturesPluginStart } from '../../../features/server';
-import { Space } from '../../../spaces/server';
-import { KueryNode } from '../../../../../src/plugins/data/server';
 import { RacAuthorizationAuditLogger } from './audit_logger';
 import { getEnabledKibanaSpaceFeatures } from './utils';
+import { GetSpaceFn, ReadOperations, WriteOperations, ESFilter } from './types';
 
-export type GetSpaceFn = (request: KibanaRequest) => Promise<Space | undefined>;
-
-export enum ReadOperations {
-  Get = 'get',
-  Find = 'find',
-}
-
-export enum WriteOperations {
-  Update = 'update',
-}
-
-interface HasPrivileges {
-  read: boolean;
-  all: boolean;
-}
 export interface ConstructorOptions {
   request: KibanaRequest;
   authorization?: SecurityPluginStart['authz'];
   owners: Set<string>;
-  isAuthEnabled: boolean;
   auditLogger: RacAuthorizationAuditLogger;
 }
 
 export interface CreateOptions {
   request: KibanaRequest;
   authorization?: SecurityPluginStart['authz'];
-  isAuthEnabled: boolean;
   auditLogger: RacAuthorizationAuditLogger;
   getSpace: GetSpaceFn;
   features: FeaturesPluginStart;
@@ -51,13 +33,11 @@ export class RacAuthorization {
   private readonly authorization?: SecurityPluginStart['authz'];
   private readonly auditLogger: RacAuthorizationAuditLogger;
   private readonly featureOwners: Set<string>;
-  private readonly isAuthEnabled: boolean;
 
-  constructor({ request, authorization, owners, isAuthEnabled, auditLogger }: ConstructorOptions) {
+  constructor({ request, authorization, owners, auditLogger }: ConstructorOptions) {
     this.request = request;
     this.authorization = authorization;
     this.featureOwners = owners;
-    this.isAuthEnabled = isAuthEnabled;
     this.auditLogger = auditLogger;
   }
 
@@ -66,7 +46,6 @@ export class RacAuthorization {
     authorization,
     getSpace,
     features,
-    isAuthEnabled,
     auditLogger,
   }: CreateOptions): Promise<RacAuthorization> {
     const owners = await getEnabledKibanaSpaceFeatures({
@@ -75,9 +54,7 @@ export class RacAuthorization {
       features,
     });
 
-    console.error('ARE THERE ANY OWNERS???', owners);
-
-    return new RacAuthorization({ request, authorization, owners, isAuthEnabled, auditLogger });
+    return new RacAuthorization({ request, authorization, owners, auditLogger });
   }
 
   /**
@@ -92,15 +69,8 @@ export class RacAuthorization {
 
     // Does the owner the client sent up match with the KibanaFeatures structure
     const isAvailableOwner = this.featureOwners.has(owner);
-    console.error('PROVIDED OWNER', owner);
-    console.error('THIS.FEATUREOWNERS', this.featureOwners);
-    console.error('IS AVAILABLE OWNER', isAvailableOwner);
-    console.error('AUTHORIZATION???', authorization);
-    console.error('THIS.SHOULDCHECKAUTHZ', this.shouldCheckAuthorization());
-
     if (authorization != null && this.shouldCheckAuthorization()) {
       const requiredPrivileges = [authorization.actions.rac.get(owner, operation)];
-      console.error('REQUIRED PRIVILEGES', JSON.stringify(requiredPrivileges, null, 2));
       const checkPrivileges = authorization.checkPrivilegesDynamicallyWithRequest(this.request);
       const { hasAllRequested, username, privileges } = await checkPrivileges({
         kibana: requiredPrivileges,
@@ -162,73 +132,95 @@ export class RacAuthorization {
   }
 
   public async getFindAuthorizationFilter(): Promise<{
-    filter?: KueryNode;
-    ensureAlertTypeIsAuthorized: (alertTypeId: string, consumer: string) => void;
+    filter?: ESFilter;
+    ensureOwnerIsAuthorized: (owner: string) => void;
     logSuccessfulAuthorization: () => void;
   }> {
-    // if (this.authorization && this.shouldCheckAuthorization()) {
-    //   const { authorizedOwners } = await this.getAuthorizedOwners([ReadOperations.Find]);
-    //   if (!authorizedOwners.length) {
-    //     // TODO: Better error message, log error
-    //     throw Boom.forbidden('Not authorized for this owner');
-    //   }
-    //   return {
-    //     filter: getOwnersFilter(savedObjectType, authorizedOwners),
-    //     ensureAlertTypeIsAuthorized: (owner: string) => {
-    //       if (!authorizedOwners.includes(owner)) {
-    //         // TODO: log error
-    //         throw Boom.forbidden('Not authorized for this owner');
-    //       }
-    //     },
-    //   };
-    // }
+    const operations = [ReadOperations.Find];
+
+    if (this.authorization != null && this.shouldCheckAuthorization()) {
+      const { username, authorizedOwners } = await this.getAuthorizedOwners(operations);
+
+      if (!authorizedOwners.length) {
+        throw Boom.forbidden(
+          this.auditLogger.racAuthorizationFailure({
+            username: username ?? '',
+            owner: Array.from(this.featureOwners).join(','),
+            operation: ReadOperations.Find,
+            type: EventType.ACCESS,
+          })
+        );
+      }
+
+      return {
+        filter: getQueryFilter(authorizedOwners),
+        ensureOwnerIsAuthorized: (owner: string) => {
+          if (!authorizedOwners.includes(owner)) {
+            throw Boom.forbidden(
+              this.auditLogger.racAuthorizationFailure({
+                username: username ?? '',
+                owner,
+                operation: ReadOperations.Find,
+                type: EventType.ACCESS,
+              })
+            );
+          }
+        },
+        logSuccessfulAuthorization: () => {
+          this.auditLogger.racAuthorizationBulkSuccess({
+            username,
+            owners: Array.from(this.featureOwners),
+            operation: ReadOperations.Find,
+            type: EventType.ACCESS,
+          });
+        },
+      };
+    }
     return {
-      ensureAlertTypeIsAuthorized: (alertTypeId: string, consumer: string) => {},
+      ensureOwnerIsAuthorized: (owner: string) => {},
       logSuccessfulAuthorization: () => {},
     };
   }
 
-  // private async getAuthorizedOwners(
-  //   operations: Array<ReadOperations | WriteOperations>
-  // ): Promise<{
-  //   username?: string;
-  //   hasAllRequested: boolean;
-  //   authorizedOwners: string[];
-  // }> {
-  //   const { securityAuth, featureCaseOwners } = this;
-  //   if (securityAuth && this.shouldCheckAuthorization()) {
-  //     const checkPrivileges = securityAuth.checkPrivilegesDynamicallyWithRequest(this.request);
-  //     const requiredPrivileges = new Map<string, [string]>();
+  private async getAuthorizedOwners(
+    operations: Array<ReadOperations | WriteOperations>
+  ): Promise<{
+    username?: string;
+    hasAllRequested: boolean;
+    authorizedOwners: string[];
+  }> {
+    const { featureOwners } = this;
+    if (this.authorization != null && this.shouldCheckAuthorization()) {
+      const checkPrivileges = this.authorization.checkPrivilegesDynamicallyWithRequest(
+        this.request
+      );
+      const requiredPrivileges = getRequiredPrivileges(
+        featureOwners,
+        operations,
+        this.authorization.actions
+      );
 
-  //     for (const owner of featureCaseOwners) {
-  //       for (const operation of operations) {
-  //         requiredPrivileges.set(securityAuth.actions.cases.get(owner, operation), [owner]);
-  //       }
-  //     }
+      const { hasAllRequested, username, privileges } = await checkPrivileges({
+        kibana: [...requiredPrivileges.keys()],
+      });
 
-  //     const { hasAllRequested, username, privileges } = await checkPrivileges({
-  //       kibana: [...requiredPrivileges.keys()],
-  //     });
+      const authorizedOwners = getAuthorizedOwners(
+        hasAllRequested,
+        featureOwners,
+        privileges,
+        requiredPrivileges
+      );
 
-  //     return {
-  //       hasAllRequested,
-  //       username,
-  //       authorizedOwners: hasAllRequested
-  //         ? Array.from(featureCaseOwners)
-  //         : privileges.kibana.reduce<string[]>((authorizedOwners, { authorized, privilege }) => {
-  //             if (authorized && requiredPrivileges.has(privilege)) {
-  //               const [owner] = requiredPrivileges.get(privilege)!;
-  //               authorizedOwners.push(owner);
-  //             }
-
-  //             return authorizedOwners;
-  //           }, []),
-  //     };
-  //   } else {
-  //     return {
-  //       hasAllRequested: true,
-  //       authorizedOwners: Array.from(featureCaseOwners),
-  //     };
-  //   }
-  // }
+      return {
+        hasAllRequested,
+        username,
+        authorizedOwners,
+      };
+    } else {
+      return {
+        hasAllRequested: true,
+        authorizedOwners: Array.from(featureOwners),
+      };
+    }
+  }
 }

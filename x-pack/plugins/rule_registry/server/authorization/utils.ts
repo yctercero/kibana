@@ -4,16 +4,26 @@
  * 2.0; you may not use this file except in compliance with the Elastic License
  * 2.0.
  */
+import { remove } from 'lodash';
 
-import { remove, uniq } from 'lodash';
-
-import { KibanaRequest } from 'src/core/server';
-
-import { nodeBuilder } from '../../../../../src/plugins/data/common';
-import { KueryNode } from '../../../../../src/plugins/data/server';
+import { KibanaRequest } from '../../../../../src/core/server';
+import { esQuery } from '../../../../../src/plugins/data/server';
+import { EsQueryConfig, Query } from '../../../../../src/plugins/data/common';
+// eslint-disable-next-line @kbn/eslint/no-restricted-paths
+import { CheckPrivilegesResponse } from '../../../security/server/authorization/types';
+// eslint-disable-next-line @kbn/eslint/no-restricted-paths
+import { Actions } from '../../../security/server/authorization';
 import { PluginStartContract as FeaturesPluginStart } from '../../../features/server';
-import { GetSpaceFn } from './rac_authorization';
+import { ESFilter, GetSpaceFn, ReadOperations, WriteOperations } from './types';
 
+/**
+ * Returns a user's enabled kibana features per the space the
+ * request cam from
+ *
+ * @param getSpace function that extracts space from request
+ * @param request
+ * @param features helper to get all possible kibana features
+ */
 export const getEnabledKibanaSpaceFeatures = async ({
   getSpace,
   request,
@@ -24,55 +34,100 @@ export const getEnabledKibanaSpaceFeatures = async ({
   features: FeaturesPluginStart;
 }): Promise<Set<string>> => {
   try {
-    console.error('GETSPACE', getSpace);
     const disabledUserSpaceFeatures = new Set((await getSpace(request))?.disabledFeatures ?? []);
-    console.error('DISABLED USER SPACE FEATURES', disabledUserSpaceFeatures);
     // Filter through all user Kibana features to find corresponding enabled
     // RAC feature owners like 'security-solution' or 'observability'
-    const owners = await new Set(
+    const owners: Set<string> = await new Set(
       features
         .getKibanaFeatures()
         // get all the rac 'owners' that aren't disabled
         .filter(({ id }) => !disabledUserSpaceFeatures.has(id))
-        .flatMap((feature) => {
-          console.error('FEATURE.RAC', feature.rac);
-          return feature.rac ?? [];
-        })
+        .flatMap((feature) => feature.rac ?? [])
     );
-    console.error('INTERNAL OWNERS', owners);
     return owners;
   } catch (error) {
-    console.error('GETENABLEDKIBANASPACEFEAUTRES THREW AN ERROR');
     return new Set<string>();
   }
 };
 
-export const getOwnersFilter = (owners: string[]): KueryNode => {
-  // const kqlQuery: Query = {
-  //     language: 'kuery',
-  //     query: filter,
-  //   };
-  //   const config: EsQueryConfig = {
-  //     allowLeadingWildcards: true,
-  //     dateFormatTZ: 'Zulu',
-  //     ignoreFilterIfFieldNotInIndex: false,
-  //     queryStringOptions: { analyze_wildcard: true },
-  //   };
-  //   return esQuery.buildEsQuery(undefined, kqlQuery, [], config);
-  //   return nodeBuilder.or(
-  //     owners.reduce<KueryNode[]>((query, owner) => {
-  //       ensureFieldIsSafeForQuery('owner', owner);
-  //       query.push(nodeBuilder.is(`${savedObjectType}.attributes.owner`, owner));
-  //       return query;
-  //     }, [])
-  //   );
+/**
+ * Returns map of URI to owner
+ * ex: Map {"rac:1.0.0:securitySolution/find" => ["securitySolution"]}
+ *
+ * @param owners set of owners user has access to
+ * @param operations array of operations user is attempting
+ * @param actions security plugin helper that builds URIs
+ */
+export const getRequiredPrivileges = (
+  owners: Set<string>,
+  operations: Array<ReadOperations | WriteOperations>,
+  actions: Actions
+): Map<string, [string]> => {
+  const requiredPrivileges = new Map<string, [string]>();
+
+  for (const owner of owners) {
+    for (const operation of operations) {
+      const actionUriFromSecurityPlugin = actions.rac.get(owner, operation);
+      requiredPrivileges.set(actionUriFromSecurityPlugin, [owner]);
+    }
+  }
+
+  return requiredPrivileges;
 };
 
-export const combineFilterWithAuthorizationFilter = (
-  filter: KueryNode,
-  authorizationFilter: KueryNode
-) => {
-  return nodeBuilder.and([filter, authorizationFilter]);
+/**
+ * Returns user's authorized owners after comparing what is being
+ * requested to what privileges we have marked down
+ * ex: ["securitySolution"]
+ *
+ * @param hasAllRequested boolean describing if user has all
+ * access to all requested owners/operations
+ * @param owners set of owners user has access to
+ * @param privileges privileges structure fetched from features plugin
+ * @param requiredPrivileges map of possible URI's to owners user is
+ * attempting to access
+ */
+export const getAuthorizedOwners = (
+  hasAllRequested: boolean,
+  owners: Set<string>,
+  privileges: CheckPrivilegesResponse['privileges'],
+  requiredPrivileges: Map<string, [string]>
+): string[] => {
+  return hasAllRequested
+    ? Array.from(owners)
+    : privileges.kibana.reduce<string[]>((authorizedOwners, { authorized, privilege }) => {
+        if (authorized && requiredPrivileges.has(privilege)) {
+          const [owner] = requiredPrivileges.get(privilege)!;
+          return [...authorizedOwners, owner];
+        }
+
+        return authorizedOwners;
+      }, []);
+};
+
+export const getQueryFilter = (owners: string[]): ESFilter => {
+  const ownersFilter = getOwnersFilter(owners);
+  const kqlQuery: Query = {
+    language: 'kuery',
+    query: `(${ownersFilter})`,
+  };
+  const config: EsQueryConfig = {
+    allowLeadingWildcards: true,
+    dateFormatTZ: 'Zulu',
+    ignoreFilterIfFieldNotInIndex: false,
+    queryStringOptions: { analyze_wildcard: true },
+  };
+
+  return esQuery.buildEsQuery(undefined, kqlQuery, [], config);
+};
+
+export const getOwnersFilter = (owners: string[]): string => {
+  return owners
+    .reduce<string[]>((query, owner) => {
+      ensureFieldIsSafeForQuery('owner', owner);
+      return [...query, `owner: ${owner}`];
+    }, [])
+    .join(' or ');
 };
 
 export const ensureFieldIsSafeForQuery = (field: string, value: string): boolean => {
@@ -90,6 +145,3 @@ export const ensureFieldIsSafeForQuery = (field: string, value: string): boolean
   }
   return true;
 };
-
-export const includeFieldsRequiredForAuthentication = (fields: string[]): string[] =>
-  uniq([...fields, 'owner']);
