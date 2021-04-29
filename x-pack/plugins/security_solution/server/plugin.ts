@@ -245,9 +245,9 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
     router.get({ path: '/security-myfakepath', validate: false }, async (context, req, res) => {
       try {
         const racClient = await context.ruleRegistry?.getRacClient();
-        const thing = await racClient?.get({ id: 'hello world', owner: SERVER_APP_ID });
-        console.error('hits?', JSON.stringify(thing.body.hits.hits, null, 2));
-        return res.ok({ body: { success: true, thing: thing.body.hits.hits } });
+        const thing = await racClient?.get({ id: 'hello world', owner: 'securitySolution' });
+        console.error('THE THING EXISTS??', JSON.stringify(thing.body, null, 2));
+        return res.ok({ body: { success: true } });
       } catch (err) {
         console.error('monitoring route threw an error');
         console.error(err);
@@ -267,12 +267,12 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
       order: 1100,
       app: [...securitySubPlugins, 'kibana'],
       category: DEFAULT_APP_CATEGORIES.security,
-      rac: [SERVER_APP_ID],
+      rac: ['securitySolution'],
       privileges: {
         all: {
           app: [...securitySubPlugins, 'kibana'],
           rac: {
-            all: [SERVER_APP_ID],
+            all: ['securitySolution'],
           },
           savedObject: {
             all: [
@@ -306,11 +306,11 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
         insightsAndAlerting: ['triggersActions'],
       },
       alerting: ruleTypes,
-      rac: [SERVER_APP_ID],
+      rac: ['securitySolution'],
       privileges: {
         all: {
           rac: {
-            all: [SERVER_APP_ID],
+            all: ['securitySolution'],
           },
           app: [...securitySubPlugins, 'kibana'],
           catalogue: ['securitySolution'],
@@ -353,7 +353,7 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
 <<<<<<< HEAD
 =======
           rac: {
-            all: [SERVER_APP_ID],
+            all: ['securitySolution'],
           },
 >>>>>>> adds an 'owner' field to the siem-signals mapping, working authz get for security solution, need to work through rule registry changes (#8)
           management: {
