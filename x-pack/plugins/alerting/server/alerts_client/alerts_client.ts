@@ -46,7 +46,12 @@ import { EncryptedSavedObjectsClient } from '../../../encrypted_saved_objects/se
 import { TaskManagerStartContract } from '../../../task_manager/server';
 import { taskInstanceToAlertTaskInstance } from '../task_runner/alert_task_instance';
 import { RegistryAlertType, UntypedNormalizedAlertType } from '../alert_type_registry';
-import { AlertsAuthorization, WriteOperations, ReadOperations } from '../authorization';
+import {
+  AlertsAuthorization,
+  WriteOperations,
+  ReadOperations,
+  AlertingAuthorizationTypes,
+} from '../authorization';
 import { IEventLogClient } from '../../../../plugins/event_log/server';
 import { parseIsoOrRelativeDate } from '../lib/iso_or_relative_date';
 import { alertInstanceSummaryFromEventLog } from '../lib/alert_instance_summary_from_event_log';
@@ -234,11 +239,11 @@ export class AlertsClient {
     const id = options?.id || SavedObjectsUtils.generateId();
 
     try {
-      await this.authorization.ensureAuthorized(
-        data.alertTypeId,
-        data.consumer,
-        WriteOperations.Create
-      );
+      await this.authorization.ensureAuthorized({
+        ruleTypeId: data.alertTypeId,
+        consumer: data.consumer,
+        operation: WriteOperations.Create,
+      });
     } catch (error) {
       this.auditLogger?.log(
         alertAuditEvent({
@@ -355,11 +360,11 @@ export class AlertsClient {
   }): Promise<SanitizedAlert<Params>> {
     const result = await this.unsecuredSavedObjectsClient.get<RawAlert>('alert', id);
     try {
-      await this.authorization.ensureAuthorized(
-        result.attributes.alertTypeId,
-        result.attributes.consumer,
-        ReadOperations.Get
-      );
+      await this.authorization.ensureAuthorized({
+        ruleTypeId: result.attributes.alertTypeId,
+        consumer: result.attributes.consumer,
+        operation: ReadOperations.Get,
+      });
     } catch (error) {
       this.auditLogger?.log(
         alertAuditEvent({
@@ -381,11 +386,11 @@ export class AlertsClient {
 
   public async getAlertState({ id }: { id: string }): Promise<AlertTaskState | void> {
     const alert = await this.get({ id });
-    await this.authorization.ensureAuthorized(
-      alert.alertTypeId,
-      alert.consumer,
-      ReadOperations.GetAlertState
-    );
+    await this.authorization.ensureAuthorized({
+      ruleTypeId: alert.alertTypeId,
+      consumer: alert.consumer,
+      operation: ReadOperations.GetAlertState,
+    });
     if (alert.scheduledTaskId) {
       const { state } = taskInstanceToAlertTaskInstance(
         await this.taskManager.get(alert.scheduledTaskId),
@@ -401,11 +406,11 @@ export class AlertsClient {
   }: GetAlertInstanceSummaryParams): Promise<AlertInstanceSummary> {
     this.logger.debug(`getAlertInstanceSummary(): getting alert ${id}`);
     const alert = await this.get({ id });
-    await this.authorization.ensureAuthorized(
-      alert.alertTypeId,
-      alert.consumer,
-      ReadOperations.GetAlertInstanceSummary
-    );
+    await this.authorization.ensureAuthorized({
+      ruleTypeId: alert.alertTypeId,
+      consumer: alert.consumer,
+      operation: ReadOperations.GetAlertInstanceSummary,
+    });
 
     // default duration of instance summary is 60 * alert interval
     const dateNow = new Date();
@@ -581,11 +586,11 @@ export class AlertsClient {
     }
 
     try {
-      await this.authorization.ensureAuthorized(
-        attributes.alertTypeId,
-        attributes.consumer,
-        WriteOperations.Delete
-      );
+      await this.authorization.ensureAuthorized({
+        ruleTypeId: attributes.alertTypeId,
+        consumer: attributes.consumer,
+        operation: WriteOperations.Delete,
+      });
     } catch (error) {
       this.auditLogger?.log(
         alertAuditEvent({
@@ -654,11 +659,11 @@ export class AlertsClient {
     }
 
     try {
-      await this.authorization.ensureAuthorized(
-        alertSavedObject.attributes.alertTypeId,
-        alertSavedObject.attributes.consumer,
-        WriteOperations.Update
-      );
+      await this.authorization.ensureAuthorized({
+        ruleTypeId: alertSavedObject.attributes.alertTypeId,
+        consumer: alertSavedObject.attributes.consumer,
+        operation: WriteOperations.Update,
+      });
     } catch (error) {
       this.auditLogger?.log(
         alertAuditEvent({
@@ -826,11 +831,11 @@ export class AlertsClient {
     }
 
     try {
-      await this.authorization.ensureAuthorized(
-        attributes.alertTypeId,
-        attributes.consumer,
-        WriteOperations.UpdateApiKey
-      );
+      await this.authorization.ensureAuthorized({
+        ruleTypeId: attributes.alertTypeId,
+        consumer: attributes.consumer,
+        operation: WriteOperations.UpdateApiKey,
+      });
       if (attributes.actions.length) {
         await this.actionsAuthorization.ensureAuthorized('execute');
       }
@@ -930,11 +935,11 @@ export class AlertsClient {
     }
 
     try {
-      await this.authorization.ensureAuthorized(
-        attributes.alertTypeId,
-        attributes.consumer,
-        WriteOperations.Enable
-      );
+      await this.authorization.ensureAuthorized({
+        ruleTypeId: attributes.alertTypeId,
+        consumer: attributes.consumer,
+        operation: WriteOperations.Enable,
+      });
 
       if (attributes.actions.length) {
         await this.actionsAuthorization.ensureAuthorized('execute');
@@ -1047,11 +1052,11 @@ export class AlertsClient {
     }
 
     try {
-      await this.authorization.ensureAuthorized(
-        attributes.alertTypeId,
-        attributes.consumer,
-        WriteOperations.Disable
-      );
+      await this.authorization.ensureAuthorized({
+        ruleTypeId: attributes.alertTypeId,
+        consumer: attributes.consumer,
+        operation: WriteOperations.Disable,
+      });
     } catch (error) {
       this.auditLogger?.log(
         alertAuditEvent({
@@ -1119,11 +1124,11 @@ export class AlertsClient {
     );
 
     try {
-      await this.authorization.ensureAuthorized(
-        attributes.alertTypeId,
-        attributes.consumer,
-        WriteOperations.MuteAll
-      );
+      await this.authorization.ensureAuthorized({
+        ruleTypeId: attributes.alertTypeId,
+        consumer: attributes.consumer,
+        operation: WriteOperations.MuteAll,
+      });
 
       if (attributes.actions.length) {
         await this.actionsAuthorization.ensureAuthorized('execute');
@@ -1180,11 +1185,11 @@ export class AlertsClient {
     );
 
     try {
-      await this.authorization.ensureAuthorized(
-        attributes.alertTypeId,
-        attributes.consumer,
-        WriteOperations.UnmuteAll
-      );
+      await this.authorization.ensureAuthorized({
+        ruleTypeId: attributes.alertTypeId,
+        consumer: attributes.consumer,
+        operation: WriteOperations.UnmuteAll,
+      });
 
       if (attributes.actions.length) {
         await this.actionsAuthorization.ensureAuthorized('execute');
@@ -1241,11 +1246,11 @@ export class AlertsClient {
     );
 
     try {
-      await this.authorization.ensureAuthorized(
-        attributes.alertTypeId,
-        attributes.consumer,
-        WriteOperations.MuteInstance
-      );
+      await this.authorization.ensureAuthorized({
+        ruleTypeId: attributes.alertTypeId,
+        consumer: attributes.consumer,
+        operation: WriteOperations.MuteInstance,
+      });
 
       if (attributes.actions.length) {
         await this.actionsAuthorization.ensureAuthorized('execute');
@@ -1308,11 +1313,11 @@ export class AlertsClient {
     );
 
     try {
-      await this.authorization.ensureAuthorized(
-        attributes.alertTypeId,
-        attributes.consumer,
-        WriteOperations.UnmuteInstance
-      );
+      await this.authorization.ensureAuthorized({
+        ruleTypeId: attributes.alertTypeId,
+        consumer: attributes.consumer,
+        operation: WriteOperations.UnmuteInstance,
+      });
       if (attributes.actions.length) {
         await this.actionsAuthorization.ensureAuthorized('execute');
       }
