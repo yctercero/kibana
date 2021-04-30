@@ -139,7 +139,7 @@ export class RacClient {
       try {
         const result = await this.esClient.get({
           index: '.siem-signals-devin-hurley-default',
-          id: id,
+          id,
         });
         console.error(`************\nRESULT ${JSON.stringify(result, null, 2)}\n************`);
         return result;
@@ -200,7 +200,11 @@ export class RacClient {
     // return this.getAlertFromRaw<Params>(result.id, result.attributes, result.references);
   }
 
-  public async find({ owner }: { owner: typeof SERVER_APP_ID }): Promise<unknown> {
+  public async find({
+    owner,
+  }: {
+    owner: typeof SERVER_APP_ID | 'observability';
+  }): Promise<unknown> {
     try {
       await this.authorization.ensureAuthorized(
         // TODO: add spaceid here.. I think
