@@ -245,13 +245,34 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
     router.get({ path: '/security-myfakepath', validate: false }, async (context, req, res) => {
       try {
         const racClient = await context.ruleRegistry?.getRacClient();
-        const thing = await racClient?.get({ id: 'hello world', owner: 'securitySolution' });
-        console.error('THE THING EXISTS??', JSON.stringify(thing.body, null, 2));
-        return res.ok({ body: { success: true } });
+        const thing = await racClient?.find({ owner: SERVER_APP_ID });
+        console.error('hits?', JSON.stringify(thing.body.hits.hits, null, 2));
+        return res.ok({ body: { success: true, alerts: thing.body.hits.hits } });
       } catch (err) {
         console.error('monitoring route threw an error');
-        console.error(err);
-        return res.notFound({ body: { message: err.message } });
+        console.error('ERROR JSON', JSON.stringify(err, null, 2));
+        const statusCode = err.output.statusCode;
+        console.error('ERROR STATUSCODE?', statusCode);
+        // { message: err.message },
+
+        // const contentType = {
+        //   'Content-Type': 'application/json',
+        // };
+        // const defaultedHeaders = {
+        //   ...contentType,
+        // };
+
+        // return res.custom({
+        //   statusCode,
+        //   headers: defaultedHeaders,
+        //   body: Buffer.from(
+        //     JSON.stringify({
+        //       message: 'hello world', //err.message,
+        //       status_code: statusCode,
+        //     })
+        //   ),
+        // });
+        return res.unauthorized({ body: { message: err.message } });
       }
     });
 
@@ -267,12 +288,12 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
       order: 1100,
       app: [...securitySubPlugins, 'kibana'],
       category: DEFAULT_APP_CATEGORIES.security,
-      rac: ['securitySolution'],
+      rac: [SERVER_APP_ID],
       privileges: {
         all: {
           app: [...securitySubPlugins, 'kibana'],
           rac: {
-            all: ['securitySolution'],
+            all: [SERVER_APP_ID],
           },
           savedObject: {
             all: [
@@ -306,11 +327,11 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
         insightsAndAlerting: ['triggersActions'],
       },
       alerting: ruleTypes,
-      rac: ['securitySolution'],
+      rac: [SERVER_APP_ID],
       privileges: {
         all: {
           rac: {
-            all: ['securitySolution'],
+            all: [SERVER_APP_ID],
           },
           app: [...securitySubPlugins, 'kibana'],
           catalogue: ['securitySolution'],
@@ -353,7 +374,7 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
 <<<<<<< HEAD
 =======
           rac: {
-            all: ['securitySolution'],
+            all: [SERVER_APP_ID],
           },
 >>>>>>> adds an 'owner' field to the siem-signals mapping, working authz get for security solution, need to work through rule registry changes (#8)
           management: {
