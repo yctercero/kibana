@@ -222,8 +222,29 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
         return res.ok({ body: { success: true, alerts: thing.body.hits.hits } });
       } catch (err) {
         console.error('monitoring route threw an error');
-        console.error(err);
-        return res.notFound({ body: { message: err.message } });
+        console.error('ERROR JSON', JSON.stringify(err, null, 2));
+        const statusCode = err.output.statusCode;
+        console.error('ERROR STATUSCODE?', statusCode);
+        // { message: err.message },
+
+        // const contentType = {
+        //   'Content-Type': 'application/json',
+        // };
+        // const defaultedHeaders = {
+        //   ...contentType,
+        // };
+
+        // return res.custom({
+        //   statusCode,
+        //   headers: defaultedHeaders,
+        //   body: Buffer.from(
+        //     JSON.stringify({
+        //       message: 'hello world', //err.message,
+        //       status_code: statusCode,
+        //     })
+        //   ),
+        // });
+        return res.unauthorized({ body: { message: err.message } });
       }
     });
 

@@ -185,7 +185,8 @@ export class MonitoringPlugin
         } catch (err) {
           console.error('monitoring route threw an error');
           console.error(err);
-          return res.notFound({ body: { message: err.message } });
+          return res.unauthorized({ body: { message: err.message } });
+          // return res.customError({ statusCode: err.statusCode, body: { message: err.message } });
         }
       });
     }
