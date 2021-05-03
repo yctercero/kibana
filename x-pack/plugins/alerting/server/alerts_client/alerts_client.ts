@@ -491,7 +491,11 @@ export class AlertsClient {
 
     const authorizedData = data.map(({ id, attributes, references }) => {
       try {
-        ensureRuleTypeIsAuthorized(attributes.alertTypeId, attributes.consumer);
+        ensureRuleTypeIsAuthorized(
+          attributes.alertTypeId,
+          attributes.consumer,
+          AlertingAuthorizationTypes.Rule
+        );
       } catch (error) {
         this.auditLogger?.log(
           alertAuditEvent({
