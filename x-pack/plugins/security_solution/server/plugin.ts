@@ -27,8 +27,6 @@ import {
   PluginSetupContract as AlertingSetup,
   PluginStartContract as AlertPluginStartContract,
 } from '../../alerting/server';
-import { ecsFieldMap, pickWithPatterns } from '../../rule_registry/common';
-import { RuleRegistryPluginSetupContract } from '../../rule_registry/server';
 import { SecurityPluginSetup as SecuritySetup } from '../../security/server';
 import { PluginSetupContract as FeaturesSetup } from '../../features/server';
 import { MlPluginSetup as MlSetup } from '../../ml/server';
@@ -38,9 +36,7 @@ import { SpacesPluginSetup as SpacesSetup } from '../../spaces/server';
 import { ILicense, LicensingPluginStart } from '../../licensing/server';
 import { FleetStartContract } from '../../fleet/server';
 import { TaskManagerSetupContract, TaskManagerStartContract } from '../../task_manager/server';
-import { initServer } from './init_server';
 import { compose } from './lib/compose/kibana';
-import { referenceRuleAlertType } from './lib/detection_engine/reference_rules/reference_rule';
 import { initRoutes } from './routes';
 import { isAlertExecutor } from './lib/detection_engine/signals/types';
 import { signalRulesAlertType } from './lib/detection_engine/signals/signal_rule_alert_type';
@@ -57,12 +53,12 @@ import {
   SecurityPageName,
   SIGNALS_ID,
   NOTIFICATIONS_ID,
-  REFERENCE_RULE_ALERT_TYPE_ID,
 } from '../common/constants';
 import { registerEndpointRoutes } from './endpoint/routes/metadata';
 import { registerLimitedConcurrencyRoutes } from './endpoint/routes/limited_concurrency';
 import { registerResolverRoutes } from './endpoint/routes/resolver';
 import { registerPolicyRoutes } from './endpoint/routes/policy';
+import { registerHostIsolationRoutes } from './endpoint/routes/actions';
 import { EndpointArtifactClient, ManifestManager } from './endpoint/services';
 import { EndpointAppContextService } from './endpoint/endpoint_app_context_services';
 import { EndpointAppContext } from './endpoint/types';
@@ -83,8 +79,6 @@ import { securitySolutionTimelineEqlSearchStrategyProvider } from './search_stra
 import { parseExperimentalConfigValue } from '../common/experimental_features';
 import { migrateArtifactsToFleet } from './endpoint/lib/artifacts/migrate_artifacts_to_fleet';
 
-export type SecurityRuleRegistry = SetupPlugins['ruleRegistry'];
-
 export interface SetupPlugins {
   alerting: AlertingSetup;
   data: DataPluginSetup;
@@ -92,7 +86,6 @@ export interface SetupPlugins {
   features: FeaturesSetup;
   lists?: ListPluginSetup;
   ml?: MlSetup;
-  ruleRegistry: RuleRegistryPluginSetupContract;
   security?: SecuritySetup;
   spaces?: SpacesSetup;
   taskManager?: TaskManagerSetupContract;
@@ -105,7 +98,6 @@ export interface StartPlugins {
   data: DataPluginStart;
   fleet?: FleetStartContract;
   licensing: LicensingPluginStart;
-  ruleRegistry: RuleRegistryPluginSetupContract;
   taskManager?: TaskManagerStartContract;
   telemetry?: TelemetryPluginStart;
 }
@@ -170,19 +162,21 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
     const config = this.config;
     const globalConfig = this.context.config.legacy.get();
 
+    const experimentalFeatures = parseExperimentalConfigValue(config.enableExperimental);
     initSavedObjects(core.savedObjects);
-    initUiSettings(core.uiSettings);
+    initUiSettings(core.uiSettings, experimentalFeatures);
     const endpointContext: EndpointAppContext = {
       logFactory: this.context.logger,
       service: this.endpointAppContextService,
       config: (): Promise<ConfigType> => Promise.resolve(config),
-      experimentalFeatures: parseExperimentalConfigValue(config.enableExperimental),
+      experimentalFeatures,
     };
 
     initUsageCollectors({
       core,
       endpointAppContext: endpointContext,
       kibanaIndex: globalConfig.kibana.index,
+      signalsIndex: config.signalsIndex,
       ml: plugins.ml,
       usageCollection: plugins.usageCollection,
     });
@@ -206,58 +200,14 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
       config,
       plugins.encryptedSavedObjects?.canEncrypt === true,
       plugins.security,
-      plugins.ml,
-      plugins.ruleRegistry
+      plugins.ml
     );
     registerEndpointRoutes(router, endpointContext);
     registerLimitedConcurrencyRoutes(core);
     registerResolverRoutes(router);
     registerPolicyRoutes(router, endpointContext);
     registerTrustedAppsRoutes(router, endpointContext);
-    router.get({ path: '/security-myfakepath', validate: false }, async (context, req, res) => {
-      try {
-        const racClient = await context.ruleRegistry?.getRacClient();
-        const thing = await racClient?.get({ id: 'hello world', owner: 'securitySolution' });
-        return res.ok({ body: { success: true } });
-      } catch (err) {
-        return res.notFound({ body: { message: err.message } });
-      }
-    });
-
-    const referenceRuleTypes = [REFERENCE_RULE_ALERT_TYPE_ID];
-    const ruleTypes = [SIGNALS_ID, NOTIFICATIONS_ID, ...referenceRuleTypes];
-
-    plugins.features.registerKibanaFeature({
-      id: 'rac',
-      name: 'RAC',
-      order: 1100,
-      app: [...securitySubPlugins, 'kibana'],
-      category: DEFAULT_APP_CATEGORIES.security,
-      rac: ['securitySolution'],
-      privileges: {
-        all: {
-          app: [...securitySubPlugins, 'kibana'],
-          rac: {
-            all: ['securitySolution'],
-          },
-          savedObject: {
-            all: [
-              'alert',
-              ...caseSavedObjects,
-              'exception-list',
-              'exception-list-agnostic',
-              ...savedObjectTypes,
-            ],
-            read: ['config'],
-          },
-          ui: ['show', 'crud'],
-        },
-        read: {
-          savedObject: { all: [], read: [] },
-          ui: ['show'],
-        },
-      },
-    });
+    registerHostIsolationRoutes(router, endpointContext);
 
     plugins.features.registerKibanaFeature({
       id: SERVER_APP_ID,
@@ -271,13 +221,9 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
       management: {
         insightsAndAlerting: ['triggersActions'],
       },
-      alerting: ruleTypes,
-      rac: ['securitySolution'],
+      alerting: [SIGNALS_ID, NOTIFICATIONS_ID],
       privileges: {
         all: {
-          rac: {
-            all: ['securitySolution'],
-          },
           app: [...securitySubPlugins, 'kibana'],
           catalogue: ['securitySolution'],
           api: ['securitySolution', 'lists-all', 'lists-read'],
@@ -292,7 +238,7 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
             read: ['config'],
           },
           alerting: {
-            all: ruleTypes,
+            all: [SIGNALS_ID, NOTIFICATIONS_ID],
           },
           management: {
             insightsAndAlerting: ['triggersActions'],
@@ -314,10 +260,7 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
             ],
           },
           alerting: {
-            read: ruleTypes,
-          },
-          rac: {
-            all: ['securitySolution'],
+            read: [SIGNALS_ID, NOTIFICATIONS_ID],
           },
           management: {
             insightsAndAlerting: ['triggersActions'],
@@ -327,21 +270,7 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
       },
     });
 
-    // Create rule-registry scoped to security-solution (APP_ID uses caps, not supported)
-    this.setupPlugins.ruleRegistry = plugins.ruleRegistry.create({
-      namespace: 'security-solution',
-      fieldMap: {
-        ...pickWithPatterns(ecsFieldMap, 'host.name', 'service.name'),
-      },
-    });
-    // Temporarily exposing alerting client from rule-registry to allow registering of legacy rules
-    this.setupPlugins.alerting = this.setupPlugins.ruleRegistry.alertingPluginSetupContract;
-
-    // Register reference rule types via rule-registry
-    this.setupPlugins.ruleRegistry.registerType(referenceRuleAlertType);
-
-    // Continue to register legacy rules against alerting client exposed through rule-registry
-    if (this.setupPlugins.alerting != null) {
+    if (plugins.alerting != null) {
       const signalRuleType = signalRulesAlertType({
         logger: this.logger,
         eventsTelemetry: this.telemetryEventsSender,
@@ -354,11 +283,11 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
       });
 
       if (isAlertExecutor(signalRuleType)) {
-        this.setupPlugins.alerting.registerType(signalRuleType);
+        plugins.alerting.registerType(signalRuleType);
       }
 
       if (isNotificationAlertExecutor(ruleNotificationType)) {
-        this.setupPlugins.alerting.registerType(ruleNotificationType);
+        plugins.alerting.registerType(ruleNotificationType);
       }
     }
 
@@ -374,8 +303,7 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
       });
     }
 
-    const libs = compose(core, plugins, endpointContext);
-    initServer(libs);
+    compose(core, plugins, endpointContext);
 
     core.getStartServices().then(([_, depsStart]) => {
       const securitySolutionSearchStrategy = securitySolutionSearchStrategyProvider(depsStart.data);
@@ -397,8 +325,7 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
       );
       plugins.data.search.registerSearchStrategy(
         'securitySolutionTimelineSearchStrategy',
-        securitySolutionTimelineSearchStrategy,
-        true
+        securitySolutionTimelineSearchStrategy
       );
       plugins.data.search.registerSearchStrategy(
         'securitySolutionTimelineEqlSearchStrategy',

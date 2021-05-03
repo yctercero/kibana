@@ -21,14 +21,14 @@ import {
   IKibanaSearchRequest,
   IKibanaSearchResponse,
   ISearchClient,
+  IEsSearchResponse,
+  IEsSearchRequest,
 } from '../../common/search';
 import { AggsSetup, AggsStart } from './aggs';
 import { SearchUsage } from './collectors';
-import { IEsSearchRequest, IEsSearchResponse } from './es_search';
 import { IScopedSearchSessionsClient, ISearchSessionService } from './session';
 
 export interface SearchEnhancements {
-  defaultStrategy: string;
   sessionService: ISearchSessionService;
 }
 
@@ -37,7 +37,6 @@ export interface SearchStrategyDependencies {
   esClient: IScopedClusterClient;
   uiSettingsClient: IUiSettingsClient;
   searchSessionsClient: IScopedSearchSessionsClient;
-  kibanaRequest?: KibanaRequest;
 }
 
 export interface ISearchSetup {
@@ -51,8 +50,7 @@ export interface ISearchSetup {
     SearchStrategyResponse extends IKibanaSearchResponse = IEsSearchResponse
   >(
     name: string,
-    strategy: ISearchStrategy<SearchStrategyRequest, SearchStrategyResponse>,
-    includeKibanaRequest?: boolean
+    strategy: ISearchStrategy<SearchStrategyRequest, SearchStrategyResponse>
   ) => void;
 
   /**
