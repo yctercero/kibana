@@ -6,7 +6,7 @@
  * Side Public License, v 1.
  */
 
-import { from, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, from, Observable, throwError } from 'rxjs';
 import { pick } from 'lodash';
 import moment from 'moment';
 import {
@@ -36,8 +36,8 @@ import { AggsService } from './aggs';
 
 import { FieldFormatsStart } from '../field_formats';
 import { IndexPatternsServiceStart } from '../index_patterns';
-import { registerMsearchRoute, registerSearchRoute } from './routes';
-import { ES_SEARCH_STRATEGY, esSearchStrategyProvider } from './strategies/es_search';
+import { getCallMsearch, registerMsearchRoute, registerSearchRoute } from './routes';
+import { ES_SEARCH_STRATEGY, esSearchStrategyProvider } from './es_search';
 import { DataPluginStart, DataPluginStartDependencies } from '../plugin';
 import { UsageCollectionSetup } from '../../../usage_collection/server';
 import { registerUsageCollector } from './collectors/register';
@@ -64,8 +64,6 @@ import {
   SearchSourceService,
   phraseFilterFunction,
   esRawResponse,
-  ENHANCED_ES_SEARCH_STRATEGY,
-  EQL_SEARCH_STRATEGY,
 } from '../../common/search';
 import { getEsaggs, getEsdsl } from './expressions';
 import {
@@ -78,8 +76,6 @@ import { ISearchSessionService, SearchSessionService } from './session';
 import { KbnServerError } from '../../../kibana_utils/server';
 import { registerBsearchRoute } from './routes/bsearch';
 import { getKibanaContext } from './expressions/kibana_context';
-import { enhancedEsSearchStrategyProvider } from './strategies/ese_search';
-import { eqlSearchStrategyProvider } from './strategies/eql_search';
 
 type StrategyMap = Record<string, ISearchStrategy<any, any>>;
 
@@ -105,6 +101,7 @@ export interface SearchRouteDependencies {
 export class SearchService implements Plugin<ISearchSetup, ISearchStart> {
   private readonly aggsService = new AggsService();
   private readonly searchSourceService = new SearchSourceService();
+  private defaultSearchStrategyName: string = ES_SEARCH_STRATEGY;
   private searchStrategies: StrategyMap = {};
   private sessionService: ISearchSessionService;
   private asScoped!: ISearchStart['asScoped'];
@@ -146,17 +143,6 @@ export class SearchService implements Plugin<ISearchSetup, ISearchStart> {
       )
     );
 
-    this.registerSearchStrategy(
-      ENHANCED_ES_SEARCH_STRATEGY,
-      enhancedEsSearchStrategyProvider(
-        this.initializerContext.config.legacy.globalConfig$,
-        this.logger,
-        usage
-      )
-    );
-
-    this.registerSearchStrategy(EQL_SEARCH_STRATEGY, eqlSearchStrategyProvider(this.logger));
-
     registerBsearchRoute(bfetch, (request: KibanaRequest) => this.asScoped(request));
 
     core.savedObjects.registerType(searchTelemetry);
@@ -195,6 +181,9 @@ export class SearchService implements Plugin<ISearchSetup, ISearchStart> {
 
     return {
       __enhance: (enhancements: SearchEnhancements) => {
+        if (this.searchStrategies.hasOwnProperty(enhancements.defaultStrategy)) {
+          this.defaultSearchStrategyName = enhancements.defaultStrategy;
+        }
         this.sessionService = enhancements.sessionService;
       },
       aggs,
@@ -237,6 +226,14 @@ export class SearchService implements Plugin<ISearchSetup, ISearchStart> {
             getConfig: <T = any>(key: string): T => uiSettingsCache[key],
             search: this.asScoped(request).search,
             onResponse: (req, res) => res,
+            legacy: {
+              callMsearch: getCallMsearch({
+                esClient,
+                globalConfig$: this.initializerContext.config.legacy.globalConfig$,
+                uiSettings: uiSettingsClient,
+              }),
+              loadingCount$: new BehaviorSubject(0),
+            },
           };
 
           return this.searchSourceService.start(scopedIndexPatterns, searchSourceDependencies);
@@ -251,7 +248,7 @@ export class SearchService implements Plugin<ISearchSetup, ISearchStart> {
 
   private registerSearchStrategy = <
     SearchStrategyRequest extends IKibanaSearchRequest = IEsSearchRequest,
-    SearchStrategyResponse extends IKibanaSearchResponse<any> = IEsSearchResponse
+    SearchStrategyResponse extends IKibanaSearchResponse = IEsSearchResponse
   >(
     name: string,
     strategy: ISearchStrategy<SearchStrategyRequest, SearchStrategyResponse>
@@ -264,7 +261,7 @@ export class SearchService implements Plugin<ISearchSetup, ISearchStart> {
     SearchStrategyRequest extends IKibanaSearchRequest = IEsSearchRequest,
     SearchStrategyResponse extends IKibanaSearchResponse = IEsSearchResponse
   >(
-    name: string = ENHANCED_ES_SEARCH_STRATEGY
+    name: string = this.defaultSearchStrategyName
   ): ISearchStrategy<SearchStrategyRequest, SearchStrategyResponse> => {
     this.logger.debug(`Get strategy ${name}`);
     const strategy = this.searchStrategies[name];
