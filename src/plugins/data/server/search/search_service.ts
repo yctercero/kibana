@@ -344,7 +344,6 @@ export class SearchService implements Plugin<ISearchSetup, ISearchStart> {
           strategy: strategyName,
           isStored: true,
         };
-
         return this.cancel(deps, searchId, searchOptions);
       })
     );
