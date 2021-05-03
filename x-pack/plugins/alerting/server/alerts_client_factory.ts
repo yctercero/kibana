@@ -19,11 +19,7 @@ import { EncryptedSavedObjectsClient } from '../../encrypted_saved_objects/serve
 import { TaskManagerStartContract } from '../../task_manager/server';
 import { IEventLogClientService } from '../../../plugins/event_log/server';
 import { AlertingAuthorizationClientFactory } from './alerting_authorization_client_factory';
-<<<<<<< HEAD
 import { ALERTS_FEATURE_ID } from '../common';
-=======
-
->>>>>>> WIP - creating alerting authorization client factory and exposing authorization client on plugin start contract
 export interface AlertsClientFactoryOpts {
   logger: Logger;
   taskManager: TaskManagerStartContract;
@@ -76,13 +72,10 @@ export class AlertsClientFactory {
   public create(request: KibanaRequest, savedObjects: SavedObjectsServiceStart): AlertsClient {
     const { securityPluginSetup, securityPluginStart, actions, eventLog } = this;
     const spaceId = this.getSpaceId(request);
-<<<<<<< HEAD
 
     if (!this.authorization) {
       throw new Error('AlertingAuthorizationClientFactory is not defined');
     }
-=======
->>>>>>> WIP - creating alerting authorization client factory and exposing authorization client on plugin start contract
 
     return new AlertsClient({
       spaceId,
@@ -94,11 +87,7 @@ export class AlertsClientFactory {
         excludedWrappers: ['security'],
         includedHiddenTypes: ['alert', 'api_key_pending_invalidation'],
       }),
-<<<<<<< HEAD
       authorization: this.authorization.create(request, [ALERTS_FEATURE_ID]),
-=======
-      authorization: this.authorization!.create(request),
->>>>>>> WIP - creating alerting authorization client factory and exposing authorization client on plugin start contract
       actionsAuthorization: actions.getActionsAuthorizationWithRequest(request),
       namespace: this.spaceIdToNamespace(spaceId),
       encryptedSavedObjectsClient: this.encryptedSavedObjectsClient,

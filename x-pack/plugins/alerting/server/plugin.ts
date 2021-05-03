@@ -105,13 +105,9 @@ export interface PluginSetupContract {
 export interface PluginStartContract {
   listTypes: AlertTypeRegistry['list'];
   getAlertsClientWithRequest(request: KibanaRequest): PublicMethodsOf<AlertsClient>;
-<<<<<<< HEAD
   getAlertingAuthorizationWithRequest(
     request: KibanaRequest
   ): PublicMethodsOf<AlertingAuthorization>;
-=======
-  getAlertingAuthorizationWithRequest(request: KibanaRequest): PublicMethodsOf<AlertsAuthorization>;
->>>>>>> WIP - creating alerting authorization client factory and exposing authorization client on plugin start contract
   getFrameworkHealth: () => Promise<AlertsHealth>;
 }
 
