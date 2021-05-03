@@ -456,7 +456,8 @@ export class AlertsClient {
     let authorizationTuple;
     try {
       authorizationTuple = await this.authorization.getFindAuthorizationFilter(
-        AlertingAuthorizationTypes.Rule
+        AlertingAuthorizationTypes.Rule,
+        { ruleTypeId: 'alert.attributes.alertTypeId', consumer: 'alert.attributes.consumer' }
       );
     } catch (error) {
       this.auditLogger?.log(
@@ -541,7 +542,10 @@ export class AlertsClient {
         const {
           filter: authorizationFilter,
           logSuccessfulAuthorization,
-        } = await this.authorization.getFindAuthorizationFilter(AlertingAuthorizationTypes.Rule);
+        } = await this.authorization.getFindAuthorizationFilter(AlertingAuthorizationTypes.Rule, {
+          ruleTypeId: 'alert.attributes.alertTypeId',
+          consumer: 'alert.attributes.consumer',
+        });
         const filter = options.filter
           ? `${options.filter} and alert.attributes.executionStatus.status:(${status})`
           : `alert.attributes.executionStatus.status:(${status})`;
