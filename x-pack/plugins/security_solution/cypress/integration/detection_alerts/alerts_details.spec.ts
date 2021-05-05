@@ -34,6 +34,7 @@ describe('Alert details with unmapped fields', () => {
     waitForAlertsPanelToBeLoaded();
     expandFirstAlert();
   });
+
   it('Displays the unmapped field on the JSON view', () => {
     const expectedUnmappedField = { line: 2, text: '  "unmapped": "This is the unmapped field"' };
 
