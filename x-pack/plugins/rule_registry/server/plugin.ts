@@ -58,7 +58,6 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
   private readonly globalConfig: SharedGlobalConfig;
   private readonly config: RuleRegistryConfig;
   private readonly racClientFactory: RacClientFactory;
-  private security?: SecurityPluginSetup;
   private readonly logger: Logger;
   private readonly kibanaVersion: PluginInitializerContext['env']['packageInfo']['version'];
 
@@ -105,21 +104,19 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
   }
 
   public start(core: CoreStart, plugins: RacPluginsStart) {
-    const { logger, security, racClientFactory } = this;
+    const { logger, racClientFactory } = this;
 
     racClientFactory.initialize({
       logger,
-      securityPluginSetup: security,
-      securityPluginStart: plugins.security,
       getSpaceId(request: KibanaRequest) {
         return plugins.spaces?.spacesService.getSpaceId(request);
       },
-      async getSpace(request: KibanaRequest) {
-        return plugins.spaces?.spacesService.getActiveSpace(request);
-      },
-      features: plugins.features,
       kibanaVersion: this.kibanaVersion,
       esClient: core.elasticsearch.client.asInternalUser,
+      // NOTE: Alerts share the authorization client with the alerting plugin
+      getAlertingAuthorization(request: KibanaRequest) {
+        return plugins.alerting.getAlertingAuthorizationWithRequest(request);
+      },
     });
 
     const getRacClientWithRequest = (request: KibanaRequest) => {

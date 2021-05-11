@@ -138,6 +138,10 @@ export class AlertsAuthorization {
     return this.authorization?.mode?.useRbacForRequest(this.request) ?? false;
   }
 
+  public getAuthorizedAlertsIndices(): boolean {
+    return '.siem-signals*';
+  }
+
   public async ensureAuthorized({
     ruleTypeId,
     consumer,

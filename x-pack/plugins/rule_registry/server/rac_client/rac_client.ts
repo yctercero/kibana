@@ -6,6 +6,13 @@
  */
 
 import { estypes } from '@elastic/elasticsearch';
+import { PublicMethodsOf } from '@kbn/utility-types';
+import { AlertingAuthorizationFilterType } from '../../../alerting/server/authorization/alerts_authorization_kuery';
+import {
+  ReadOperations,
+  AlertingAuthorizationTypes,
+  AlertsAuthorization,
+} from '../../../alerting/server/authorization';
 import {
   Logger,
   PluginInitializerContext,
@@ -15,22 +22,14 @@ import {
   GrantAPIKeyResult as SecurityPluginGrantAPIKeyResult,
   InvalidateAPIKeyResult as SecurityPluginInvalidateAPIKeyResult,
 } from '../../../security/server';
-import { SERVER_APP_ID } from '../../../security_solution/server';
+import { AuditLogger } from '../../../security/server';
+import { buildAlertsSearchQuery } from '../authorization/utils';
 
-import {
-  RacAuthorization,
-  WriteOperations,
-  ReadOperations,
-} from '../authorization/rac_authorization';
-import { AuditLogger, EventOutcome } from '../../../security/server';
-// TODO: later
-// import { alertAuditEvent, AlertAuditAction } from './audit_events';
-import { nodeBuilder } from '../../../../../src/plugins/data/common';
+const alertingAuthorizationFilterOpts: AlertingAuthorizationFilterOpts = {
+  type: AlertingAuthorizationFilterType.ESDSL,
+  fieldNames: { ruleTypeId: 'alert.alertTypeId', consumer: 'alert.owner' },
+};
 
-// export interface RegistryAlertTypeWithAuth extends RegistryAlertType {
-//   authorizedConsumers: string[];
-// }
-// type NormalizedAlertAction = Omit<AlertAction, 'actionTypeId'>;
 export type CreateAPIKeyResult =
   | { apiKeysEnabled: false }
   | { apiKeysEnabled: true; result: SecurityPluginGrantAPIKeyResult };
@@ -40,7 +39,7 @@ export type InvalidateAPIKeyResult =
 
 export interface ConstructorOptions {
   logger: Logger;
-  authorization: RacAuthorization;
+  authorization: PublicMethodsOf<AlertsAuthorization>;
   spaceId?: string;
   kibanaVersion: PluginInitializerContext['env']['packageInfo']['version'];
   auditLogger?: AuditLogger;
@@ -90,6 +89,10 @@ export interface UpdateOptions<Params extends AlertTypeParams> {
   };
 }
 
+interface GetAlertParams {
+  id: string;
+}
+
 export interface GetAlertInstanceSummaryParams {
   id: string;
   dateStart?: string;
@@ -100,224 +103,68 @@ export class RacClient {
   private readonly spaceId?: string;
   private readonly authorization: RacAuthorization;
   private readonly kibanaVersion!: PluginInitializerContext['env']['packageInfo']['version'];
-  private readonly auditLogger?: AuditLogger;
   private readonly esClient: ElasticsearchClient;
 
-  constructor({
-    authorization,
-    logger,
-    spaceId,
-    kibanaVersion,
-    auditLogger,
-    esClient,
-  }: ConstructorOptions) {
+  constructor({ authorization, logger, spaceId, kibanaVersion, esClient }: ConstructorOptions) {
     this.logger = logger;
     this.spaceId = spaceId;
     this.authorization = authorization;
     this.kibanaVersion = kibanaVersion;
-    this.auditLogger = auditLogger;
     this.esClient = esClient;
   }
 
-  public async get<Params>({
-    id,
-    owner,
-  }: {
-    id: string;
-    owner: typeof SERVER_APP_ID | 'observability';
-  }): Promise<unknown> {
-    // .get<RawAlert>('alert', id);
+  public async get({ id }: GetAlertParams): Promise<unknown> {
+    const indices = this.authorization.getAuthorizedAlertsIndices();
+    const query = buildAlertsSearchQuery({
+      index: indices,
+      alertId: id,
+    });
+    const { body: result } = await this.esClient.search(query);
+    console.error('----------------BLAH', result.hits.hits[0]['kibana.rac.producer']);
     try {
-      await this.authorization.ensureAuthorized(
-        // TODO: add spaceid here.. I think
-        // result.body._source?.owner,
-        owner,
-        ReadOperations.Get
-      );
-      // TODO: type alert for the get method
-
-      try {
-        const result = await this.esClient.get({
-          index: '.siem-signals-devin-hurley-default',
-          id,
-        });
-        console.error(`************\nRESULT ${JSON.stringify(result, null, 2)}\n************`);
-        return result;
-      } catch (exc) {
-        console.error('THREW ERROR WHEN TRYING GET', JSON.stringify(exc, null, 2));
-      }
-
-      // const result = await this.esClient.search({
-      //   index: '.siem*',
-      //   body: { query: { match_all: {} } },
-      // });
+      await this.authorization.ensureAuthorized({
+        ruleTypeId: result.hits.hits[0]['kibana.rac.alert.uuid'] ?? 'siem.signals',
+        consumer: result.hits.hits[0]['kibana.rac.producer'],
+        operation: ReadOperations.Get,
+        authorizationType: AlertingAuthorizationTypes.Alert,
+      });
+      return result;
     } catch (error) {
       console.error('HERES THE ERROR', error);
-      // this.auditLogger?.log(
-      //   alertAuditEvent({
-      //     action: AlertAuditAction.GET,
-      //     savedObject: { type: 'alert', id },
-      //     error,
-      //   })
-      // );
       throw error;
     }
-    // this.auditLogger?.log(
-    //   alertAuditEvent({
-    //     action: AlertAuditAction.GET,
-    //     savedObject: { type: 'alert', id },
-    //   })
-    // );
-    // TODO: strip out owner field maybe?
-    // this.getAlertFromRaw<Params>(result.id, result.attributes, result.references);
-
-    // return result;
-
-    // return Promise.resolve({ id: 'hello world!!!' });
-    // const result = await this.unsecuredSavedObjectsClient.get<RawAlert>('alert', id);
-    // try {
-    //   await this.authorization.ensureAuthorized(
-    //     result.attributes.alertTypeId,
-    //     result.attributes.consumer,
-    //     ReadOperations.Get
-    //   );
-    // } catch (error) {
-    //   this.auditLogger?.log(
-    //     alertAuditEvent({
-    //       action: AlertAuditAction.GET,
-    //       savedObject: { type: 'alert', id },
-    //       error,
-    //     })
-    //   );
-    //   throw error;
-    // }
-    // this.auditLogger?.log(
-    //   alertAuditEvent({
-    //     action: AlertAuditAction.GET,
-    //     savedObject: { type: 'alert', id },
-    //   })
-    // );
-    // return this.getAlertFromRaw<Params>(result.id, result.attributes, result.references);
   }
 
-  public async find({
-    owner,
-  }: {
-    owner: typeof SERVER_APP_ID | 'observability';
-  }): Promise<unknown> {
+  public async find({ owner }: { owner: string }): Promise<unknown> {
+    let authorizationTuple;
     try {
-      await this.authorization.ensureAuthorized(
-        // TODO: add spaceid here.. I think
-        // result.body._source?.owner,
-        owner,
-        ReadOperations.Get
+      authorizationTuple = await this.authorization.getFindAuthorizationFilter(
+        AlertingAuthorizationTypes.Alert,
+        alertingAuthorizationFilterOpts
       );
-      // TODO: type alert for the get method
-
-      try {
-        // const result = await this.esClient.get({
-        //   index: '.siem-signals-devin-hurley-default',
-        //   id: 'ecf1d03a9f3456bb28bf3af5ef9fd2ef441641f3b495d92112e5e76d8feae62e',
-        // });
-        const result = await this.esClient.search({
-          index: '.siem-signals*',
-          body: {
-            query: {
-              term: {
-                'signal.owner': {
-                  value: owner,
-                },
-              },
-            },
-          },
-        });
-        console.error(`************\nRESULT ${JSON.stringify(result, null, 2)}\n************`);
-        return result;
-      } catch (exc) {
-        console.error('THREW ERROR WHEN TRYING GET', JSON.stringify(exc, null, 2));
-      }
-
-      // const result = await this.esClient.search({
-      //   index: '.siem*',
-      //   body: { query: { match_all: {} } },
-      // });
     } catch (error) {
-      console.error('HERES THE ERROR', error);
-      // this.auditLogger?.log(
-      //   alertAuditEvent({
-      //     action: AlertAuditAction.GET,
-      //     savedObject: { type: 'alert', id },
-      //     error,
-      //   })
-      // );
       throw error;
     }
-    // let authorizationTuple;
-    // try {
-    //   authorizationTuple = await this.authorization.getFindAuthorizationFilter();
-    // } catch (error) {
-    //   this.auditLogger?.log(
-    //     alertAuditEvent({
-    //       action: AlertAuditAction.FIND,
-    //       error,
-    //     })
-    //   );
-    //   throw error;
-    // }
-    // const {
-    //   filter: authorizationFilter,
-    //   ensureAlertTypeIsAuthorized,
-    //   logSuccessfulAuthorization,
-    // } = authorizationTuple;
-    // const {
-    //   page,
-    //   per_page: perPage,
-    //   total,
-    //   saved_objects: data,
-    // } = await this.unsecuredSavedObjectsClient.find<RawAlert>({
-    //   ...options,
-    //   sortField: mapSortField(options.sortField),
-    //   filter:
-    //     (authorizationFilter && options.filter
-    //       ? nodeBuilder.and([esKuery.fromKueryExpression(options.filter), authorizationFilter])
-    //       : authorizationFilter) ?? options.filter,
-    //   fields: fields ? this.includeFieldsRequiredForAuthentication(fields) : fields,
-    //   type: 'alert',
-    // });
-    // const authorizedData = data.map(({ id, attributes, references }) => {
-    //   try {
-    //     ensureAlertTypeIsAuthorized(attributes.alertTypeId, attributes.consumer);
-    //   } catch (error) {
-    //     this.auditLogger?.log(
-    //       alertAuditEvent({
-    //         action: AlertAuditAction.FIND,
-    //         savedObject: { type: 'alert', id },
-    //         error,
-    //       })
-    //     );
-    //     throw error;
-    //   }
-    //   return this.getAlertFromRaw<Params>(
-    //     id,
-    //     fields ? (pick(attributes, fields) as RawAlert) : attributes,
-    //     references
-    //   );
-    // });
-    // authorizedData.forEach(({ id }) =>
-    //   this.auditLogger?.log(
-    //     alertAuditEvent({
-    //       action: AlertAuditAction.FIND,
-    //       savedObject: { type: 'alert', id },
-    //     })
-    //   )
-    // );
-    // logSuccessfulAuthorization();
-    // return {
-    //   page,
-    //   perPage,
-    //   total,
-    //   data: authorizedData,
-    // };
+    const {
+      filter: authorizationFilter,
+      ensureRuleTypeIsAuthorized,
+      logSuccessfulAuthorization,
+    } = authorizationTuple;
+
+    console.error(
+      '-------------------------------FILTER--------------------------',
+      JSON.stringify(authorizationFilter)
+    );
+
+    try {
+      ensureRuleTypeIsAuthorized('siem.signals', 'siem', AlertingAuthorizationTypes.Alert);
+    } catch (error) {
+      console.error(
+        '-------------------------------AUTHORIZATION CATCH--------------------------',
+        error
+      );
+      throw error;
+    }
   }
 
   public async update<Params extends AlertTypeParams = never>({
@@ -329,81 +176,6 @@ export class RacClient {
     //   `alertsClient.update('${id}')`,
     //   async () => await this.updateWithOCC<Params>({ id, data })
     // );
-  }
-
-  private async updateWithOCC<Params extends AlertTypeParams>({
-    id,
-    data,
-  }: UpdateOptions<Params>): Promise<PartialAlert<Params>> {
-    // let alertSavedObject: SavedObject<RawAlert>;
-    // try {
-    //   alertSavedObject = await this.encryptedSavedObjectsClient.getDecryptedAsInternalUser<RawAlert>(
-    //     'alert',
-    //     id,
-    //     { namespace: this.namespace }
-    //   );
-    // } catch (e) {
-    //   // We'll skip invalidating the API key since we failed to load the decrypted saved object
-    //   this.logger.error(
-    //     `update(): Failed to load API key to invalidate on alert ${id}: ${e.message}`
-    //   );
-    //   // Still attempt to load the object using SOC
-    //   alertSavedObject = await this.unsecuredSavedObjectsClient.get<RawAlert>('alert', id);
-    // }
-    // try {
-    //   await this.authorization.ensureAuthorized(
-    //     alertSavedObject.attributes.alertTypeId,
-    //     alertSavedObject.attributes.consumer,
-    //     WriteOperations.Update
-    //   );
-    // } catch (error) {
-    //   this.auditLogger?.log(
-    //     alertAuditEvent({
-    //       action: AlertAuditAction.UPDATE,
-    //       savedObject: { type: 'alert', id },
-    //       error,
-    //     })
-    //   );
-    //   throw error;
-    // }
-    // this.auditLogger?.log(
-    //   alertAuditEvent({
-    //     action: AlertAuditAction.UPDATE,
-    //     outcome: EventOutcome.UNKNOWN,
-    //     savedObject: { type: 'alert', id },
-    //   })
-    // );
-    // this.alertTypeRegistry.ensureAlertTypeEnabled(alertSavedObject.attributes.alertTypeId);
-    // const updateResult = await this.updateAlert<Params>({ id, data }, alertSavedObject);
-    // await Promise.all([
-    //   alertSavedObject.attributes.apiKey
-    //     ? markApiKeyForInvalidation(
-    //         { apiKey: alertSavedObject.attributes.apiKey },
-    //         this.logger,
-    //         this.unsecuredSavedObjectsClient
-    //       )
-    //     : null,
-    //   (async () => {
-    //     if (
-    //       updateResult.scheduledTaskId &&
-    //       !isEqual(alertSavedObject.attributes.schedule, updateResult.schedule)
-    //     ) {
-    //       this.taskManager
-    //         .runNow(updateResult.scheduledTaskId)
-    //         .then(() => {
-    //           this.logger.debug(
-    //             `Alert update has rescheduled the underlying task: ${updateResult.scheduledTaskId}`
-    //           );
-    //         })
-    //         .catch((err: Error) => {
-    //           this.logger.error(
-    //             `Alert update failed to run its underlying task. TaskManager runNow failed with Error: ${err.message}`
-    //           );
-    //         });
-    //     }
-    //   })(),
-    // ]);
-    // return updateResult;
   }
 
   static async create({ esClient, owner, data }: createAlertParams) {}

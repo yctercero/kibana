@@ -5,91 +5,48 @@
  * 2.0.
  */
 
-import { remove, uniq } from 'lodash';
+interface BuildAlertsSearchQuery {
+  alertId: string;
+  index: string;
+  from?: string;
+  to?: string;
+  size?: number;
+}
 
-import { KibanaRequest } from 'src/core/server';
-
-import { nodeBuilder } from '../../../../../src/plugins/data/common';
-import { KueryNode } from '../../../../../src/plugins/data/server';
-import { PluginStartContract as FeaturesPluginStart } from '../../../features/server';
-import { GetSpaceFn } from './rac_authorization';
-
-export const getEnabledKibanaSpaceFeatures = async ({
-  getSpace,
-  request,
-  features,
-}: {
-  request: KibanaRequest;
-  getSpace: GetSpaceFn;
-  features: FeaturesPluginStart;
-}): Promise<Set<string>> => {
-  try {
-    console.error('GETSPACE', getSpace);
-    const disabledUserSpaceFeatures = new Set((await getSpace(request))?.disabledFeatures ?? []);
-    console.error('DISABLED USER SPACE FEATURES', disabledUserSpaceFeatures);
-    // Filter through all user Kibana features to find corresponding enabled
-    // RAC feature owners like 'security-solution' or 'observability'
-    const owners = await new Set(
-      features
-        .getKibanaFeatures()
-        // get all the rac 'owners' that aren't disabled
-        .filter(({ id }) => !disabledUserSpaceFeatures.has(id))
-        .flatMap((feature) => {
-          console.error('FEATURE.RAC', feature.rac);
-          return feature.rac ?? [];
-        })
-    );
-    console.error('INTERNAL OWNERS', owners);
-    return owners;
-  } catch (error) {
-    console.error('GETENABLEDKIBANASPACEFEAUTRES THREW AN ERROR');
-    return new Set<string>();
-  }
-};
-
-export const getOwnersFilter = (owners: string[]): KueryNode => {
-  // const kqlQuery: Query = {
-  //     language: 'kuery',
-  //     query: filter,
-  //   };
-  //   const config: EsQueryConfig = {
-  //     allowLeadingWildcards: true,
-  //     dateFormatTZ: 'Zulu',
-  //     ignoreFilterIfFieldNotInIndex: false,
-  //     queryStringOptions: { analyze_wildcard: true },
-  //   };
-  //   return esQuery.buildEsQuery(undefined, kqlQuery, [], config);
-  //   return nodeBuilder.or(
-  //     owners.reduce<KueryNode[]>((query, owner) => {
-  //       ensureFieldIsSafeForQuery('owner', owner);
-  //       query.push(nodeBuilder.is(`${savedObjectType}.attributes.owner`, owner));
-  //       return query;
-  //     }, [])
-  //   );
-};
-
-export const combineFilterWithAuthorizationFilter = (
-  filter: KueryNode,
-  authorizationFilter: KueryNode
-) => {
-  return nodeBuilder.and([filter, authorizationFilter]);
-};
-
-export const ensureFieldIsSafeForQuery = (field: string, value: string): boolean => {
-  const invalid = value.match(/([>=<\*:()]+|\s+)/g);
-  if (invalid) {
-    const whitespace = remove(invalid, (chars) => chars.trim().length === 0);
-    const errors = [];
-    if (whitespace.length) {
-      errors.push(`whitespace`);
-    }
-    if (invalid.length) {
-      errors.push(`invalid character${invalid.length > 1 ? `s` : ``}: ${invalid?.join(`, `)}`);
-    }
-    throw new Error(`expected ${field} not to include ${errors.join(' and ')}`);
-  }
-  return true;
-};
-
-export const includeFieldsRequiredForAuthentication = (fields: string[]): string[] =>
-  uniq([...fields, 'owner']);
+export const buildAlertsSearchQuery = ({
+  alertId,
+  index,
+  from,
+  to,
+  size,
+}: BuildAlertsSearchQuery) => ({
+  index,
+  body: {
+    size,
+    query: {
+      bool: {
+        filter: [
+          {
+            bool: {
+              should: {
+                match: {
+                  _id: alertId,
+                },
+              },
+              minimum_should_match: 1,
+            },
+          },
+          {
+            range: {
+              '@timestamp': {
+                gt: from,
+                lte: to,
+                format: 'epoch_millis',
+              },
+            },
+          },
+        ],
+      },
+    },
+  },
+});
