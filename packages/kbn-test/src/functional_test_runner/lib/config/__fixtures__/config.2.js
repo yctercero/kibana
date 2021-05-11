@@ -6,20 +6,10 @@
  * Side Public License, v 1.
  */
 
-<<<<<<< HEAD:packages/kbn-test/src/functional_test_runner/lib/config/__fixtures__/config.2.js
 export default async function ({ readConfigFile }) {
   const config1 = await readConfigFile(require.resolve('./config.1.js'));
 
   return {
     testFiles: [...config1.get('testFiles'), 'config.2'],
-=======
-import { LoadingStatus, LoadingStatusState } from '../../context_app_state';
-
-export function createInitialLoadingStatusState(): LoadingStatusState {
-  return {
-    anchor: LoadingStatus.UNINITIALIZED,
-    predecessors: LoadingStatus.UNINITIALIZED,
-    successors: LoadingStatus.UNINITIALIZED,
->>>>>>> [Discover] Migrate remaining context files from js to ts (#99019):src/plugins/discover/public/application/angular/context/query/state.ts
   };
 }
