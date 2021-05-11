@@ -34,7 +34,12 @@ export const METRICS_FEATURE = {
         read: ['index-pattern'],
       },
       alerting: {
-        all: [METRIC_THRESHOLD_ALERT_TYPE_ID, METRIC_INVENTORY_THRESHOLD_ALERT_TYPE_ID],
+        rules: {
+          all: [METRIC_THRESHOLD_ALERT_TYPE_ID, METRIC_INVENTORY_THRESHOLD_ALERT_TYPE_ID],
+        },
+        alerts: {
+          all: [METRIC_THRESHOLD_ALERT_TYPE_ID, METRIC_INVENTORY_THRESHOLD_ALERT_TYPE_ID],
+        },
       },
       management: {
         insightsAndAlerting: ['triggersActions'],
@@ -50,7 +55,12 @@ export const METRICS_FEATURE = {
         read: ['infrastructure-ui-source', 'index-pattern'],
       },
       alerting: {
-        read: [METRIC_THRESHOLD_ALERT_TYPE_ID, METRIC_INVENTORY_THRESHOLD_ALERT_TYPE_ID],
+        rules: {
+          read: [METRIC_THRESHOLD_ALERT_TYPE_ID, METRIC_INVENTORY_THRESHOLD_ALERT_TYPE_ID],
+        },
+        alerts: {
+          read: [METRIC_THRESHOLD_ALERT_TYPE_ID, METRIC_INVENTORY_THRESHOLD_ALERT_TYPE_ID],
+        },
       },
       management: {
         insightsAndAlerting: ['triggersActions'],
@@ -83,7 +93,12 @@ export const LOGS_FEATURE = {
         read: [],
       },
       alerting: {
-        all: [LOG_DOCUMENT_COUNT_ALERT_TYPE_ID],
+        rules: {
+          all: [LOG_DOCUMENT_COUNT_ALERT_TYPE_ID],
+        },
+        alerts: {
+          all: [LOG_DOCUMENT_COUNT_ALERT_TYPE_ID],
+        },
       },
       management: {
         insightsAndAlerting: ['triggersActions'],
@@ -95,7 +110,12 @@ export const LOGS_FEATURE = {
       catalogue: ['infralogging', 'logs'],
       api: ['infra'],
       alerting: {
-        read: [LOG_DOCUMENT_COUNT_ALERT_TYPE_ID],
+        rules: {
+          read: [LOG_DOCUMENT_COUNT_ALERT_TYPE_ID],
+        },
+        alerts: {
+          read: [LOG_DOCUMENT_COUNT_ALERT_TYPE_ID],
+        },
       },
       management: {
         insightsAndAlerting: ['triggersActions'],

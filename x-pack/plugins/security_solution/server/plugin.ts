@@ -245,34 +245,13 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
     router.get({ path: '/security-myfakepath', validate: false }, async (context, req, res) => {
       try {
         const racClient = await context.ruleRegistry?.getRacClient();
-        const thing = await racClient?.find({ owner: SERVER_APP_ID });
-        console.error('hits?', JSON.stringify(thing.body.hits.hits, null, 2));
-        return res.ok({ body: { success: true, alerts: thing.body.hits.hits } });
+        const thing = await racClient?.get({
+          id: '3142c702a014be0ce5adccce0984d2df34b769542218f756037bf405acef9f00',
+        });
+        return res.ok({ body: { success: true, alerts: JSON.stringify(thing) } });
       } catch (err) {
-        console.error('monitoring route threw an error');
         console.error('ERROR JSON', JSON.stringify(err, null, 2));
-        const statusCode = err.output.statusCode;
-        console.error('ERROR STATUSCODE?', statusCode);
-        // { message: err.message },
-
-        // const contentType = {
-        //   'Content-Type': 'application/json',
-        // };
-        // const defaultedHeaders = {
-        //   ...contentType,
-        // };
-
-        // return res.custom({
-        //   statusCode,
-        //   headers: defaultedHeaders,
-        //   body: Buffer.from(
-        //     JSON.stringify({
-        //       message: 'hello world', //err.message,
-        //       status_code: statusCode,
-        //     })
-        //   ),
-        // });
-        return res.unauthorized({ body: { message: err.message } });
+        return res.ok({ body: { success: true, alerts: 'booooo' } });
       }
     });
 
@@ -281,38 +260,6 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
       REFERENCE_RULE_PERSISTENCE_ALERT_TYPE_ID,
     ];
     const ruleTypes = [SIGNALS_ID, NOTIFICATIONS_ID, ...referenceRuleTypes];
-
-    plugins.features.registerKibanaFeature({
-      id: 'rac',
-      name: 'RAC',
-      order: 1100,
-      app: [...securitySubPlugins, 'kibana'],
-      category: DEFAULT_APP_CATEGORIES.security,
-      rac: [SERVER_APP_ID],
-      privileges: {
-        all: {
-          app: [...securitySubPlugins, 'kibana'],
-          rac: {
-            all: [SERVER_APP_ID],
-          },
-          savedObject: {
-            all: [
-              'alert',
-              ...caseSavedObjects,
-              'exception-list',
-              'exception-list-agnostic',
-              ...savedObjectTypes,
-            ],
-            read: ['config'],
-          },
-          ui: ['show', 'crud'],
-        },
-        read: {
-          savedObject: { all: [], read: [] },
-          ui: ['show'],
-        },
-      },
-    });
 
     plugins.features.registerKibanaFeature({
       id: SERVER_APP_ID,
@@ -327,12 +274,8 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
         insightsAndAlerting: ['triggersActions'],
       },
       alerting: ruleTypes,
-      rac: [SERVER_APP_ID],
       privileges: {
         all: {
-          rac: {
-            all: [SERVER_APP_ID],
-          },
           app: [...securitySubPlugins, 'kibana'],
           catalogue: ['securitySolution'],
           api: ['securitySolution', 'lists-all', 'lists-read'],
@@ -347,7 +290,12 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
             read: ['config'],
           },
           alerting: {
-            all: ruleTypes,
+            rules: {
+              all: ruleTypes,
+            },
+            alerts: {
+              all: ruleTypes,
+            },
           },
           management: {
             insightsAndAlerting: ['triggersActions'],
@@ -370,19 +318,50 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
           },
           alerting: {
             read: ruleTypes,
+            rules: {
+              read: ruleTypes,
+            },
+            alerts: {
+              read: ruleTypes,
+            },
           },
-<<<<<<< HEAD
-=======
-          rac: {
-            all: [SERVER_APP_ID],
-          },
->>>>>>> adds an 'owner' field to the siem-signals mapping, working authz get for security solution, need to work through rule registry changes (#8)
           management: {
             insightsAndAlerting: ['triggersActions'],
           },
           ui: ['show'],
         },
       },
+      subFeatures: [
+        {
+          name: i18n.translate('xpack.securitySolution.featureRegistry.alertStatusUpdate', {
+            defaultMessage: 'Alert status update',
+          }),
+          privilegeGroups: [
+            {
+              groupType: 'independent',
+              privileges: [
+                {
+                  id: 'alert_status_update',
+                  name: i18n.translate(
+                    'xpack.securitySolution.subFeatureRegistry.alerting.alerts',
+                    {
+                      defaultMessage: 'Alert status update',
+                    }
+                  ),
+                  includeIn: 'all',
+                  alerting: {
+                    alerts: {
+                      all: ruleTypes,
+                    },
+                  },
+                  savedObject: { all: [], read: [] },
+                  ui: [],
+                },
+              ],
+            },
+          ],
+        },
+      ],
     });
 
     // Continue to register legacy rules against alerting client exposed through rule-registry

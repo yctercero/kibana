@@ -44,7 +44,12 @@ export class AlertingExamplePlugin implements Plugin<void, void, AlertingExample
       privileges: {
         all: {
           alerting: {
-            all: [alwaysFiringAlert.id, peopleInSpaceAlert.id, INDEX_THRESHOLD_ID],
+            rules: {
+              all: [alwaysFiringAlert.id, peopleInSpaceAlert.id, INDEX_THRESHOLD_ID],
+            },
+            alerts: {
+              all: [alwaysFiringAlert.id, peopleInSpaceAlert.id, INDEX_THRESHOLD_ID],
+            },
           },
           savedObject: {
             all: [],
@@ -57,7 +62,12 @@ export class AlertingExamplePlugin implements Plugin<void, void, AlertingExample
         },
         read: {
           alerting: {
-            read: [alwaysFiringAlert.id, peopleInSpaceAlert.id, INDEX_THRESHOLD_ID],
+            rules: {
+              read: [alwaysFiringAlert.id, peopleInSpaceAlert.id, INDEX_THRESHOLD_ID],
+            },
+            alerts: {
+              read: [alwaysFiringAlert.id, peopleInSpaceAlert.id, INDEX_THRESHOLD_ID],
+            },
           },
           savedObject: {
             all: [],

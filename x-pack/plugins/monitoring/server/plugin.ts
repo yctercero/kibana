@@ -257,13 +257,9 @@ export class MonitoringPlugin
       }),
       category: DEFAULT_APP_CATEGORIES.management,
       app: ['monitoring', 'kibana'],
-      rac: ['observability'],
       catalogue: ['monitoring'],
       privileges: {
         all: {
-          rac: {
-            all: ['observability'],
-          },
           savedObject: {
             all: [],
             read: [],
@@ -271,9 +267,6 @@ export class MonitoringPlugin
           ui: ['show', 'save', 'alerting:show', 'alerting:save'],
         },
         read: {
-          rac: {
-            all: ['observability'],
-          },
           savedObject: {
             all: [],
             read: [],
@@ -297,7 +290,12 @@ export class MonitoringPlugin
                 read: [],
               },
               alerting: {
-                all: ALERTS,
+                rules: {
+                  all: ALERTS,
+                },
+                alerts: {
+                  all: ALERTS,
+                },
               },
               ui: [],
             },

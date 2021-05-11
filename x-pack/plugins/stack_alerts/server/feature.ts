@@ -31,8 +31,14 @@ export const BUILT_IN_ALERTS_FEATURE = {
         insightsAndAlerting: ['triggersActions'],
       },
       alerting: {
-        all: [IndexThreshold, GeoContainment, ElasticsearchQuery],
-        read: [],
+        rules: {
+          all: [IndexThreshold, GeoContainment, ElasticsearchQuery],
+          read: [],
+        },
+        alerts: {
+          all: [IndexThreshold, GeoContainment, ElasticsearchQuery],
+          read: [],
+        },
       },
       savedObject: {
         all: [],
@@ -48,8 +54,14 @@ export const BUILT_IN_ALERTS_FEATURE = {
         insightsAndAlerting: ['triggersActions'],
       },
       alerting: {
-        all: [],
-        read: [IndexThreshold, GeoContainment, ElasticsearchQuery],
+        rules: {
+          all: [],
+          read: [IndexThreshold, GeoContainment, ElasticsearchQuery],
+        },
+        alerts: {
+          all: [],
+          read: [IndexThreshold, GeoContainment, ElasticsearchQuery],
+        },
       },
       savedObject: {
         all: [],

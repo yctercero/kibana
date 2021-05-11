@@ -50,7 +50,12 @@ export const initServerWithKibana = (server: UptimeCoreSetup, plugins: UptimeCor
           read: [],
         },
         alerting: {
-          all: ['xpack.uptime.alerts.tls', 'xpack.uptime.alerts.monitorStatus'],
+          rules: {
+            all: ['xpack.uptime.alerts.tls', 'xpack.uptime.alerts.monitorStatus'],
+          },
+          alerts: {
+            all: ['xpack.uptime.alerts.tls', 'xpack.uptime.alerts.monitorStatus'],
+          },
         },
         management: {
           insightsAndAlerting: ['triggersActions'],
@@ -66,7 +71,12 @@ export const initServerWithKibana = (server: UptimeCoreSetup, plugins: UptimeCor
           read: [umDynamicSettings.name],
         },
         alerting: {
-          read: ['xpack.uptime.alerts.tls', 'xpack.uptime.alerts.monitorStatus'],
+          rules: {
+            read: ['xpack.uptime.alerts.tls', 'xpack.uptime.alerts.monitorStatus'],
+          },
+          alerts: {
+            read: ['xpack.uptime.alerts.tls', 'xpack.uptime.alerts.monitorStatus'],
+          },
         },
         management: {
           insightsAndAlerting: ['triggersActions'],
