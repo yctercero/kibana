@@ -206,26 +206,24 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
 
     // TODO: Once we are past experimental phase this check can be removed along with legacy registration of rules
     let ruleDataClient: RuleDataClient | null = null;
-    if (experimentalFeatures.ruleRegistryEnabled) {
-      // Create rule-registry data client scoped to security-solution
-      const start = () => core.getStartServices().then(([coreStart]) => coreStart);
+    // if (experimentalFeatures.ruleRegistryEnabled) {
+    // Create rule-registry data client scoped to security-solution
+    const start = () => core.getStartServices().then(([coreStart]) => coreStart);
 
-      ruleDataClient = new RuleDataClient({
-        getClusterClient: async () => {
-          const coreStart = await start();
-          return coreStart.elasticsearch.client.asInternalUser;
-        },
-        ready: () => Promise.resolve(),
-        alias: plugins.ruleRegistry.getFullAssetName(),
-      });
+    ruleDataClient = new RuleDataClient({
+      getClusterClient: async () => {
+        const coreStart = await start();
+        return coreStart.elasticsearch.client.asInternalUser;
+      },
+      ready: () => Promise.resolve(),
+      alias: plugins.ruleRegistry.getFullAssetName(),
+    });
 
-      // Register reference rule types via rule-registry
-      this.setupPlugins.alerting.registerType(createQueryAlertType(ruleDataClient, this.logger));
-      this.setupPlugins.alerting.registerType(createEqlAlertType(ruleDataClient, this.logger));
-      this.setupPlugins.alerting.registerType(
-        createThresholdAlertType(ruleDataClient, this.logger)
-      );
-    }
+    // Register reference rule types via rule-registry
+    this.setupPlugins.alerting.registerType(createQueryAlertType(ruleDataClient, this.logger));
+    this.setupPlugins.alerting.registerType(createEqlAlertType(ruleDataClient, this.logger));
+    this.setupPlugins.alerting.registerType(createThresholdAlertType(ruleDataClient, this.logger));
+    // }
 
     // TO DO We need to get the endpoint routes inside of initRoutes
     initRoutes(
@@ -242,18 +240,18 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
     registerPolicyRoutes(router, endpointContext);
     registerTrustedAppsRoutes(router, endpointContext);
     registerHostIsolationRoutes(router, endpointContext);
-    router.get({ path: '/security-myfakepath', validate: false }, async (context, req, res) => {
-      try {
-        const racClient = await context.ruleRegistry?.getRacClient();
-        const thing = await racClient?.get({
-          id: '3142c702a014be0ce5adccce0984d2df34b769542218f756037bf405acef9f00',
-        });
-        return res.ok({ body: { success: true, alerts: JSON.stringify(thing) } });
-      } catch (err) {
-        console.error('ERROR JSON', JSON.stringify(err, null, 2));
-        return res.ok({ body: { success: true, alerts: 'booooo' } });
-      }
-    });
+    // router.get({ path: '/security-myfakepath', validate: false }, async (context, req, res) => {
+    //   try {
+    //     const racClient = await context.ruleRegistry?.getRacClient();
+    //     const thing = await racClient?.get({
+    //       id: '3142c702a014be0ce5adccce0984d2df34b769542218f756037bf405acef9f00',
+    //     });
+    //     return res.ok({ body: { success: true, alerts: JSON.stringify(thing) } });
+    //   } catch (err) {
+    //     console.error('ERROR JSON', JSON.stringify(err, null, 2));
+    //     return res.ok({ body: { success: true, alerts: 'booooo' } });
+    //   }
+    // });
 
     const referenceRuleTypes = [
       REFERENCE_RULE_ALERT_TYPE_ID,
@@ -317,7 +315,6 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
             ],
           },
           alerting: {
-            read: ruleTypes,
             rules: {
               read: ruleTypes,
             },

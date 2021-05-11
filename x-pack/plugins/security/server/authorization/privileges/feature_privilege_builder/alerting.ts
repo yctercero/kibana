@@ -52,12 +52,15 @@ export class FeaturePrivilegeAlertingBuilder extends BaseFeaturePrivilegeBuilder
       alertingType: AlertingType
     ) =>
       privilegedTypes.flatMap((privilegedType) =>
-        operations.map((operation) =>
-          this.actions.alerting.get(privilegedType, consumer, alertingType, operation)
-        )
+        operations.map((operation) => {
+          if (consumer === 'siem') {
+            console.error('---------OPERATION', operation);
+            return this.actions.alerting.get(privilegedType, consumer, alertingType, operation);
+          }
+        })
       );
 
-    return uniq([
+    const a = uniq([
       ...getAlertingPrivilege(
         allOperations.rule,
         privilegeDefinition.alerting?.rules?.all ?? [],
@@ -83,5 +86,7 @@ export class FeaturePrivilegeAlertingBuilder extends BaseFeaturePrivilegeBuilder
         AlertingType.ALERT
       ),
     ]);
+    console.error('--------POSSIBILITIES', JSON.stringify(a));
+    return a;
   }
 }

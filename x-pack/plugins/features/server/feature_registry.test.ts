@@ -837,8 +837,14 @@ describe('FeatureRegistry', () => {
         privileges: {
           all: {
             alerting: {
-              all: ['foo', 'bar'],
-              read: ['baz'],
+              rules: {
+                all: ['foo', 'bar'],
+                read: ['baz'],
+              },
+              alerts: {
+                all: ['foo', 'bar'],
+                read: ['baz'],
+              },
             },
             savedObject: {
               all: [],
@@ -848,7 +854,14 @@ describe('FeatureRegistry', () => {
             app: [],
           },
           read: {
-            alerting: { read: ['foo', 'bar', 'baz'] },
+            alerting: {
+              rules: {
+                read: ['foo', 'bar', 'baz'],
+              },
+              alerts: {
+                read: ['foo', 'bar', 'baz'],
+              },
+            },
             savedObject: {
               all: [],
               read: [],
@@ -877,7 +890,14 @@ describe('FeatureRegistry', () => {
         alerting: ['foo', 'bar', 'baz'],
         privileges: {
           all: {
-            alerting: { all: ['foo'] },
+            alerting: {
+              rules: {
+                all: ['foo'],
+              },
+              alerts: {
+                all: ['foo'],
+              },
+            },
             savedObject: {
               all: [],
               read: [],
@@ -886,7 +906,14 @@ describe('FeatureRegistry', () => {
             app: [],
           },
           read: {
-            alerting: { all: ['foo'] },
+            alerting: {
+              rules: {
+                all: ['foo'],
+              },
+              alerts: {
+                all: ['foo'],
+              },
+            },
             savedObject: {
               all: [],
               read: [],
@@ -911,7 +938,14 @@ describe('FeatureRegistry', () => {
                       read: [],
                     },
                     ui: [],
-                    alerting: { all: ['bar'] },
+                    alerting: {
+                      rules: {
+                        all: ['bar'],
+                      },
+                      alerts: {
+                        all: ['bar'],
+                      },
+                    },
                   },
                 ],
               },
@@ -943,7 +977,14 @@ describe('FeatureRegistry', () => {
             {
               id: 'reserved',
               privilege: {
-                alerting: { all: ['foo', 'bar', 'baz'] },
+                alerting: {
+                  rules: {
+                    all: ['foo', 'bar', 'baz'],
+                  },
+                  alerts: {
+                    all: ['foo', 'bar', 'baz'],
+                  },
+                },
                 savedObject: {
                   all: [],
                   read: [],
@@ -979,7 +1020,14 @@ describe('FeatureRegistry', () => {
             {
               id: 'reserved',
               privilege: {
-                alerting: { all: ['foo', 'bar'] },
+                alerting: {
+                  rules: {
+                    all: ['foo', 'bar'],
+                  },
+                  alerts: {
+                    all: ['foo', 'bar'],
+                  },
+                },
                 savedObject: {
                   all: [],
                   read: [],

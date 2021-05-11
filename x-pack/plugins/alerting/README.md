@@ -302,27 +302,52 @@ features.registerKibanaFeature({
 	privileges: {
 		all: {
 			alerting: {
-				all: [
-					// grant `all` over our own types
-					'my-application-id.my-alert-type',
-					'my-application-id.my-restricted-alert-type',
-					// grant `all` over the built-in IndexThreshold
-					'.index-threshold',
-					// grant `all` over Uptime's TLS AlertType
-					'xpack.uptime.alerts.actionGroups.tls'
-				],
+				rules: {
+					all: [
+						// grant `all` over our own types
+						'my-application-id.my-alert-type',
+						'my-application-id.my-restricted-alert-type',
+						// grant `all` over the built-in IndexThreshold
+						'.index-threshold',
+						// grant `all` over Uptime's TLS AlertType
+						'xpack.uptime.alerts.actionGroups.tls'
+					],
+				},
+				alerts: {
+					all: [
+						// grant `all` over our own types
+						'my-application-id.my-alert-type',
+						'my-application-id.my-restricted-alert-type',
+						// grant `all` over the built-in IndexThreshold
+						'.index-threshold',
+						// grant `all` over Uptime's TLS AlertType
+						'xpack.uptime.alerts.actionGroups.tls'
+					],
+				}
 			},
 		},
 		read: {
 			alerting: {
-				read: [
-					// grant `read` over our own type
-					'my-application-id.my-alert-type',
-					// grant `read` over the built-in IndexThreshold
-					'.index-threshold', 
-					// grant `read` over Uptime's TLS AlertType
-					'xpack.uptime.alerts.actionGroups.tls'
-				],
+				rules: {
+					read: [
+						// grant `read` over our own type
+						'my-application-id.my-alert-type',
+						// grant `read` over the built-in IndexThreshold
+						'.index-threshold', 
+						// grant `read` over Uptime's TLS AlertType
+						'xpack.uptime.alerts.actionGroups.tls'
+					],
+				},
+				alerts: {
+					read: [
+						// grant `read` over our own type
+						'my-application-id.my-alert-type',
+						// grant `read` over the built-in IndexThreshold
+						'.index-threshold', 
+						// grant `read` over Uptime's TLS AlertType
+						'xpack.uptime.alerts.actionGroups.tls'
+					],
+				}
 			},
 		},
 	},
@@ -354,12 +379,22 @@ features.registerKibanaFeature({
     read: {
       app: ['lens', 'kibana'],
       alerting: {
-        all: [
-          'my-application-id.my-alert-type'
-        ],
-        read: [
-          'my-application-id.my-restricted-alert-type'
-        ],
+        rules: {
+					all: [
+						'my-application-id.my-alert-type'
+					],
+					read: [
+						'my-application-id.my-restricted-alert-type'
+					],
+				},
+				alerts: {
+					all: [
+						'my-application-id.my-alert-type'
+					],
+					read: [
+						'my-application-id.my-restricted-alert-type'
+					],
+				}
       },
       savedObject: {
         all: [],

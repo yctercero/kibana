@@ -166,12 +166,22 @@ features.registerKibanaFeature({
     read: {
       app: ['lens', 'kibana'],
       alerting: {
-        all: [
-          'my-application-id.my-alert-type'
-        ],
-        read: [
-          'my-application-id.my-restricted-alert-type'
-        ],
+        rules: {
+          all: [
+            'my-application-id.my-alert-type'
+          ],
+          read: [
+            'my-application-id.my-restricted-alert-type'
+          ],
+        },
+        alerts: {
+          all: [
+            'my-application-id.my-alert-type'
+          ],
+          read: [
+            'my-application-id.my-restricted-alert-type'
+          ],
+        }
       },
       savedObject: {
         all: [],

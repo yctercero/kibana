@@ -51,9 +51,6 @@ export interface RacPluginsStart {
   alerting: AlertPluginStartContract;
   getRacClientWithRequest(request: KibanaRequest): PublicMethodsOf<RacClient>;
 }
-
-export type RuleRegistryPluginSetupContract = RuleRegistry<BaseRuleFieldMap>;
-
 export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContract> {
   private readonly globalConfig: SharedGlobalConfig;
   private readonly config: RuleRegistryConfig;

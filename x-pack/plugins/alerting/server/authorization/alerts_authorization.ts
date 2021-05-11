@@ -54,8 +54,14 @@ export interface EnsureAuthorizedOpts {
 }
 
 interface HasPrivileges {
-  read: boolean;
-  all: boolean;
+  rules: {
+    read: boolean;
+    all: boolean;
+  };
+  alerts: {
+    read: boolean;
+    all: boolean;
+  };
 }
 type AuthorizedConsumers = Record<string, HasPrivileges>;
 export interface RegistryAlertTypeWithAuth extends RegistryAlertType {
@@ -127,8 +133,14 @@ export class AlertsAuthorization {
     this.allPossibleConsumers = this.featuresIds.then((featuresIds) =>
       featuresIds.size
         ? asAuthorizedConsumers([...this.exemptConsumerIds, ...featuresIds], {
-            read: true,
-            all: true,
+            rules: {
+              read: true,
+              all: true,
+            },
+            alerts: {
+              read: true,
+              all: true,
+            },
           })
         : {}
     );
@@ -167,7 +179,7 @@ export class AlertsAuthorization {
           operation
         ),
       };
-
+      console.error('------------PRIVS', JSON.stringify(requiredPrivilegesByScope));
       // Skip authorizing consumer if it is in the list of exempt consumer ids
       const shouldAuthorizeConsumer = !this.exemptConsumerIds.includes(consumer);
 
@@ -187,6 +199,7 @@ export class AlertsAuthorization {
                 requiredPrivilegesByScope.producer,
               ],
       });
+      console.error('------------PRIVS2', JSON.stringify(privileges));
 
       if (!isAvailableConsumer) {
         /**
@@ -456,8 +469,14 @@ export class AlertsAuthorization {
 
 function mergeHasPrivileges(left: HasPrivileges, right?: HasPrivileges): HasPrivileges {
   return {
-    read: (left.read || right?.read) ?? false,
-    all: (left.all || right?.all) ?? false,
+    rules: {
+      read: (left.rules.read || right?.rules.read) ?? false,
+      all: (left.rules.all || right?.rules.all) ?? false,
+    },
+    alerts: {
+      read: (left.alerts.read || right?.alerts.read) ?? false,
+      all: (left.alerts.all || right?.alerts.all) ?? false,
+    },
   };
 }
 
@@ -465,8 +484,14 @@ function hasPrivilegeByOperation(operation: ReadOperations | WriteOperations): H
   const read = Object.values(ReadOperations).includes((operation as unknown) as ReadOperations);
   const all = Object.values(WriteOperations).includes((operation as unknown) as WriteOperations);
   return {
-    read: read || all,
-    all,
+    rules: {
+      read: read || all,
+      all,
+    },
+    alerts: {
+      read: read || all,
+      all,
+    },
   };
 }
 

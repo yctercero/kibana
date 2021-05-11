@@ -242,7 +242,7 @@ export class AlertsClient {
     options,
   }: CreateOptions<Params>): Promise<SanitizedAlert<Params>> {
     const id = options?.id || SavedObjectsUtils.generateId();
-
+    console.error('--------------HERE------------', data.alertTypeId, data.consumer);
     try {
       await this.authorization.ensureAuthorized({
         ruleTypeId: data.alertTypeId,

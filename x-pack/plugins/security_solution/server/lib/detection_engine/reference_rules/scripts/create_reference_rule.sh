@@ -5,13 +5,12 @@
 # 2.0; you may not use this file except in compliance with the Elastic License
 # 2.0.
 #
-
-curl -X POST http://localhost:5601/${BASE_PATH}/api/alerts/alert \
-     -u ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD} \
-     -H 'kbn-xsrf: true' \
-     -H 'Content-Type: application/json' \
-     --verbose \
-     -d '
+curl -s -k \
+   -H "Content-Type: application/json" \
+   -H 'kbn-xsrf: 123' \
+   -u ytercero:AWqrPVbWnlKVW@6isSX@ \
+   -X POST http://localhost:5601/api/alerts/alert \
+   -d '
 {
   "params":{
       "server":"howdy",

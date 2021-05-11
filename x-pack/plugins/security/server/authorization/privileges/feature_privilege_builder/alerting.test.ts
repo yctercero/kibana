@@ -20,8 +20,14 @@ describe(`feature_privilege_builder`, () => {
 
       const privilege: FeatureKibanaPrivileges = {
         alerting: {
-          all: [],
-          read: [],
+          rules: {
+            all: [],
+            read: [],
+          },
+          alerts: {
+            all: [],
+            read: [],
+          },
         },
 
         savedObject: {
@@ -52,8 +58,14 @@ describe(`feature_privilege_builder`, () => {
 
         const privilege: FeatureKibanaPrivileges = {
           alerting: {
-            all: [],
-            read: ['alert-type'],
+            rules: {
+              all: [],
+              read: ['alert-type'],
+            },
+            alerts: {
+              all: [],
+              read: ['alert-type'],
+            },
           },
 
           savedObject: {
@@ -92,8 +104,14 @@ describe(`feature_privilege_builder`, () => {
 
         const privilege: FeatureKibanaPrivileges = {
           alerting: {
-            all: ['alert-type'],
-            read: [],
+            rules: {
+              all: ['alert-type'],
+              read: [],
+            },
+            alerts: {
+              all: ['alert-type'],
+              read: [],
+            },
           },
 
           savedObject: {
@@ -143,8 +161,14 @@ describe(`feature_privilege_builder`, () => {
 
         const privilege: FeatureKibanaPrivileges = {
           alerting: {
-            all: ['alert-type'],
-            read: ['readonly-alert-type'],
+            rules: {
+              all: ['alert-type'],
+              read: ['readonly-alert-type'],
+            },
+            alerts: {
+              all: ['alert-type'],
+              read: ['readonly-alert-type'],
+            },
           },
 
           savedObject: {
