@@ -82,54 +82,52 @@ export interface FeatureKibanaPrivileges {
    * Alert Types and Alert Types provided by other features to which you wish to grant access.
    */
   alerting?: {
-    /**
-     * List of alert types which users should have full read/write access to when granted this privilege.
-     * @example
-     * ```ts
-     *  {
-     *    all: ['my-alert-type-within-my-feature']
-     *  }
-     * ```
-     */
-    all?: readonly string[];
+    rules?: {
+      /**
+       * List of alert types which users should have full read/write access to when granted this privilege.
+       * @example
+       * ```ts
+       *  {
+       *    all: ['my-alert-type-within-my-feature']
+       *  }
+       * ```
+       */
+      all?: readonly string[];
 
-    /**
-     * List of alert types which users should have read-only access to when granted this privilege.
-     * @example
-     * ```ts
-     *  {
-     *    read: ['my-alert-type']
-     *  }
-     * ```
-     */
-    read?: readonly string[];
-  };
+      /**
+       * List of alert types which users should have read-only access to when granted this privilege.
+       * @example
+       * ```ts
+       *  {
+       *    read: ['my-alert-type']
+       *  }
+       * ```
+       */
+      read?: readonly string[];
+    };
+    alerts?: {
+      /**
+       * List of alert types which users should have full read/write access to when granted this privilege.
+       * @example
+       * ```ts
+       *  {
+       *    all: ['my-alert-type-within-my-feature']
+       *  }
+       * ```
+       */
+      all?: readonly string[];
 
-  /**
-   * Solutions should specify owners of alerts here which will provide the solution read / write access to those alerts.
-   */
-  rac?: {
-    /**
-     * List of owners of alerts which users should have full read/write access to when granted this privilege.
-     * @example
-     * ```ts
-     *  {
-     *    all: ['securitySolution']
-     *  }
-     * ```
-     */
-    all?: readonly string[];
-
-    /**
-     * List of owners of alerts which users should have read-only access to when granted this privilege.
-     * @example
-     * ```ts
-     *  {
-     *    read: ['securitySolution', 'observability']
-     *  }
-     * ```
-     */
-    read?: readonly string[];
+      /**
+       * List of alert types which users should have read-only access to when granted this privilege.
+       * @example
+       * ```ts
+       *  {
+       *    read: ['my-alert-type']
+       *  }
+       * ```
+       */
+      read?: readonly string[];
+    };
   };
 
   /**

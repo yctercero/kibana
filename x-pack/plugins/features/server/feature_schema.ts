@@ -33,7 +33,6 @@ const managementSchema = Joi.object().pattern(
 );
 const catalogueSchema = Joi.array().items(Joi.string().regex(uiCapabilitiesRegex));
 const alertingSchema = Joi.array().items(Joi.string());
-const racSchema = Joi.array().items(Joi.string());
 
 const appCategorySchema = Joi.object({
   id: Joi.string().required(),
@@ -50,17 +49,19 @@ const kibanaPrivilegeSchema = Joi.object({
   api: Joi.array().items(Joi.string()),
   app: Joi.array().items(Joi.string()),
   alerting: Joi.object({
-    all: alertingSchema,
-    read: alertingSchema,
+    rules: {
+      all: alertingSchema,
+      read: alertingSchema,
+    },
+    alerts: {
+      all: alertingSchema,
+      read: alertingSchema,
+    },
   }),
   savedObject: Joi.object({
     all: Joi.array().items(Joi.string()).required(),
     read: Joi.array().items(Joi.string()).required(),
   }).required(),
-  rac: Joi.object({
-    all: racSchema,
-    read: racSchema,
-  }),
   ui: Joi.array().items(Joi.string().regex(uiCapabilitiesRegex)).required(),
 });
 
@@ -72,8 +73,14 @@ const kibanaIndependentSubFeaturePrivilegeSchema = Joi.object({
   management: managementSchema,
   catalogue: catalogueSchema,
   alerting: Joi.object({
-    all: alertingSchema,
-    read: alertingSchema,
+    rules: {
+      all: alertingSchema,
+      read: alertingSchema,
+    },
+    alerts: {
+      all: alertingSchema,
+      read: alertingSchema,
+    },
   }),
   api: Joi.array().items(Joi.string()),
   app: Joi.array().items(Joi.string()),
@@ -118,7 +125,6 @@ const kibanaFeatureSchema = Joi.object({
   management: managementSchema,
   catalogue: catalogueSchema,
   alerting: alertingSchema,
-  rac: racSchema,
   privileges: Joi.object({
     all: kibanaPrivilegeSchema,
     read: kibanaPrivilegeSchema,
@@ -167,7 +173,7 @@ export function validateKibanaFeature(feature: KibanaFeatureConfig) {
     throw validateResult.error;
   }
   // the following validation can't be enforced by the Joi schema, since it'd require us looking "up" the object graph for the list of valid value, which they explicitly forbid.
-  const { app = [], management = {}, catalogue = [], alerting = [], rac = [] } = feature;
+  const { app = [], management = {}, catalogue = [], alerting = [] } = feature;
 
   const unseenApps = new Set(app);
 
@@ -181,8 +187,6 @@ export function validateKibanaFeature(feature: KibanaFeatureConfig) {
   const unseenCatalogue = new Set(catalogue);
 
   const unseenAlertTypes = new Set(alerting);
-
-  const unseenRacTypes = new Set(rac);
 
   function validateAppEntry(privilegeId: string, entry: readonly string[] = []) {
     entry.forEach((privilegeApp) => unseenApps.delete(privilegeApp));
@@ -211,8 +215,10 @@ export function validateKibanaFeature(feature: KibanaFeatureConfig) {
   }
 
   function validateAlertingEntry(privilegeId: string, entry: FeatureKibanaPrivileges['alerting']) {
-    const all = entry?.all ?? [];
-    const read = entry?.read ?? [];
+    const all = Array.from(new Set([...(entry?.alerts?.all ?? []), ...(entry?.rules?.all ?? [])]));
+    const read = Array.from(
+      new Set([...(entry?.alerts?.read ?? []), ...(entry?.rules?.read ?? [])])
+    );
 
     all.forEach((privilegeAlertTypes) => unseenAlertTypes.delete(privilegeAlertTypes));
     read.forEach((privilegeAlertTypes) => unseenAlertTypes.delete(privilegeAlertTypes));
@@ -223,23 +229,6 @@ export function validateKibanaFeature(feature: KibanaFeatureConfig) {
         `Feature privilege ${
           feature.id
         }.${privilegeId} has unknown alerting entries: ${unknownAlertingEntries.join(', ')}`
-      );
-    }
-  }
-
-  function validateRacEntry(privilegeId: string, entry: FeatureKibanaPrivileges['rac']) {
-    const all = entry?.all ?? [];
-    const read = entry?.read ?? [];
-
-    all.forEach((privilegeOwner) => unseenRacTypes.delete(privilegeOwner));
-    read.forEach((privilegeOwner) => unseenRacTypes.delete(privilegeOwner));
-
-    const unknownRacEntries = difference([...all, ...read], rac);
-    if (unknownRacEntries.length > 0) {
-      throw new Error(
-        `Feature privilege ${
-          feature.id
-        }.${privilegeId} has unknown rac entries: ${unknownRacEntries.join(', ')}`
       );
     }
   }
@@ -305,8 +294,6 @@ export function validateKibanaFeature(feature: KibanaFeatureConfig) {
 
     validateManagementEntry(privilegeId, privilegeDefinition.management);
     validateAlertingEntry(privilegeId, privilegeDefinition.alerting);
-
-    // validateRacEntry(privilegeId, privilegeDefinition.rac);
   });
 
   const subFeatureEntries = feature.subFeatures ?? [];
@@ -317,7 +304,6 @@ export function validateKibanaFeature(feature: KibanaFeatureConfig) {
         validateCatalogueEntry(subFeaturePrivilege.id, subFeaturePrivilege.catalogue);
         validateManagementEntry(subFeaturePrivilege.id, subFeaturePrivilege.management);
         validateAlertingEntry(subFeaturePrivilege.id, subFeaturePrivilege.alerting);
-        // validateRacEntry(subFeaturePrivilege.id, subFeaturePrivilege.rac);
       });
     });
   });
