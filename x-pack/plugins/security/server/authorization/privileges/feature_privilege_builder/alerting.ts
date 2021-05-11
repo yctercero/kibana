@@ -46,21 +46,42 @@ export class FeaturePrivilegeAlertingBuilder extends BaseFeaturePrivilegeBuilder
     feature: KibanaFeature
   ): string[] {
     const getAlertingPrivilege = (
-      operations: Record<AlertingType, string[]>,
+      operations: string[],
       privilegedTypes: readonly string[],
-      consumer: string
+      consumer: string,
+      alertingType: AlertingType
     ) =>
       privilegedTypes.flatMap((privilegedType) =>
-        Object.values(AlertingType).flatMap((alertingType) =>
-          operations[alertingType].map((operation) =>
-            this.actions.alerting.get(privilegedType, consumer, alertingType, operation)
-          )
+        operations.map((operation) =>
+          this.actions.alerting.get(privilegedType, consumer, alertingType, operation)
         )
       );
 
     return uniq([
-      ...getAlertingPrivilege(allOperations, privilegeDefinition.alerting?.all ?? [], feature.id),
-      ...getAlertingPrivilege(readOperations, privilegeDefinition.alerting?.read ?? [], feature.id),
+      ...getAlertingPrivilege(
+        allOperations.rule,
+        privilegeDefinition.alerting?.rules?.all ?? [],
+        feature.id,
+        AlertingType.RULE
+      ),
+      ...getAlertingPrivilege(
+        readOperations.rule,
+        privilegeDefinition.alerting?.rules?.read ?? [],
+        feature.id,
+        AlertingType.RULE
+      ),
+      ...getAlertingPrivilege(
+        allOperations.alert,
+        privilegeDefinition.alerting?.alerts?.all ?? [],
+        feature.id,
+        AlertingType.ALERT
+      ),
+      ...getAlertingPrivilege(
+        readOperations.alert,
+        privilegeDefinition.alerting?.alerts?.read ?? [],
+        feature.id,
+        AlertingType.ALERT
+      ),
     ]);
   }
 }

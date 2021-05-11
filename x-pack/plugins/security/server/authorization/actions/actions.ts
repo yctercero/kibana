@@ -8,7 +8,6 @@
 import { AlertingActions } from './alerting';
 import { ApiActions } from './api';
 import { AppActions } from './app';
-import { RacActions } from './rac';
 import { SavedObjectActions } from './saved_object';
 import { SpaceActions } from './space';
 import { UIActions } from './ui';
@@ -21,8 +20,6 @@ export class Actions {
   public readonly api = new ApiActions(this.versionNumber);
 
   public readonly app = new AppActions(this.versionNumber);
-
-  public readonly rac = new RacActions(this.versionNumber);
 
   public readonly login = 'login:';
 

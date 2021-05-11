@@ -82,11 +82,26 @@ function mergeWithSubFeatures(
     );
 
     mergedConfig.alerting = {
-      all: mergeArrays(mergedConfig.alerting?.all ?? [], subFeaturePrivilege.alerting?.all ?? []),
-      read: mergeArrays(
-        mergedConfig.alerting?.read ?? [],
-        subFeaturePrivilege.alerting?.read ?? []
-      ),
+      rules: {
+        all: mergeArrays(
+          mergedConfig.alerting?.rules?.all ?? [],
+          subFeaturePrivilege.alerting?.rules?.all ?? []
+        ),
+        read: mergeArrays(
+          mergedConfig.alerting?.rules?.read ?? [],
+          subFeaturePrivilege.alerting?.rules?.read ?? []
+        ),
+      },
+      alerts: {
+        all: mergeArrays(
+          mergedConfig.alerting?.alerts?.all ?? [],
+          subFeaturePrivilege.alerting?.alerts?.all ?? []
+        ),
+        read: mergeArrays(
+          mergedConfig.alerting?.alerts?.read ?? [],
+          subFeaturePrivilege.alerting?.alerts?.read ?? []
+        ),
+      },
     };
   }
   return mergedConfig;
