@@ -47,7 +47,7 @@ import { TaskManagerStartContract } from '../../../task_manager/server';
 import { taskInstanceToAlertTaskInstance } from '../task_runner/alert_task_instance';
 import { RegistryAlertType, UntypedNormalizedAlertType } from '../alert_type_registry';
 import {
-  AlertsAuthorization,
+  AlertingAuthorization,
   WriteOperations,
   ReadOperations,
   AlertingAuthorizationEntity,
@@ -83,7 +83,7 @@ export interface ConstructorOptions {
   logger: Logger;
   taskManager: TaskManagerStartContract;
   unsecuredSavedObjectsClient: SavedObjectsClientContract;
-  authorization: AlertsAuthorization;
+  authorization: AlertingAuthorization;
   actionsAuthorization: ActionsAuthorization;
   alertTypeRegistry: AlertTypeRegistry;
   encryptedSavedObjectsClient: EncryptedSavedObjectsClient;
@@ -194,7 +194,7 @@ export class AlertsClient {
   private readonly namespace?: string;
   private readonly taskManager: TaskManagerStartContract;
   private readonly unsecuredSavedObjectsClient: SavedObjectsClientContract;
-  private readonly authorization: AlertsAuthorization;
+  private readonly authorization: AlertingAuthorization;
   private readonly alertTypeRegistry: AlertTypeRegistry;
   private readonly createAPIKey: (name: string) => Promise<CreateAPIKeyResult>;
   private readonly getActionsClient: () => Promise<ActionsClient>;
