@@ -104,7 +104,12 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
     router.post(
       {
         path: '/update-alert',
-        validate: false,
+        validate: {
+          body: schema.object({
+            status: schema.string(),
+            id: schema.string(),
+          }),
+        },
       },
       async (context, req, res) => {
         try {
@@ -114,13 +119,14 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
           console.error('STATUS', status);
           console.error('ID', id);
           const thing = await racClient?.update({
-            id: 'Dh1IYnkB0N8iW9VY-cL0',
+            id,
             owner: 'apm',
-            data: { status: 'closed' },
+            data: { status },
           });
           return res.ok({ body: { success: true, alerts: thing } });
         } catch (exc) {
           console.error('OOPS', exc);
+          return res.unauthorized();
         }
       }
     );
