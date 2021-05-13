@@ -84,7 +84,8 @@ export interface FindResult<Params extends AlertTypeParams> {
 }
 
 export interface UpdateOptions<Params extends AlertTypeParams> {
-  id: string;
+  ids: string[];
+  owner: string;
   data: {
     status: string;
   };
@@ -321,9 +322,51 @@ export class RacClient {
   }
 
   public async update<Params extends AlertTypeParams = never>({
-    id,
+    ids,
+    owner,
     data,
   }: UpdateOptions<Params>): Promise<PartialAlert<Params>> {
+    try {
+      await this.authorization.ensureAuthorized(
+        // TODO: add spaceid here.. I think
+        // result.body._source?.owner,
+        owner,
+        WriteOperations.Update
+      );
+      // TODO: type alert for the get method
+
+      try {
+        const body = ids.flatMap((id) => [
+          {
+            update: {
+              _id: id,
+            },
+          },
+          {
+            doc: { 'kibana.rac.alert.status': data.status },
+          },
+        ]);
+
+        const result = await this.esClient.bulk({
+          index: '.kibana-devin-hurley-alerts-observability-apm-8.0.0',
+          body,
+        });
+        return result;
+      } catch (exc) {
+        console.error(exc);
+        console.error('THREW ERROR WHEN TRYING UPDATE', JSON.stringify(exc, null, 2));
+      }
+    } catch (error) {
+      console.error('HERES THE ERROR', error);
+      // this.auditLogger?.log(
+      //   alertAuditEvent({
+      //     action: AlertAuditAction.GET,
+      //     savedObject: { type: 'alert', id },
+      //     error,
+      //   })
+      // );
+      throw error;
+    }
     // return await retryIfConflicts(
     //   this.logger,
     //   `alertsClient.update('${id}')`,

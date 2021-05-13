@@ -29,6 +29,7 @@
       "feature": {
         "ml": ["read"],
         "monitoring": ["all"],
+        "apm": ["all"],
         "actions": ["read"],
         "builtInAlerts": ["all"]
       },

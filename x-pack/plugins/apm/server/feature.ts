@@ -23,6 +23,7 @@ export const APM_FEATURE = {
   category: DEFAULT_APP_CATEGORIES.observability,
   app: ['apm', 'ux', 'kibana'],
   catalogue: ['apm'],
+  rac: [APM_SERVER_FEATURE_ID],
   management: {
     insightsAndAlerting: ['triggersActions'],
   },
@@ -33,6 +34,9 @@ export const APM_FEATURE = {
       app: ['apm', 'ux', 'kibana'],
       api: ['apm', 'apm_write'],
       catalogue: ['apm'],
+      rac: {
+        all: [APM_SERVER_FEATURE_ID],
+      },
       savedObject: {
         all: [],
         read: [],
@@ -49,6 +53,9 @@ export const APM_FEATURE = {
       app: ['apm', 'ux', 'kibana'],
       api: ['apm'],
       catalogue: ['apm'],
+      rac: {
+        all: [APM_SERVER_FEATURE_ID],
+      },
       savedObject: {
         all: [],
         read: [],

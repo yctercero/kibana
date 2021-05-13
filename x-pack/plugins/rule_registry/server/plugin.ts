@@ -15,6 +15,7 @@ import {
   KibanaRequest,
   IContextProvider,
 } from 'src/core/server';
+import { schema } from '@kbn/config-schema';
 import { PublicMethodsOf } from '@kbn/utility-types';
 import { SecurityPluginSetup, SecurityPluginStart } from '../../security/server';
 import {
@@ -99,6 +100,36 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
       racClient?.get({ id: 'hello world' });
       return res.ok();
     });
+
+    router.post(
+      {
+        path: '/update-alert',
+        validate: {
+          body: schema.object({
+            status: schema.string(),
+            ids: schema.arrayOf(schema.string()),
+          }),
+        },
+      },
+      async (context, req, res) => {
+        try {
+          const racClient = await context.ruleRegistry?.getRacClient();
+          console.error(req);
+          const { status, ids } = req.body;
+          console.error('STATUS', status);
+          console.error('ID', ids);
+          const thing = await racClient?.update({
+            ids,
+            owner: 'apm',
+            data: { status },
+          });
+          return res.ok({ body: { success: true, alerts: thing } });
+        } catch (exc) {
+          console.error('OOPS', exc);
+          return res.unauthorized();
+        }
+      }
+    );
 
     return rootRegistry;
   }
