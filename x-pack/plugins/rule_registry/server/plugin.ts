@@ -107,7 +107,7 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
         validate: {
           body: schema.object({
             status: schema.string(),
-            id: schema.string(),
+            ids: schema.arrayOf(schema.string()),
           }),
         },
       },
@@ -115,11 +115,11 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
         try {
           const racClient = await context.ruleRegistry?.getRacClient();
           console.error(req);
-          const { status, id } = req.body;
+          const { status, ids } = req.body;
           console.error('STATUS', status);
-          console.error('ID', id);
+          console.error('ID', ids);
           const thing = await racClient?.update({
-            id,
+            ids,
             owner: 'apm',
             data: { status },
           });

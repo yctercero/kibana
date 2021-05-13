@@ -84,7 +84,7 @@ export interface FindResult<Params extends AlertTypeParams> {
 }
 
 export interface UpdateOptions<Params extends AlertTypeParams> {
-  id: string;
+  ids: string[];
   owner: string;
   data: {
     status: string;
@@ -322,7 +322,7 @@ export class RacClient {
   }
 
   public async update<Params extends AlertTypeParams = never>({
-    id,
+    ids,
     owner,
     data,
   }: UpdateOptions<Params>): Promise<PartialAlert<Params>> {
@@ -336,30 +336,26 @@ export class RacClient {
       // TODO: type alert for the get method
 
       try {
-        // const result = await this.esClient.get({
-        //   index: '.siem-signals-devin-hurley-default',
-        //   id: 'ecf1d03a9f3456bb28bf3af5ef9fd2ef441641f3b495d92112e5e76d8feae62e',
-        // });
-        const result = await this.esClient.update({
-          index: '.kibana-devin-hurley-alerts-observability-apm-8.0.0',
-          id,
-          body: {
-            doc: {
-              'kibana.rac.alert.status': data.status,
+        const body = ids.flatMap((id) => [
+          {
+            update: {
+              _id: id,
             },
           },
+          {
+            doc: { 'kibana.rac.alert.status': data.status },
+          },
+        ]);
+
+        const result = await this.esClient.bulk({
+          index: '.kibana-devin-hurley-alerts-observability-apm-8.0.0',
+          body,
         });
-        // console.error(`************\nRESULT ${JSON.stringify(result, null, 2)}\n************`);
         return result;
       } catch (exc) {
         console.error(exc);
         console.error('THREW ERROR WHEN TRYING UPDATE', JSON.stringify(exc, null, 2));
       }
-
-      // const result = await this.esClient.search({
-      //   index: '.siem*',
-      //   body: { query: { match_all: {} } },
-      // });
     } catch (error) {
       console.error('HERES THE ERROR', error);
       // this.auditLogger?.log(
