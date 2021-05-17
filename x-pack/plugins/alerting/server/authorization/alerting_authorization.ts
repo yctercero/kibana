@@ -138,6 +138,14 @@ export class AlertingAuthorization {
     return this.authorization?.mode?.useRbacForRequest(this.request) ?? false;
   }
 
+  public getAuthorizedAlertsIndices(owners: string[]): string {
+    return owners
+      .map((owner) => {
+        return `.alerts-${owner}*`;
+      })
+      .join(',');
+  }
+
   public async ensureAuthorized({ ruleTypeId, consumer, operation, entity }: EnsureAuthorizedOpts) {
     const { authorization } = this;
 
