@@ -106,7 +106,7 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
           console.error('STATUS', status);
           console.error('ID', ids);
           const thing = await racClient?.update({
-            ids,
+            id: ids[0],
             owner: 'apm',
             data: { status },
           });
