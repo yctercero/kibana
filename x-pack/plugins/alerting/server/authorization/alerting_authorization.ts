@@ -71,7 +71,6 @@ export interface ConstructorOptions {
   auditLogger: AlertingAuthorizationAuditLogger;
   exemptConsumerIds: string[];
   authorization?: SecurityPluginSetup['authz'];
-  privilegeName?: string;
 }
 
 export class AlertingAuthorization {
@@ -96,13 +95,6 @@ export class AlertingAuthorization {
     this.authorization = authorization;
     this.alertTypeRegistry = alertTypeRegistry;
     this.auditLogger = auditLogger;
-    this.privilegeName = privilegeName ?? DEFAULT_PRIVILEGE_NAME;
-
-    const authorizationAction = get(
-      this.authorization!.actions,
-      this.privilegeName
-    ) as AlertingActions;
-    this.getAuthorizationString = authorizationAction.get;
 
     // List of consumer ids that are exempt from privilege check. This should be used sparingly.
     // An example of this is the Rules Management `consumer` as we don't want to have to
@@ -116,14 +108,13 @@ export class AlertingAuthorization {
           new Set(
             features
               .getKibanaFeatures()
-              .filter((feature) => {
-                // ignore features which are disabled in the user's space
-                return (
-                  !disabledFeatures.has(feature.id) &&
+              .filter(
+                ({ id, alerting }) =>
+                  // ignore features which are disabled in the user's space
+                  !disabledFeatures.has(id) &&
                   // ignore features which don't grant privileges to alerting
-                  (get(feature, this.privilegeName, undefined)?.length ?? 0 > 0)
-                );
-              })
+                  (alerting?.length ?? 0 > 0)
+              )
               .map((feature) => feature.id)
           )
       )
@@ -133,9 +124,6 @@ export class AlertingAuthorization {
         return new Set();
       });
 
-    // TODO
-    // This adds { alerts: { read: true, all: true }} to the list of consumers
-    // Do we need a flag to skip this???
     this.allPossibleConsumers = this.featuresIds.then((featuresIds) =>
       featuresIds.size
         ? asAuthorizedConsumers([...this.exemptConsumerIds, ...featuresIds], {

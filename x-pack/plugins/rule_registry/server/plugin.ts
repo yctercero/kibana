@@ -79,7 +79,6 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
     );
 
     defineRoutes(router);
-    const router = core.http.createRouter<RacRequestHandlerContext>();
     // handler is called when '/path' resource is requested with `GET` method
     router.get({ path: '/rac-myfakepath', validate: false }, async (context, req, res) => {
       const racClient = await context.ruleRegistry?.getRacClient();
