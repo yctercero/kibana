@@ -176,12 +176,11 @@ export class AlertsClient {
     id,
     data,
   }: UpdateOptions<Params>): Promise<PartialAlert<Params>> {
-    const query = buildAlertsSearchQuery({
-      index: '.alerts-*',
-      alertId: id,
-    });
     // TODO: Type out alerts (rule registry fields + alerting alerts type)
-    const { body: result } = await this.esClient.search<RawAlert>(query);
+    const result = await this.esClient.get({
+      index: '.siem-signals-devin-hurley-default',
+      id,
+    });
     const hits = result.hits.hits[0];
 
     try {

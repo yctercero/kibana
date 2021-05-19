@@ -5,6 +5,7 @@
  * 2.0.
  */
 
+import { schema } from '@kbn/config-schema';
 import {
   PluginInitializerContext,
   Plugin,
@@ -78,6 +79,44 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
     );
 
     defineRoutes(router);
+    const router = core.http.createRouter<RacRequestHandlerContext>();
+    // handler is called when '/path' resource is requested with `GET` method
+    router.get({ path: '/rac-myfakepath', validate: false }, async (context, req, res) => {
+      const racClient = await context.ruleRegistry?.getRacClient();
+      // console.error(`WHATS IN THE RAC CLIENT`, racClient);
+      racClient?.get({ id: 'hello world' });
+      return res.ok();
+    });
+
+    router.post(
+      {
+        path: '/update-alert',
+        validate: {
+          body: schema.object({
+            status: schema.string(),
+            ids: schema.arrayOf(schema.string()),
+          }),
+        },
+      },
+      async (context, req, res) => {
+        try {
+          const racClient = await context.ruleRegistry?.getRacClient();
+          console.error(req);
+          const { status, ids } = req.body;
+          console.error('STATUS', status);
+          console.error('ID', ids);
+          const thing = await racClient?.update({
+            ids,
+            owner: 'apm',
+            data: { status },
+          });
+          return res.ok({ body: { success: true, alerts: thing } });
+        } catch (exc) {
+          console.error('OOPS', exc);
+          return res.unauthorized();
+        }
+      }
+    );
 
     return service;
   }

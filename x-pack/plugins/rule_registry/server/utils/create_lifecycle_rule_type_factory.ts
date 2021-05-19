@@ -69,6 +69,7 @@ export const createLifecycleRuleTypeFactory: CreateLifecycleRuleTypeFactory = ({
       const {
         services: { alertInstanceFactory },
         state: previousState,
+        consumer,
       } = options;
 
       const ruleExecutorData = getRuleExecutorData(type, options);
