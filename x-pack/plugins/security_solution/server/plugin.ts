@@ -212,7 +212,7 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
 
     router.get({ path: '/security-myfakepath', validate: false }, async (context, req, res) => {
       try {
-        const racClient = await context.ruleRegistry?.getRacClient();
+        const racClient = await context.ruleRegistry?.getAlertsClient();
         const thing = await racClient?.find({ owner: SERVER_APP_ID });
         console.error('hits?', JSON.stringify(thing.body.hits.hits, null, 2));
         return res.ok({ body: { success: true, alerts: thing.body.hits.hits } });

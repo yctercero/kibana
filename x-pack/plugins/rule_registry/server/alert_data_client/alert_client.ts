@@ -66,6 +66,7 @@ export interface FindResult<Params extends AlertTypeParams> {
 
 export interface UpdateOptions<Params extends AlertTypeParams> {
   id: string;
+  owner: string;
   data: {
     status: string;
   };
@@ -174,33 +175,41 @@ export class AlertsClient {
 
   public async update<Params extends AlertTypeParams = never>({
     id,
+    owner,
     data,
   }: UpdateOptions<Params>): Promise<PartialAlert<Params>> {
     // TODO: Type out alerts (rule registry fields + alerting alerts type)
     const result = await this.esClient.get({
-      index: '.siem-signals-devin-hurley-default',
+      index: '.alerts-observability-apm', // '.siem-signals-devin-hurley-default',
       id,
     });
-    const hits = result.hits.hits[0];
+    console.error('RESULT', result);
+    const hits = result.body._source;
+    console.error(`ruleTypeId: ${hits['rule.id']} and consumer: ${hits['kibana.rac.alert.owner']}`);
 
     try {
       // ASSUMPTION: user bulk updating alerts from single owner/space
       // may need to iterate to support rules shared across spaces
       await this.authorization.ensureAuthorized({
-        ruleTypeId: hits['kibana.rac.alert.id'],
-        consumer: hits['kibana.rac.producer'],
+        ruleTypeId: hits['rule.id'],
+        consumer: hits['kibana.rac.alert.owner'],
         operation: WriteOperations.Update,
         entity: AlertingAuthorizationEntity.Alert,
       });
+      console.error('GOT PAST AUTHZ');
 
       try {
         const indices = this.authorization.getAuthorizedAlertsIndices([
-          hits['kibana.rac.producer'],
+          'observability',
+          // hits['kibana.rac.alert.producer'],
         ]);
+
+        console.error('INDICES', indices);
+
         // TODO: @Devin fix params for update
         const updateParameters = {
           id,
-          index: indices,
+          index: '.alerts-observability-apm',
           body: {
             doc: {
               'kibana.rac.alert.status': data.status,
@@ -208,16 +217,18 @@ export class AlertsClient {
           },
         };
 
-        return await this.esClient.update(updateParameters);
+        return this.esClient.update(updateParameters);
       } catch (error) {
         // TODO: Update error message
         this.logger.error('');
+        console.error('UPDATE ERROR', error);
         throw error;
       }
     } catch (error) {
+      console.error('AUTHZ ERROR', error);
       throw Boom.forbidden(
         this.auditLogger.racAuthorizationFailure({
-          owner: hits['kibana.rac.producer'],
+          owner: hits['kibana.rac.alert.producer'],
           operation: ReadOperations.Get,
           type: 'access',
         })

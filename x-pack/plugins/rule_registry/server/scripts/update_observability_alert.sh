@@ -16,4 +16,4 @@ curl -s -k \
  -H 'kbn-xsrf: 123' \
  -u observer:changeme \
  -X POST ${KIBANA_URL}${SPACE_URL}/update-alert \
- -d "{\"ids\": $IDS, \"status\":\"$STATUS\"}"
+ -d "{\"ids\": $IDS, \"status\":\"$STATUS\"}" | jq .

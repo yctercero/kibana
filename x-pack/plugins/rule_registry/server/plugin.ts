@@ -81,7 +81,7 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
     defineRoutes(router);
     // handler is called when '/path' resource is requested with `GET` method
     router.get({ path: '/rac-myfakepath', validate: false }, async (context, req, res) => {
-      const racClient = await context.ruleRegistry?.getRacClient();
+      const racClient = await context.rac.getAlertsClient();
       // console.error(`WHATS IN THE RAC CLIENT`, racClient);
       racClient?.get({ id: 'hello world' });
       return res.ok();
@@ -99,7 +99,7 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
       },
       async (context, req, res) => {
         try {
-          const racClient = await context.ruleRegistry?.getRacClient();
+          const racClient = await context.rac.getAlertsClient();
           console.error(req);
           const { status, ids } = req.body;
           console.error('STATUS', status);
