@@ -199,17 +199,12 @@ export class AlertsClient {
       console.error('GOT PAST AUTHZ');
 
       try {
-        const indices = this.authorization.getAuthorizedAlertsIndices([
-          'observability',
-          // hits['kibana.rac.alert.producer'],
-        ]);
+        const index = this.authorization.getAuthorizedAlertsIndices(hits['kibana.rac.alert.owner']);
 
-        console.error('INDICES', indices);
-
-        // TODO: @Devin fix params for update
+        console.error('INDEX', index);
         const updateParameters = {
           id,
-          index: '.alerts-observability-apm',
+          index,
           body: {
             doc: {
               'kibana.rac.alert.status': data.status,
@@ -256,10 +251,13 @@ export class AlertsClient {
       });
 
       try {
-        const indices = this.authorization.getAuthorizedAlertsIndices([owner]);
+        const index = this.authorization.getAuthorizedAlertsIndices(owner);
+        if (index == null) {
+          throw Error(`cannot find authorized index for owner: ${owner}`);
+        }
         const updateParameters = buildAlertsUpdateParameters({
           ids,
-          index: indices,
+          index,
           status: data.status,
         });
 
