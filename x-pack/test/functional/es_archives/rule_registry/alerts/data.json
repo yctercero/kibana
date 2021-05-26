@@ -2,7 +2,9 @@
   "type": "doc",
   "value": {
     "index": ".alerts-observability-apm",
+    "id": "NoxgpHkBqbdrfX07MqXV",
     "source": {
+      "rule.id": "apm.error_rate",
       "message": "hello world 1",
       "kibana.rac.alert.owner": "apm"
     }

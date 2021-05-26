@@ -26,17 +26,22 @@ export const getAlertByIdRoute = (router: IRouter<RacRequestHandlerContext>) => 
           )
         ),
       },
-      options: {
-        tags: ['access:rac'],
-      },
+      // options: {
+      //   tags: ['access:rac'],
+      // },
     },
     async (context, request, response) => {
-      const alertsClient = await context.rac.getAlertsClient();
-      const { id } = request.query;
-      const alert = await alertsClient.get({ id });
-      return response.ok({
-        body: alert,
-      });
+      try {
+        const alertsClient = await context.rac.getAlertsClient();
+        const { id } = request.query;
+        const alert = await alertsClient.get({ id });
+        return response.ok({
+          body: alert,
+        });
+      } catch (exc) {
+        console.error('ROUTE ERROR', exc);
+        throw exc;
+      }
     }
   );
 };
