@@ -70,6 +70,18 @@ export function createTestConfig(name: string, options: CreateTestConfigOptions)
           `--xpack.actions.allowedHosts=${JSON.stringify(['localhost', 'some.non.existent.com'])}`,
           `--xpack.actions.enabledActionTypes=${JSON.stringify(enabledActionTypes)}`,
           '--xpack.eventLog.logEntries=true',
+          `--logging.verbose=true`,
+          `--logging.events.log=${JSON.stringify([
+            'alerts',
+            'ruleRegistry',
+            'info',
+            'warning',
+            'error',
+            'fatal',
+          ])}`,
+          `--logging.events.request=${JSON.stringify(['info', 'warning', 'error', 'fatal'])}`,
+          `--logging.events.error='*'`,
+          `--logging.events.ops=__no-ops__`,
           ...disabledPlugins.map((key) => `--xpack.${key}.enabled=false`),
           ...(ssl
             ? [

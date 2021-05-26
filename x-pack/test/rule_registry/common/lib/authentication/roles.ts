@@ -36,7 +36,7 @@ export const globalRead: Role = {
       {
         feature: {
           siem: ['read'],
-          observability: ['read'],
+          apm: ['read'],
           actions: ['read'],
           actionsSimulators: ['read'],
         },
@@ -108,7 +108,7 @@ export const observabilityOnlyAll: Role = {
     kibana: [
       {
         feature: {
-          observability: ['all'],
+          apm: ['all'],
           actions: ['all'],
           actionsSimulators: ['all'],
         },
@@ -132,7 +132,7 @@ export const observabilityOnlyRead: Role = {
     kibana: [
       {
         feature: {
-          observability: ['read'],
+          apm: ['read'],
           actions: ['read'],
           actionsSimulators: ['read'],
         },
@@ -217,7 +217,7 @@ export const observabilityOnlyAllSpacesAll: Role = {
     kibana: [
       {
         feature: {
-          observability: ['all'],
+          apm: ['all'],
           actions: ['all'],
           actionsSimulators: ['all'],
         },
@@ -241,7 +241,7 @@ export const observabilityOnlyReadSpacesAll: Role = {
     kibana: [
       {
         feature: {
-          observability: ['read'],
+          apm: ['read'],
           actions: ['read'],
           actionsSimulators: ['read'],
         },

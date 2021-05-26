@@ -157,8 +157,11 @@ export class AlertingAuthorization {
     const { authorization } = this;
 
     const isAvailableConsumer = has(await this.allPossibleConsumers, consumer);
+    // console.error('IS AVAILABLE CONSUMER', isAvailableConsumer);
     if (authorization && this.shouldCheckAuthorization()) {
+      // console.error('INSIDE IF STATEMENT');
       const ruleType = this.alertTypeRegistry.get(ruleTypeId);
+      // console.error('RULE TYPE', ruleType);
       const requiredPrivilegesByScope = {
         consumer: authorization.actions.alerting.get(ruleTypeId, consumer, entity, operation),
         producer: authorization.actions.alerting.get(
@@ -169,11 +172,18 @@ export class AlertingAuthorization {
         ),
       };
 
+      console.error(
+        'REQUIRED PRIVILEGES BY SCOPE',
+        JSON.stringify(requiredPrivilegesByScope, null, 2)
+      );
+
       // Skip authorizing consumer if it is in the list of exempt consumer ids
       const shouldAuthorizeConsumer = !this.exemptConsumerIds.includes(consumer);
 
+      console.error('SHOULD AUTHORIZED CONSUMER', shouldAuthorizeConsumer);
+
       const checkPrivileges = authorization.checkPrivilegesDynamicallyWithRequest(this.request);
-      const { hasAllRequested, username, privileges } = await checkPrivileges({
+      const checkPrivParams = {
         kibana:
           shouldAuthorizeConsumer && consumer !== ruleType.producer
             ? [
@@ -187,9 +197,14 @@ export class AlertingAuthorization {
                 // be created for exempt consumers if user has producer level privileges
                 requiredPrivilegesByScope.producer,
               ],
-      });
+      };
+      console.error('CHECK PRIV PARAMS', JSON.stringify(checkPrivParams, null, 2));
+      const { hasAllRequested, username, privileges } = await checkPrivileges(checkPrivParams);
+      console.error('HASALLREQUESTED', hasAllRequested);
+      console.error('PRIVILEGES', JSON.stringify(privileges, null, 2));
 
       if (!isAvailableConsumer) {
+        console.error('NOT IS AVAILABLE CONSUMER 1');
         /**
          * Under most circumstances this would have been caught by `checkPrivileges` as
          * a user can't have Privileges to an unknown consumer, but super users
@@ -220,6 +235,7 @@ export class AlertingAuthorization {
           entity
         );
       } else {
+        console.error('NOT HAS ALL REQUESTED');
         const authorizedPrivileges = map(
           privileges.kibana.filter((privilege) => privilege.authorized),
           'privilege'
@@ -229,10 +245,16 @@ export class AlertingAuthorization {
           (privilege) => !authorizedPrivileges.includes(privilege)
         );
 
+        console.error('UNAUTHORIZED SCOPES', unauthorizedScopes);
+
         const [unauthorizedScopeType, unauthorizedScope] =
           shouldAuthorizeConsumer && unauthorizedScopes.consumer
             ? [ScopeType.Consumer, consumer]
             : [ScopeType.Producer, ruleType.producer];
+
+        console.error(
+          `UNAUTHORIZED SCOPE TYPE: ${unauthorizedScopeType} \nUNAUTHORIZED SCOPE: ${unauthorizedScope}`
+        );
 
         throw Boom.forbidden(
           this.auditLogger.logAuthorizationFailure(
@@ -246,6 +268,7 @@ export class AlertingAuthorization {
         );
       }
     } else if (!isAvailableConsumer) {
+      console.error('NOT IS AVAILABLE CONSUMER 2');
       throw Boom.forbidden(
         this.auditLogger.logAuthorizationFailure(
           '',

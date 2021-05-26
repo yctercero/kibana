@@ -36,15 +36,15 @@ export const buildAlertsSearchQuery = ({
               minimum_should_match: 1,
             },
           },
-          {
-            range: {
-              '@timestamp': {
-                gt: from,
-                lte: to,
-                format: 'epoch_millis',
-              },
-            },
-          },
+          // {
+          //   range: {
+          //     '@timestamp': {
+          //       gt: from,
+          //       lte: to,
+          //       format: 'epoch_millis',
+          //     },
+          //   },
+          // },
         ],
       },
     },

@@ -18,4 +18,4 @@ cd ..
 # Example: ./find_rules.sh
 curl -s -k \
  -u $USER:changeme \
- -X GET ${KIBANA_URL}${SPACE_URL}/monitoring-myfakepath | jq .
+ -X GET ${KIBANA_URL}${SPACE_URL}/api/rac/alerts?id=NoxgpHkBqbdrfX07MqXV | jq .

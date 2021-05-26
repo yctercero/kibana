@@ -30,8 +30,10 @@
         "ml": ["read"],
         "monitoring": ["all"],
         "apm": ["all"],
+        "ruleRegistry": ["all"],
         "actions": ["read"],
-        "builtInAlerts": ["all"]
+        "builtInAlerts": ["all"],
+        "alerting": ["all"]
       },
       "spaces": ["*"]
     }

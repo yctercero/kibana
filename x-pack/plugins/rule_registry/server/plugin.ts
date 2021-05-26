@@ -87,6 +87,27 @@ export class RuleRegistryPlugin implements Plugin<RuleRegistryPluginSetupContrac
       return res.ok();
     });
 
+    router.get(
+      {
+        path: '/rac-getalert',
+        validate: false,
+      },
+      async (context, request, response) => {
+        try {
+          const alertsClient = await context.rac.getAlertsClient();
+          const { id } = request.query;
+          console.error('ID?', id);
+          const alert = await alertsClient.get({ id });
+          return response.ok({
+            body: alert,
+          });
+        } catch (exc) {
+          console.error('ROUTE ERROR', exc);
+          throw exc;
+        }
+      }
+    );
+
     router.post(
       {
         path: '/update-alert',

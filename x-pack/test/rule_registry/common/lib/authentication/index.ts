@@ -36,13 +36,13 @@ export const createUsersAndRoles = async (
   const security = getService('security');
 
   const createRole = async ({ name, privileges }: Role) => {
-    return await security.role.create(name, privileges);
+    return security.role.create(name, privileges);
   };
 
   const createUser = async (user: User) => {
     const userInfo = getUserInfo(user);
 
-    return await security.user.create(user.username, {
+    return security.user.create(user.username, {
       password: user.password,
       roles: user.roles,
       full_name: userInfo.full_name,
@@ -51,7 +51,8 @@ export const createUsersAndRoles = async (
   };
 
   for (const role of rolesToCreate) {
-    await createRole(role);
+    const res = await createRole(role);
+    console.error('CREATED ROLE', res);
   }
 
   for (const user of usersToCreate) {

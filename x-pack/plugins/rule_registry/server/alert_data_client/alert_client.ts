@@ -114,33 +114,42 @@ export class AlertsClient {
     // first search for the alert specified, then check if user has access to it
     // and return search results
     const query = buildAlertsSearchQuery({
-      index: '.alerts-*',
+      index: '.alerts-observability-apm',
       alertId: id,
     });
     // TODO: Type out alerts (rule registry fields + alerting alerts type)
-    const { body: result } = await this.esClient.search<RawAlert>(query);
-    // TODO: I thought we were moving away from using _source?
-    const hits = result.hits.hits[0]._source;
-
     try {
-      // use security plugin routes to check what URIs user is authorized to
-      await this.authorization.ensureAuthorized({
-        ruleTypeId: hits['rule.id'],
-        consumer: hits['kibana.rac.alert.producer'],
-        operation: ReadOperations.Get,
-        entity: AlertingAuthorizationEntity.Alert,
+      console.error('QUERY', JSON.stringify(query, null, 2));
+      const { body: result } = await this.esClient.get<RawAlert>({
+        index: '.alerts-observability-apm',
+        id,
       });
-    } catch (error) {
-      throw Boom.forbidden(
-        this.auditLogger.racAuthorizationFailure({
-          owner: hits['kibana.rac.alert.producer'],
-          operation: ReadOperations.Get,
-          type: 'access',
-        })
-      );
-    }
+      console.error('rule.id', result._source['rule.id']);
+      console.error('kibana.rac.alert.owner', result._source['kibana.rac.alert.owner']);
 
-    return result;
+      try {
+        // use security plugin routes to check what URIs user is authorized to
+        await this.authorization.ensureAuthorized({
+          ruleTypeId: result._source['rule.id'],
+          consumer: result._source['kibana.rac.alert.owner'],
+          operation: ReadOperations.Get,
+          entity: AlertingAuthorizationEntity.Alert,
+        });
+      } catch (error) {
+        throw Boom.forbidden(
+          this.auditLogger.racAuthorizationFailure({
+            owner: result._source['kibana.rac.alert.owner'],
+            operation: ReadOperations.Get,
+            type: 'access',
+          })
+        );
+      }
+
+      return result;
+    } catch (exc) {
+      console.error('EXCEPTION IN GET', JSON.stringify(exc));
+      throw exc;
+    }
   }
 
   public async find({ owner }: { owner: string }): Promise<unknown> {
