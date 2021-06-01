@@ -32,7 +32,7 @@ describe('buildSignal', () => {
     delete doc._source.event;
     const rule = getRulesSchemaMock();
     const signal = {
-      ...buildSignal([doc], rule),
+      ...buildSignal([doc], rule, 'siem'),
       ...additionalSignalFields(doc),
     };
     const expected: Signal = {
@@ -114,7 +114,7 @@ describe('buildSignal', () => {
     };
     const rule = getRulesSchemaMock();
     const signal = {
-      ...buildSignal([doc], rule),
+      ...buildSignal([doc], rule, 'siem'),
       ...additionalSignalFields(doc),
     };
     const expected: Signal = {

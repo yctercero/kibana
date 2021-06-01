@@ -38,6 +38,9 @@ export const createRuleTypeMocks = () => {
 
   const services = {
     scopedClusterClient: elasticsearchServiceMock.createScopedClusterClient(),
+    savedObjectsClient: {
+      get: () => ({ attributes: { consumer: 'apm' } }),
+    },
     alertInstanceFactory: jest.fn(() => ({ scheduleActions })),
     alertWithLifecycle: jest.fn(),
     logger: loggerMock,

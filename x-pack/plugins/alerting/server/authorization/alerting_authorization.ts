@@ -138,6 +138,14 @@ export class AlertingAuthorization {
     return this.authorization?.mode?.useRbacForRequest(this.request) ?? false;
   }
 
+  public getAuthorizedAlertsIndices(owner: string): string | undefined {
+    return owner === 'apm'
+      ? '.alerts-observability-apm'
+      : owner === 'securitySolution'
+      ? '.siem-signals*'
+      : undefined;
+  }
+
   public async ensureAuthorized({ ruleTypeId, consumer, operation, entity }: EnsureAuthorizedOpts) {
     const { authorization } = this;
 
@@ -158,7 +166,7 @@ export class AlertingAuthorization {
       const shouldAuthorizeConsumer = !this.exemptConsumerIds.includes(consumer);
 
       const checkPrivileges = authorization.checkPrivilegesDynamicallyWithRequest(this.request);
-      const { hasAllRequested, username, privileges } = await checkPrivileges({
+      const checkPrivParams = {
         kibana:
           shouldAuthorizeConsumer && consumer !== ruleType.producer
             ? [
@@ -172,7 +180,8 @@ export class AlertingAuthorization {
                 // be created for exempt consumers if user has producer level privileges
                 requiredPrivilegesByScope.producer,
               ],
-      });
+      };
+      const { hasAllRequested, username, privileges } = await checkPrivileges(checkPrivParams);
 
       if (!isAvailableConsumer) {
         /**
@@ -182,6 +191,7 @@ export class AlertingAuthorization {
          * as Privileged.
          * This check will ensure we don't accidentally let these through
          */
+        // This should also log the type they're trying to access rule/alert
         throw Boom.forbidden(
           this.auditLogger.logAuthorizationFailure(
             username,

@@ -61,7 +61,7 @@ export default function ({ getService }: FtrProviderContext) {
             infrastructure: ['all', 'read'],
             logs: ['all', 'read'],
             uptime: ['all', 'read'],
-            apm: ['all', 'read'],
+            apm: ['all', 'read', 'minimal_all', 'minimal_read', 'alert_manage'],
             ml: ['all', 'read'],
             siem: ['all', 'read'],
             fleet: ['all', 'read'],

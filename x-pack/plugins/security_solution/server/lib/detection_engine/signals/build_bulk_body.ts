@@ -28,7 +28,7 @@ export const buildBulkBody = (
 ): SignalHit => {
   const rule = buildRuleWithOverrides(ruleSO, doc._source!);
   const signal: Signal = {
-    ...buildSignal([doc], rule),
+    ...buildSignal([doc], rule, ruleSO.attributes.consumer),
     ...additionalSignalFields(doc),
   };
   const event = buildEventTypeSignal(doc);
@@ -98,7 +98,7 @@ export const buildSignalFromSequence = (
   ruleSO: SavedObject<AlertAttributes>
 ): SignalHit => {
   const rule = buildRuleWithoutOverrides(ruleSO);
-  const signal: Signal = buildSignal(events, rule);
+  const signal: Signal = buildSignal(events, rule, ruleSO.attributes.consumer);
   const mergedEvents = objectArrayIntersection(events.map((event) => event._source));
   return {
     ...mergedEvents,
@@ -127,7 +127,7 @@ export const buildSignalFromEvent = (
       buildRuleWithOverrides(ruleSO, event._source)
     : buildRuleWithoutOverrides(ruleSO);
   const signal: Signal = {
-    ...buildSignal([event], rule),
+    ...buildSignal([event], rule, ruleSO.attributes.consumer),
     ...additionalSignalFields(event),
   };
   const eventFields = buildEventTypeSignal(event);
