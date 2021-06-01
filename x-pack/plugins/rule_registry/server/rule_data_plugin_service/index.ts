@@ -19,7 +19,7 @@ import { ClusterPutComponentTemplateBody, PutIndexTemplateRequest } from '../../
 
 const BOOTSTRAP_TIMEOUT = 60000;
 
-interface RuleDataPluginServiceConstructorOptions {
+export interface RuleDataPluginServiceConstructorOptions {
   getClusterClient: () => Promise<ElasticsearchClient>;
   logger: Logger;
   isWriteEnabled: boolean;

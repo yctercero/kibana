@@ -14,7 +14,7 @@ import {
   IContextProvider,
 } from 'src/core/server';
 import { SecurityPluginSetup } from '../../security/server';
-import { AlertsClientFactory } from './alert_data_client/alert_client_factory';
+import { AlertsClientFactory } from './alert_data_client/alerts_client_factory';
 import { PluginStartContract as AlertingStart } from '../../alerting/server';
 import { RacApiRequestHandlerContext, RacRequestHandlerContext } from './types';
 import { defineRoutes } from './routes';
@@ -61,7 +61,7 @@ export class RuleRegistryPlugin
   private readonly logger: Logger;
   private eventLogService: EventLogService | null;
   private readonly alertsClientFactory: AlertsClientFactory;
-  private ruleDataService: RuleDataPluginService | null | undefined;
+  private ruleDataService: RuleDataPluginService | null;
   private security: SecurityPluginSetup | undefined;
 
   constructor(initContext: PluginInitializerContext) {
@@ -143,9 +143,6 @@ export class RuleRegistryPlugin
 
     alertsClientFactory.initialize({
       logger,
-      getSpaceId(request: KibanaRequest) {
-        return plugins.spaces?.spacesService.getSpaceId(request);
-      },
       esClient: core.elasticsearch.client.asInternalUser,
       // NOTE: Alerts share the authorization client with the alerting plugin
       getAlertingAuthorization(request: KibanaRequest) {
@@ -156,7 +153,7 @@ export class RuleRegistryPlugin
     });
 
     const getRacClientWithRequest = (request: KibanaRequest) => {
-      return alertsClientFactory.create(request, this.config.index);
+      return alertsClientFactory.create(request);
     };
 
     return {
@@ -166,14 +163,14 @@ export class RuleRegistryPlugin
   }
 
   private createRouteHandlerContext = (): IContextProvider<RacRequestHandlerContext, 'rac'> => {
-    const { alertsClientFactory, config } = this;
+    const { alertsClientFactory } = this;
     return async function alertsRouteHandlerContext(
       context,
       request
     ): Promise<RacApiRequestHandlerContext> {
       return {
         getAlertsClient: async () => {
-          const createdClient = alertsClientFactory.create(request, config.index);
+          const createdClient = alertsClientFactory.create(request);
           return createdClient;
         },
       };
