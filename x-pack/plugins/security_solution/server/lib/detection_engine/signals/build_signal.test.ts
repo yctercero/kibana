@@ -62,6 +62,7 @@ describe('buildSignal', () => {
         },
       ],
       original_time: '2020-04-20T21:27:45+0000',
+      owner: 'siem',
       status: 'open',
       rule: {
         author: [],
@@ -144,6 +145,7 @@ describe('buildSignal', () => {
         },
       ],
       original_time: '2020-04-20T21:27:45+0000',
+      owner: 'siem',
       original_event: {
         action: 'socket_opened',
         dataset: 'socket',
