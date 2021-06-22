@@ -21,7 +21,7 @@ import { RuleDataWriteDisabledError } from './errors';
 
 const BOOTSTRAP_TIMEOUT = 60000;
 
-interface RuleDataPluginServiceConstructorOptions {
+export interface RuleDataPluginServiceConstructorOptions {
   getClusterClient: () => Promise<ElasticsearchClient>;
   logger: Logger;
   isWriteEnabled: boolean;
@@ -52,8 +52,11 @@ function createSignal() {
 
 export class RuleDataPluginService {
   signal = createSignal();
+  private readonly fullAssetName;
 
-  constructor(private readonly options: RuleDataPluginServiceConstructorOptions) {}
+  constructor(private readonly options: RuleDataPluginServiceConstructorOptions) {
+    this.fullAssetName = options.index;
+  }
 
   private assertWriteEnabled() {
     if (!this.isWriteEnabled()) {
@@ -155,7 +158,14 @@ export class RuleDataPluginService {
   }
 
   getFullAssetName(assetName?: string) {
-    return [this.options.index, assetName].filter(Boolean).join('-');
+    return [this.fullAssetName, assetName].filter(Boolean).join('-');
+  }
+
+  async assertFullAssetNameExists(assetName?: string) {
+    const fullAssetName = this.getFullAssetName(assetName);
+    const clusterClient = await this.getClusterClient();
+    const { body } = await clusterClient.indices.exists({ index: fullAssetName });
+    return body;
   }
 
   getRuleDataClient(alias: string, initialize: () => Promise<void>) {
