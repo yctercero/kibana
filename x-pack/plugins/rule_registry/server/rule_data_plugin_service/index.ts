@@ -18,6 +18,7 @@ import { defaultLifecyclePolicy } from '../../common/assets/lifecycle_policies/d
 import { ClusterPutComponentTemplateBody, PutIndexTemplateRequest } from '../../common/types';
 import { RuleDataClient } from '../rule_data_client';
 import { RuleDataWriteDisabledError } from './errors';
+import { ValidFeatureId } from '../utils/rbac';
 
 const BOOTSTRAP_TIMEOUT = 60000;
 
@@ -52,11 +53,8 @@ function createSignal() {
 
 export class RuleDataPluginService {
   signal = createSignal();
-  private readonly fullAssetName;
 
-  constructor(private readonly options: RuleDataPluginServiceConstructorOptions) {
-    this.fullAssetName = options.index;
-  }
+  constructor(private readonly options: RuleDataPluginServiceConstructorOptions) {}
 
   private assertWriteEnabled() {
     if (!this.isWriteEnabled()) {
@@ -158,6 +156,16 @@ export class RuleDataPluginService {
   }
 
   getFullAssetName(assetName?: string) {
-    return [this.fullAssetName, assetName].filter(Boolean).join('-');
+    return [this.options.index, assetName].filter(Boolean).join('-');
+  }
+
+  getRuleDataClient(feature: ValidFeatureId, alias: string, initialize: () => Promise<void>) {
+    return new RuleDataClient({
+      alias,
+      feature,
+      getClusterClient: () => this.getClusterClient(),
+      isWriteEnabled: this.isWriteEnabled(),
+      ready: initialize,
+    });
   }
 }

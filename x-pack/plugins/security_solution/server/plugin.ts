@@ -237,6 +237,7 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
       });
 
       ruleDataClient = ruleDataService.getRuleDataClient(
+        SERVER_APP_ID,
         ruleDataService.getFullAssetName('security-solution'),
         () => initializeRuleDataTemplatesPromise
       );
