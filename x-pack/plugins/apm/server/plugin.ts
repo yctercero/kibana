@@ -19,7 +19,7 @@ import { mapValues, once } from 'lodash';
 import { TECHNICAL_COMPONENT_TEMPLATE_NAME } from '../../rule_registry/common/assets';
 import { mappingFromFieldMap } from '../../rule_registry/common/mapping_from_field_map';
 import { RuleDataClient } from '../../rule_registry/server';
-import { APMConfig, APMXPackConfig } from '.';
+import { APMConfig, APMXPackConfig, APM_SERVER_FEATURE_ID } from '.';
 import { mergeConfigs } from './index';
 import { UI_SETTINGS } from '../../../../src/plugins/data/common';
 import { APM_FEATURE, registerFeaturesUsage } from './feature';
@@ -181,6 +181,7 @@ export class APMPlugin
     });
 
     const ruleDataClient = new RuleDataClient({
+      feature: APM_SERVER_FEATURE_ID,
       alias: ruleDataService.getFullAssetName('observability-apm'),
       getClusterClient: async () => {
         const coreStart = await getCoreStart();

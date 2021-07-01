@@ -237,6 +237,7 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
       });
 
       ruleDataClient = new RuleDataClient({
+        feature: SERVER_APP_ID,
         alias: plugins.ruleRegistry.ruleDataService.getFullAssetName('security-solution'),
         getClusterClient: async () => {
           const coreStart = await start();

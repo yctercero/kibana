@@ -105,7 +105,13 @@ export class ObservabilityPlugin implements Plugin<ObservabilityPluginSetup> {
         return coreStart.elasticsearch.client.asInternalUser;
       },
       ready: () => Promise.resolve(),
+      // For the line below this comment...
+      // so just .alerts? That doesn't seem right...
+      // I'm imagining this should be .alerts-observability and so
+      // ...ruleDataService.getFullAssetName('observability');
+      // otherwise .alerts could return top alerts for everything?
       alias: plugins.ruleRegistry.ruleDataService.getFullAssetName(),
+      feature: 'observability',
     });
 
     registerRoutes({
