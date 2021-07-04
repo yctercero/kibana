@@ -26,6 +26,12 @@ import {
 } from './roles';
 import { User } from './types';
 
+/**
+ *
+ * These users will have access to all spaces.
+ *
+ */
+
 export const superUser: User = {
   username: 'superuser',
   password: 'superuser',
@@ -100,36 +106,38 @@ export const users = [
 ];
 
 /**
+ *
  * These users will have access to all spaces.
+ *
  */
 
 export const secOnlySpacesAll: User = {
-  username: 'sec_only',
-  password: 'sec_only',
+  username: 'sec_only_spaces_all',
+  password: 'sec_only_spaces_all',
   roles: [securitySolutionOnlyAllSpacesAll.name],
 };
 
 export const secOnlyReadSpacesAll: User = {
-  username: 'sec_only_read',
-  password: 'sec_only_read',
+  username: 'sec_only_read_spaces_all',
+  password: 'sec_only_read_spaces_all',
   roles: [securitySolutionOnlyReadSpacesAll.name],
 };
 
 export const obsOnlySpacesAll: User = {
-  username: 'obs_only',
-  password: 'obs_only',
+  username: 'obs_only_spaces_all',
+  password: 'obs_only_spaces_all',
   roles: [observabilityOnlyAllSpacesAll.name],
 };
 
 export const obsSecSpacesAll: User = {
-  username: 'obs_sec',
-  password: 'obs_sec',
+  username: 'obs_sec_spaces_all',
+  password: 'obs_sec_spaces_all',
   roles: [securitySolutionOnlyAllSpacesAll.name, observabilityOnlyAllSpacesAll.name],
 };
 
 export const obsSecReadSpacesAll: User = {
-  username: 'obs_sec_read',
-  password: 'obs_sec_read',
+  username: 'obs_sec_read_spaces_all',
+  password: 'obs_sec_read_spaces_all',
   roles: [securitySolutionOnlyReadSpacesAll.name, observabilityOnlyReadSpacesAll.name],
 };
 
