@@ -87,7 +87,6 @@ export class AlertsClient {
         body: { query: { term: { _id: id } } },
         seq_no_primary_term: true,
       });
-
       if (!isValidAlert(result.body.hits.hits[0]._source)) {
         const errorMessage = `Unable to retrieve alert details for alert with id of "${id}".`;
         this.logger.debug(errorMessage);
