@@ -5,13 +5,19 @@
  * 2.0.
  */
 
-import { map, mergeMap } from 'rxjs/operators';
+import { flatMap, map, mergeMap } from 'rxjs/operators';
+import { from } from 'rxjs';
+
+import {
+  AlertingAuthorizationEntity,
+  AlertingAuthorizationFilterType,
+  PluginStartContract as AlertPluginStartContract,
+} from '../../../../alerting/server';
 import {
   ISearchStrategy,
   PluginStart,
   shimHitsTotal,
 } from '../../../../../../src/plugins/data/server';
-import { ENHANCED_ES_SEARCH_STRATEGY } from '../../../../../../src/plugins/data/common';
 import {
   TimelineFactoryQueryTypes,
   TimelineStrategyResponseType,
@@ -21,17 +27,38 @@ import { timelineFactory } from './factory';
 import { TimelineFactory } from './factory/types';
 
 export const timelineSearchStrategyProvider = <T extends TimelineFactoryQueryTypes>(
-  data: PluginStart
+  data: PluginStart,
+  alerting: AlertPluginStartContract
 ): ISearchStrategy<TimelineStrategyRequestType<T>, TimelineStrategyResponseType<T>> => {
-  const es = data.search.getSearchStrategy(ENHANCED_ES_SEARCH_STRATEGY);
+  const es = data.search.searchAsInternalUser;
   return {
     search: (request, options, deps) => {
-      if (request.factoryQueryType == null) {
+      const factoryQueryType = request.factoryQueryType;
+
+      if (factoryQueryType == null) {
         throw new Error('factoryQueryType is required');
       }
-      const queryFactory: TimelineFactory<T> = timelineFactory[request.factoryQueryType];
-      const dsl = queryFactory.buildDsl(request);
-      return es.search({ ...request, params: dsl }, options, deps).pipe(
+
+      // Note: Alerts RBAC are built off of the alerting's authorization class, which
+      // is why we are pulling from alerting, not ther alertsClient here
+      const alertingAuthorizationClient = alerting.getAlertingAuthorizationWithRequest(
+        deps.request
+      );
+      const queryFactory: TimelineFactory<T> = timelineFactory[factoryQueryType];
+      const getAuthFilter = async () => {
+        return alertingAuthorizationClient.getFindAuthorizationFilter(
+          AlertingAuthorizationEntity.Alert,
+          {
+            type: AlertingAuthorizationFilterType.ESDSL,
+            fieldNames: { consumer: 'kibana.rac.alert.owner', ruleTypeId: 'rule.id' },
+          }
+        );
+      };
+      return from(getAuthFilter()).pipe(
+        flatMap(({ filter }) => {
+          const dsl = queryFactory.buildDsl({ ...request, authFilter: filter });
+          return es.search({ ...request, params: dsl }, options, deps);
+        }),
         map((response) => {
           return {
             ...response,
