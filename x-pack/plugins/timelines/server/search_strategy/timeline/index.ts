@@ -50,12 +50,13 @@ export const timelineSearchStrategyProvider = <T extends TimelineFactoryQueryTyp
           AlertingAuthorizationEntity.Alert,
           {
             type: AlertingAuthorizationFilterType.ESDSL,
-            fieldNames: { consumer: 'kibana.rac.alert.owner', ruleTypeId: 'rule.id' },
+            fieldNames: { consumer: 'kibana.rac.alert.owner', ruleTypeId: 'kibana.rac.alert.id' },
           }
         );
       };
       return from(getAuthFilter()).pipe(
         flatMap(({ filter }) => {
+          console.error('AUTH FILTER', JSON.stringify(filter))
           const dsl = queryFactory.buildDsl({ ...request, authFilter: filter });
           return es.search({ ...request, params: dsl }, options, deps);
         }),
