@@ -200,7 +200,7 @@ export const useTimelineEvents = ({
 
   // TODO: Once we are past experimental phase this code should be removed
   const ruleRegistryEnabled = useIsExperimentalFeatureEnabled('ruleRegistryEnabled');
-
+  console.log('ruleRegistryEnabled', ruleRegistryEnabled);
   const timelineSearch = useCallback(
     (request: TimelineRequest<typeof language> | null) => {
       if (request == null || pageName === '' || skip) {

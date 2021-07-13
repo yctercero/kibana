@@ -9,14 +9,14 @@
 
 set -e
 
-USER=${1:-'hunter'}
-ID=${2:-'kdL4gHoBFALkyfScIsY5'}
+# USER=${1:-'hunter'}
+# ID=${2:-'kdL4gHoBFALkyfScIsY5'}
 
-cd ./hunter && sh ./post_detections_role.sh && sh ./post_detections_user.sh
-cd ../observer && sh ./post_detections_role.sh && sh ./post_detections_user.sh
-cd ..
+# cd ./hunter && sh ./post_detections_role.sh && sh ./post_detections_user.sh
+# cd ../observer && sh ./post_detections_role.sh && sh ./post_detections_user.sh
+# cd ..
 
 # Example: ./get_observability_alert.sh hunter
 curl -v -k \
- -u $USER:changeme \
- -X GET "${KIBANA_URL}${SPACE_URL}/internal/rac/alerts?id=$ID&index=.alerts-security-solution" | jq .
+ -u ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD} \
+ -X GET "${KIBANA_URL}${SPACE_URL}/internal/rac/alerts?id=EKsWnXoBXXA_cE40lrlx&index=.alerts-security.alerts" | jq .

@@ -73,7 +73,7 @@ export const createQueryAlertType = (ruleDataClient: RuleDataClient, logger: Log
         };
 
         const alerts = await findAlerts(query);
-        // console.log('alerts', alerts);
+        console.log('alerts', alerts);
         alertWithPersistence(alerts).forEach((alert) => {
           alert.scheduleActions('default', { server: 'server-test' });
         });
