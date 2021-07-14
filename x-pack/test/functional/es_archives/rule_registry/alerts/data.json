@@ -4,9 +4,11 @@
     "index": ".alerts-observability-apm",
     "id": "NoxgpHkBqbdrfX07MqXV",
     "source": {
+      "event.kind" : "signal",
       "@timestamp": "2020-12-16T15:16:18.570Z",
-      "rule.id": "apm.error_rate",
+      "kibana.rac.alert.id": "apm.error_rate",
       "message": "hello world 1",
+      "kibana.rac.alert.uuid" : "b9b3a95a-2698-45ef-ae80-c9159014fc39",
       "kibana.rac.alert.owner": "apm",
       "kibana.rac.alert.status": "open"
     }
@@ -19,11 +21,30 @@
     "index": ".alerts-security.alerts",
     "id": "020202",
     "source": {
+      "event.kind" : "signal",
       "@timestamp": "2020-12-16T15:16:18.570Z",
-      "rule.id": "siem.signals",
+      "kibana.rac.alert.id": "siem.signals",
       "message": "hello world security",
       "kibana.rac.alert.owner": "siem",
+      "kibana.rac.alert.uuid" : "f56cd8c8-09cc-4cda-a552-9193d411e776",
       "kibana.rac.alert.status": "open"
+    }
+  }
+}
+
+{
+  "type": "doc",
+  "value": {
+    "index": ".alerts-security.alerts",
+    "id": "020203",
+    "source": {
+      "event.kind" : "signal",
+      "@timestamp": "2020-12-16T15:16:18.570Z",
+      "kibana.rac.alert.id": "siem.signals",
+      "message": "hello world security",
+      "kibana.rac.alert.owner": "siem",
+      "kibana.rac.alert.status": "open",
+      "kibana.rac.alert.uuid" : "24990c5b-4466-4d8f-8274-8d3fa6431762"
     }
   }
 }

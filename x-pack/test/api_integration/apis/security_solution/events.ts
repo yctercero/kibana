@@ -7,7 +7,7 @@
 
 import expect from '@kbn/expect';
 
-import { secOnly } from '../../../rule_registry/common/lib/authentication/users';
+import { obsSecSpacesAll, obsOnlySpacesAll, secOnlySpacesAll } from '../../../rule_registry/common/lib/authentication/users';
 import {
   createSpacesAndUsers,
   deleteSpacesAndUsers,
@@ -374,12 +374,22 @@ const DOC_VALUE_FIELDS = [
   {
     field: 'dll.pe.original_file_name',
   },
+  {
+    field: 'kibana.rac.alert.owner',
+  },
+  {
+    field: 'kibana.rac.alert.id',
+  },
+  {
+    field: 'event.kind',
+  },
 ];
 const FIELD_REQUESTED = [
   '@timestamp',
   'message',
   'event.category',
   'event.action',
+  'event.kind',
   'host.name',
   'source.ip',
   'destination.ip',
@@ -406,6 +416,8 @@ const FIELD_REQUESTED = [
   'file.hash.sha256',
   'host.os.family',
   'event.code',
+  'kibana.rac.alert.owner',
+  'kibana.rac.alert.id'
 ];
 
 export default function ({ getService }: FtrProviderContext) {
@@ -414,7 +426,7 @@ export default function ({ getService }: FtrProviderContext) {
   const supertest = getService('supertest');
   const supertestWithoutAuth = getService('supertestWithoutAuth');
 
-  describe('Timeline', () => {
+  describe.only('Timeline', () => {
     before(async () => {
       await esArchiver.load('x-pack/test/functional/es_archives/auditbeat/hosts');
       await esArchiver.load('x-pack/test/functional/es_archives/rule_registry/alerts');
@@ -426,7 +438,7 @@ export default function ({ getService }: FtrProviderContext) {
       await deleteSpacesAndUsers(getService);
     });
 
-    it('Make sure that we get Timeline data', async () => {
+    xit('Make sure that we get Timeline data', async () => {
       await retry.try(async () => {
         const resp = await supertest
           .post('/internal/search/timelineSearchStrategy/')
@@ -469,47 +481,98 @@ export default function ({ getService }: FtrProviderContext) {
     });
 
     // TODO: unskip this test once authz is added to search strategy
-    it.skip('Make sure that we get Timeline data using the hunter role and do not receive observability alerts', async () => {
-      await retry.try(async () => {
-        const requestBody = {
-          defaultIndex: ['.alerts*'], // query both .alerts-observability-apm and .alerts-security-solution
-          docValueFields: [],
-          factoryQueryType: TimelineEventsQueries.all,
-          fieldRequested: FIELD_REQUESTED,
-          // fields: [],
-          filterQuery: {
-            bool: {
-              filter: [
-                {
-                  match_all: {},
-                },
-              ],
-            },
-          },
-          pagination: {
-            activePage: 0,
-            querySize: 25,
-          },
-          language: 'kuery',
-          sort: [
-            {
-              field: '@timestamp',
-              direction: Direction.desc,
-              type: 'number',
-            },
-          ],
-          timerange: {
-            from: FROM,
-            to: TO,
-            interval: '12h',
-          },
-        };
+    it('Make sure that we get Timeline data using the hunter role and do not receive observability alerts', async () => {
+      // await retry.try(async () => {
         const resp = await supertestWithoutAuth
-          .post('/internal/search/securitySolutionTimelineSearchStrategy/')
-          .auth(secOnly.username, secOnly.password) // using security 'hunter' role
+          .post('/internal/search/timelineSearchStrategy/')
+          .auth(secOnlySpacesAll.username, secOnlySpacesAll.password) // using security 'hunter' role
           .set('kbn-xsrf', 'true')
           .set('Content-Type', 'application/json')
-          .send(requestBody)
+          .send({
+            defaultIndex: ['.alerts*'],
+            docValueFields: DOC_VALUE_FIELDS,
+            factoryQueryType: TimelineEventsQueries.all,
+            fieldRequested: FIELD_REQUESTED,
+            fields: [],
+            filterQuery: {
+              bool: {
+                filter: [
+                  {
+                    match_all: {},
+                  },
+                ],
+              },
+            },
+            pagination: {
+              activePage: 0,
+              querySize: LIMITED_PAGE_SIZE,
+            },
+            language: 'kuery',
+            sort: [
+              {
+                field: '@timestamp',
+                direction: Direction.desc,
+                type: 'number',
+              },
+            ],
+            timerange: {
+              from: FROM,
+              to: TO,
+              interval: '12h',
+            },
+          })
+          .expect(200);
+
+        const timeline = resp.body;
+
+        // we inject one alert into the security solutions alerts index and another alert into the observability alerts index
+        // therefore when accessing the .alerts* index with the security solution user,
+        // only security solution alerts should be returned since the security solution user
+        // is not authorized to view observability alerts.
+        expect(timeline.totalCount).to.be(2);
+      // });
+    });
+
+    it('Make sure that we get Timeline data using the observability and do not receive security alerts', async () => {
+      // await retry.try(async () => {
+        const resp = await supertestWithoutAuth
+          .post('/internal/search/timelineSearchStrategy/')
+          .auth(obsOnlySpacesAll.username, obsOnlySpacesAll.password) // using security 'hunter' role
+          .set('kbn-xsrf', 'true')
+          .set('Content-Type', 'application/json')
+          .send({
+            defaultIndex: ['.alerts*'],
+            docValueFields: DOC_VALUE_FIELDS,
+            factoryQueryType: TimelineEventsQueries.all,
+            fieldRequested: FIELD_REQUESTED,
+            fields: [],
+            filterQuery: {
+              bool: {
+                filter: [
+                  {
+                    match_all: {},
+                  },
+                ],
+              },
+            },
+            pagination: {
+              activePage: 0,
+              querySize: LIMITED_PAGE_SIZE,
+            },
+            language: 'kuery',
+            sort: [
+              {
+                field: '@timestamp',
+                direction: Direction.desc,
+                type: 'number',
+              },
+            ],
+            timerange: {
+              from: FROM,
+              to: TO,
+              interval: '12h',
+            },
+          })
           .expect(200);
 
         const timeline = resp.body;
@@ -519,10 +582,62 @@ export default function ({ getService }: FtrProviderContext) {
         // only security solution alerts should be returned since the security solution user
         // is not authorized to view observability alerts.
         expect(timeline.totalCount).to.be(1);
-      });
+      // });
     });
 
-    it('Make sure that pagination is working in Timeline query', async () => {
+    it('Make sure that we get Timeline data using the ob/sec and do not receive security alerts', async () => {
+      // await retry.try(async () => {
+        const resp = await supertestWithoutAuth
+          .post('/internal/search/timelineSearchStrategy/')
+          .auth(obsSecSpacesAll.username, obsSecSpacesAll.password) // using security 'hunter' role
+          .set('kbn-xsrf', 'true')
+          .set('Content-Type', 'application/json')
+          .send({
+            defaultIndex: ['.alerts*'],
+            docValueFields: DOC_VALUE_FIELDS,
+            factoryQueryType: TimelineEventsQueries.all,
+            fieldRequested: FIELD_REQUESTED,
+            fields: [],
+            filterQuery: {
+              bool: {
+                filter: [
+                  {
+                    match_all: {},
+                  },
+                ],
+              },
+            },
+            pagination: {
+              activePage: 0,
+              querySize: LIMITED_PAGE_SIZE,
+            },
+            language: 'kuery',
+            sort: [
+              {
+                field: '@timestamp',
+                direction: Direction.desc,
+                type: 'number',
+              },
+            ],
+            timerange: {
+              from: FROM,
+              to: TO,
+              interval: '12h',
+            },
+          })
+          .expect(200);
+
+        const timeline = resp.body;
+
+        // we inject one alert into the security solutions alerts index and another alert into the observability alerts index
+        // therefore when accessing the .alerts* index with the security solution user,
+        // only security solution alerts should be returned since the security solution user
+        // is not authorized to view observability alerts.
+        expect(timeline.totalCount).to.be(3);
+      // });
+    });
+
+    xit('Make sure that pagination is working in Timeline query', async () => {
       await retry.try(async () => {
         const resp = await supertest
           .post('/internal/search/timelineSearchStrategy/')
