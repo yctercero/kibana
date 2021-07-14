@@ -18,8 +18,6 @@ export default async function (context: FtrConfigProviderContext) {
       'xpack.license.self_generated.type=basic',
       'xpack.security.enabled=true',
       'xpack.security.authc.api_key.enabled=true',
-      'xpack.securitySolution.enableExperimental=["ruleRegistryEnabled"]',
-      'xpack.ruleRegistry.write.enabled=true'
     ];
     config.testFiles = [require.resolve('./apis/security/security_basic')];
     config.junit.reportName = 'X-Pack API Integration Tests (Security Basic)';

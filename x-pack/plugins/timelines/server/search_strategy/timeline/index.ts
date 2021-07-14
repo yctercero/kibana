@@ -44,24 +44,18 @@ export const timelineSearchStrategyProvider = <T extends TimelineFactoryQueryTyp
       const alertingAuthorizationClient = alerting.getAlertingAuthorizationWithRequest(
         deps.request
       );
-      console.error('I AM HERE----------------------')
       const queryFactory: TimelineFactory<T> = timelineFactory[factoryQueryType];
-      console.error('QUERY FACTORY TYPE----------------------')
 
-      const getAuthFilter = async () => {
-        const a = await alertingAuthorizationClient.getFindAuthorizationFilter(
+      const getAuthFilter = async () => (
+        alertingAuthorizationClient.getFindAuthorizationFilter(
           AlertingAuthorizationEntity.Alert,
           {
             type: AlertingAuthorizationFilterType.ESDSL,
             fieldNames: { consumer: 'kibana.rac.alert.owner', ruleTypeId: 'kibana.rac.alert.id' },
           }
-        );
-console.log('GETAUTHFILTER', JSON.stringify(a))
-        return a;
-      };
+        ));
       return from(getAuthFilter()).pipe(
         flatMap(({ filter }) => {
-          console.error('AUTH FILTER', JSON.stringify(filter))
           const dsl = queryFactory.buildDsl({ ...request, authFilter: filter });
           return es.search({ ...request, params: dsl }, options, deps);
         }),
@@ -77,7 +71,6 @@ console.log('GETAUTHFILTER', JSON.stringify(a))
       );
     },
     cancel: async (id, options, deps) => {
-      console.error('WHY AM I CANCELLING')
       if (es.cancel) {
         return es.cancel(id, options, deps);
       }

@@ -366,10 +366,8 @@ export class AlertingAuthorization {
     hasAllRequested: boolean;
     authorizedRuleTypes: Set<RegistryAlertTypeWithAuth>;
   }> {
-    console.error('FEATURE IDS 1', featuresIds)
-
     const fIds = featuresIds ?? (await this.featuresIds);
-    console.error('FEATURE IDS', fIds)
+
     if (this.authorization && this.shouldCheckAuthorization()) {
       const checkPrivileges = this.authorization.checkPrivilegesDynamicallyWithRequest(
         this.request

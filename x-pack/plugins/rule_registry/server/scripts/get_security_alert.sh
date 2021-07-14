@@ -19,4 +19,4 @@ set -e
 # Example: ./get_observability_alert.sh hunter
 curl -v -k \
  -u ${ELASTICSEARCH_USERNAME}:${ELASTICSEARCH_PASSWORD} \
- -X GET "${KIBANA_URL}${SPACE_URL}/internal/rac/alerts?id=EKsWnXoBXXA_cE40lrlx&index=.alerts-security.alerts" | jq .
+ -X GET "${KIBANA_URL}${SPACE_URL}/internal/rac/alerts?id=$ID&index=.alerts-security.alerts" | jq .

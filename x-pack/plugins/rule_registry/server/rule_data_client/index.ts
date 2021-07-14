@@ -80,8 +80,6 @@ export class RuleDataClient implements IRuleDataClient {
 
     return {
       bulk: async (request) => {
-                      console.error('--------isWriteEnabled------', isWriteEnabled)
-
         if (!isWriteEnabled) {
           throw new RuleDataWriteDisabledError();
         }
@@ -100,7 +98,6 @@ export class RuleDataClient implements IRuleDataClient {
               response.body.items.length > 0 &&
               response.body.items?.[0]?.index?.error?.type === 'index_not_found_exception'
             ) {
-              console.error('--------CREATING SIGNALS------')
               return this.createWriteTargetIfNeeded({ namespace }).then(() => {
                 return clusterClient.bulk(requestWithDefaultParameters);
               });
