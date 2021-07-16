@@ -65,6 +65,7 @@ import {
   SERVER_APP_ID,
   SIGNALS_ID,
   NOTIFICATIONS_ID,
+  CUSTOM_ALERT_TYPE_ID,
   REFERENCE_RULE_ALERT_TYPE_ID,
   REFERENCE_RULE_PERSISTENCE_ALERT_TYPE_ID,
 } from '../common/constants';
@@ -191,9 +192,11 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
 
     // TODO: Once we are past experimental phase this check can be removed along with legacy registration of rules
     const isRuleRegistryEnabled = experimentalFeatures.ruleRegistryEnabled;
+    console.error('IS 2 ENABLED --------', isRuleRegistryEnabled);
 
     let ruleDataClient: RuleDataClient | null = null;
     if (isRuleRegistryEnabled) {
+      console.error('IS ENABLED --------', isRuleRegistryEnabled);
       const { ruleDataService } = plugins.ruleRegistry;
 
       const alertsIndexPattern = ruleDataService.getFullAssetName('security.alerts*');
@@ -271,13 +274,14 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
     const referenceRuleTypes = [
       REFERENCE_RULE_ALERT_TYPE_ID,
       REFERENCE_RULE_PERSISTENCE_ALERT_TYPE_ID,
+      CUSTOM_ALERT_TYPE_ID,
     ];
     const ruleTypes = [
       SIGNALS_ID,
       NOTIFICATIONS_ID,
       ...(isRuleRegistryEnabled ? referenceRuleTypes : []),
     ];
-
+    console.log('RULE TYPES----------', ruleTypes);
     plugins.features.registerKibanaFeature(
       getKibanaPrivilegesFeaturePrivileges(ruleTypes, isRuleRegistryEnabled)
     );

@@ -118,3 +118,27 @@ export const removeSignalsIndex = () => {
     }
   });
 };
+
+export const createReferenceRuleActivated = () => {
+  cy.request({
+    method: 'POST',
+    url: '/api/alerts/alert',
+    body: {
+      params: {
+        indexPatterns: ['rac-*'],
+        customQuery: '*:*',
+      },
+      consumer: 'alerts',
+      alertTypeId: 'siem.customRule',
+      schedule: {
+        interval: '30s',
+      },
+      actions: [],
+      tags: ['custom', 'persistence'],
+      notifyWhen: 'onActionGroupChange',
+      name: 'Basic reference query rule',
+    },
+    headers: { 'kbn-xsrf': 'cypress-creds' },
+    failOnStatusCode: false,
+  });
+};

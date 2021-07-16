@@ -47,7 +47,8 @@ export const buildTimelineEventsAllQuery = ({
     return [];
   };
 
-  const filter = [...filterClause, ...getTimerangeFilter(timerange), { match_all: {} }, authFilter];
+  const filters = [...filterClause, ...getTimerangeFilter(timerange), { match_all: {} }];
+  const filter = authFilter != null ? [...filters, { ...authFilter }] : filters;
 
   const getSortField = (sortFields: TimelineRequestSortField[]) =>
     sortFields.map((item) => {

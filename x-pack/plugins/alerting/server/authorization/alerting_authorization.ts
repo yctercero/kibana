@@ -367,7 +367,6 @@ export class AlertingAuthorization {
     authorizedRuleTypes: Set<RegistryAlertTypeWithAuth>;
   }> {
     const fIds = featuresIds ?? (await this.featuresIds);
-
     if (this.authorization && this.shouldCheckAuthorization()) {
       const checkPrivileges = this.authorization.checkPrivilegesDynamicallyWithRequest(
         this.request
