@@ -353,9 +353,7 @@ const ExceptionsViewerComponent = ({
 
       {currentModal === 'addException' && exceptionListTypeToEdit != null && (
         <AddExceptionFlyout
-          ruleName={ruleName}
-          ruleIndices={ruleIndices}
-          dataViewId={dataViewId}
+          showAlertCloseOptions={true}
           ruleId={ruleId}
           exceptionListType={exceptionListTypeToEdit}
           onCancel={handleOnCancelExceptionModal}

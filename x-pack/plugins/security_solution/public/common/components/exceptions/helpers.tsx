@@ -95,6 +95,23 @@ export const formatOperatingSystems = (osTypes: string[]): string => {
 };
 
 /**
+ * Adds user defined name to all new exceptionItems
+ * @param exceptionItems new or existing ExceptionItem[]
+ * @param name new exception item name
+ */
+ export const enrichNewExceptionItemsWithName = (
+  exceptionItems: Array<ExceptionListItemSchema | CreateExceptionListItemSchema>,
+  name: string
+): Array<ExceptionListItemSchema | CreateExceptionListItemSchema> => {
+  return exceptionItems.map((item: ExceptionListItemSchema | CreateExceptionListItemSchema) => {
+    return {
+      ...item,
+      name,
+    };
+  });
+};
+
+/**
  * Formats ExceptionItem.comments into EuiCommentList format
  *
  * @param comments ExceptionItem.comments
