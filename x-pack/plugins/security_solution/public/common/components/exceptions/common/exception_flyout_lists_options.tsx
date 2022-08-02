@@ -105,6 +105,7 @@ const ExceptionsAddToListsComponent: React.FC<ExceptionsAddToListsComponentProps
       ));
       setListsToDisplay([]);
     } else {
+      setListsToDisplay(lists.filter((list) => list.type === 'detection'));
     }
   }, [setMessage, loadingLists, lists]);
   
