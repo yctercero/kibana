@@ -348,9 +348,8 @@ export const AddExceptionFlyoutWrapper: React.FC<AddExceptionFlyoutWrapperProps>
 
   return (
     <AddExceptionFlyout
-      ruleName={ruleName}
+      showAlertCloseOptions={true}
       ruleId={ruleId}
-      ruleIndices={useRuleIndices}
       exceptionListType={exceptionListType}
       alertData={enrichedAlert}
       isAlertDataLoading={isLoading}

@@ -26,18 +26,6 @@ export const REMOVE = i18n.translate('xpack.securitySolution.exceptions.removeBu
   defaultMessage: 'Remove',
 });
 
-export const COMMENTS_SHOW = (comments: number) =>
-  i18n.translate('xpack.securitySolution.exceptions.showCommentsLabel', {
-    values: { comments },
-    defaultMessage: 'Show ({comments}) {comments, plural, =1 {Comment} other {Comments}}',
-  });
-
-export const COMMENTS_HIDE = (comments: number) =>
-  i18n.translate('xpack.securitySolution.exceptions.hideCommentsLabel', {
-    values: { comments },
-    defaultMessage: 'Hide ({comments}) {comments, plural, =1 {Comment} other {Comments}}',
-  });
-
 export const NAME = i18n.translate('xpack.securitySolution.exceptions.nameLabel', {
   defaultMessage: 'Name',
 });
@@ -162,13 +150,6 @@ export const AND = i18n.translate('xpack.securitySolution.exceptions.andDescript
 export const OR = i18n.translate('xpack.securitySolution.exceptions.orDescription', {
   defaultMessage: 'OR',
 });
-
-export const ADD_COMMENT_PLACEHOLDER = i18n.translate(
-  'xpack.securitySolution.exceptions.viewer.addCommentPlaceholder',
-  {
-    defaultMessage: 'Add a new comment...',
-  }
-);
 
 export const ADD_TO_CLIPBOARD = i18n.translate(
   'xpack.securitySolution.exceptions.viewer.addToClipboard',

@@ -19,10 +19,10 @@ import {
 } from '@elastic/eui';
 import type { Comment } from '@kbn/securitysolution-io-ts-list-types';
 import * as i18n from './translations';
-import { useCurrentUser } from '../../lib/kibana';
-import { getFormattedComments } from './helpers';
+import { useCurrentUser } from '../../../lib/kibana';
+import { getFormattedComments } from '../helpers';
 
-interface AddExceptionCommentsProps {
+interface ExceptionItemCommentsProps {
   exceptionItemComments?: Comment[];
   newCommentValue: string;
   newCommentOnChange: (value: string) => void;
@@ -45,13 +45,17 @@ const CommentAccordion = styled(EuiAccordion)`
   `}
 `;
 
-export const AddExceptionComments = memo(function AddExceptionComments({
+export const ExceptionItemComments = memo(function ExceptionItemComments({
   exceptionItemComments,
   newCommentValue,
   newCommentOnChange,
-}: AddExceptionCommentsProps) {
+}: ExceptionItemCommentsProps) {
   const [shouldShowComments, setShouldShowComments] = useState(false);
   const currentUser = useCurrentUser();
+  const fullName = currentUser?.fullName;
+  const userName = currentUser?.username;
+  const avatarName =
+    fullName && fullName.length > 0 ? fullName : userName ?? i18n.UNKNOWN_AVATAR_NAME;
 
   const handleOnChange = useCallback(
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -105,10 +109,7 @@ export const AddExceptionComments = memo(function AddExceptionComments({
       )}
       <EuiFlexGroup gutterSize={'none'}>
         <EuiFlexItem grow={false}>
-          <MyAvatar
-            name={currentUser != null ? currentUser.username.toUpperCase() ?? '' : ''}
-            size="l"
-          />
+          <MyAvatar name={avatarName} size="l" />
         </EuiFlexItem>
         <EuiFlexItem grow={1}>
           <EuiTextArea
@@ -117,6 +118,7 @@ export const AddExceptionComments = memo(function AddExceptionComments({
             value={newCommentValue}
             onChange={handleOnChange}
             fullWidth={true}
+            data-test-subj="newExceptionItemCommentTextArea"
           />
         </EuiFlexItem>
       </EuiFlexGroup>

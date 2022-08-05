@@ -1727,8 +1727,8 @@ describe('Exception builder helpers', () => {
     test('it removes `temporaryId` from items', () => {
       const { meta, ...rest } = getNewExceptionItem({
         listId: '123',
+        name: 'rule name',
         namespaceType: 'single',
-        ruleName: 'rule name',
       });
       const exceptions = filterExceptionItems([{ ...rest, entries: [getEntryMatchMock()], meta }]);
 

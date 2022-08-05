@@ -54,7 +54,7 @@ import * as sharedI18n from '../translations';
 import { useKibana } from '../../../lib/kibana';
 import { useAppToasts } from '../../../hooks/use_app_toasts';
 import { useAddOrUpdateException } from '../use_add_exception';
-import { AddExceptionComments } from '../add_exception_comments';
+import { ExceptionItemComments } from '../common/exception_item_comments';
 import {
   enrichExistingExceptionItemWithComments,
   enrichExceptionItemsWithOS,
@@ -410,7 +410,7 @@ export const EditExceptionFlyout = memo(function EditExceptionFlyout({
 
               <EuiSpacer />
 
-              <AddExceptionComments
+              <ExceptionItemComments
                 exceptionItemComments={exceptionItem.comments}
                 newCommentValue={comment}
                 newCommentOnChange={onCommentChange}

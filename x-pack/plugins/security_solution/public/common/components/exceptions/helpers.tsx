@@ -49,6 +49,23 @@ import exceptionableEndpointFields from './exceptionable_endpoint_fields.json';
 import { EXCEPTIONABLE_ENDPOINT_EVENT_FIELDS } from '../../../../common/endpoint/exceptions/exceptionable_endpoint_event_fields';
 import { ALERT_ORIGINAL_EVENT } from '../../../../common/field_maps/field_names';
 
+/**
+ * Adds user defined name to all new exceptionItems
+ * @param exceptionItems new or existing ExceptionItem[]
+ * @param name new exception item name
+ */
+ export const enrichNewExceptionItemsWithName = (
+  exceptionItems: Array<ExceptionListItemSchema | CreateExceptionListItemSchema>,
+  name: string
+): Array<ExceptionListItemSchema | CreateExceptionListItemSchema> => {
+  return exceptionItems.map((item: ExceptionListItemSchema | CreateExceptionListItemSchema) => {
+    return {
+      ...item,
+      name,
+    };
+  });
+};
+
 export const filterIndexPatterns = (
   patterns: DataViewBase,
   type: ExceptionListType,
