@@ -19,6 +19,7 @@ import {
 } from '../../../../../common/constants';
 import type { BulkAction } from '../../../../../common/detection_engine/schemas/common';
 import type {
+  CreateRuleExceptionListItemSchema,
   FullResponseSchema,
   PreviewResponse,
 } from '../../../../../common/detection_engine/schemas/request';
@@ -368,6 +369,33 @@ export const fetchInstalledIntegrations = async ({
       query: {
         packages: packages?.sort()?.join(','),
       },
+      signal,
+    }
+  );
+
+/**
+ * Add exception items to default rule exception list
+ *
+ * @param ruleId `id` of rule to add items to
+ * @param items CreateRuleExceptionListItemSchema[]
+ * @param signal to cancel request
+ *
+ * @throws An error if response is not OK
+ */
+export const addRuleExceptions = async ({
+  ruleId,
+  items,
+  signal,
+}: {
+  ruleId: string;
+  items: CreateRuleExceptionListItemSchema[];
+  signal: AbortSignal | undefined;
+}): Promise<FullResponseSchema> =>
+  KibanaServices.get().http.fetch<FullResponseSchema>(
+    `${DETECTION_ENGINE_RULES_URL}/${ruleId}/exceptions`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ items }),
       signal,
     }
   );

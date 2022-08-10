@@ -6,20 +6,32 @@
  */
 
 import React, { useEffect, useCallback, useMemo, useState } from 'react';
-import { EuiText, EuiTitle, EuiSpacer, EuiLink, EuiFlexGroup, EuiFlexItem, EuiInMemoryTable, EuiEmptyPrompt, EuiPanel, EuiRadioGroup, EuiLoadingLogo } from '@elastic/eui';
+import {
+  EuiText,
+  EuiTitle,
+  EuiSpacer,
+  EuiIconTip,
+  EuiFlexGroup,
+  EuiFlexItem,
+  EuiInMemoryTable,
+  EuiEmptyPrompt,
+  EuiPanel,
+  EuiRadioGroup,
+  EuiLoadingLogo,
+} from '@elastic/eui';
 import styled, { css } from 'styled-components';
 import { useExceptionLists } from '@kbn/securitysolution-list-hooks';
 
-import { Action } from './reducer';
+import type { ExceptionListSchema } from '@kbn/securitysolution-io-ts-list-types';
+import type { Action } from './reducer';
 import * as i18n from './translations';
 import { useKibana } from '../../../lib/kibana';
 import { ALL_ENDPOINT_ARTIFACT_LIST_IDS } from '../../../../../common/endpoint/service/artifacts/constants';
-import { ExceptionListSchema } from '@kbn/securitysolution-io-ts-list-types';
 
 interface ExceptionsAddToListsComponentProps {
   addExceptionToRule: boolean;
   ruleName: string;
-  dispatch:  React.Dispatch<Action>;
+  dispatch: React.Dispatch<Action>;
 }
 
 const SectionHeader = styled(EuiTitle)`
@@ -36,38 +48,33 @@ const columns = [
     'data-test-subj': 'exceptionListNameCell',
   },
   {
-    field: 'list_id',
-    name: 'list_id',
-    sortable: true,
-    'data-test-subj': 'exceptionListListIdCell',
-  },
-  {
     field: 'a',
     name: '# of rules linked to',
     sortable: false,
     'data-test-subj': 'exceptionListRulesLinkedToIdCell',
   },
-  {
-    name: 'Actions',
-    actions: [
-      {
-        'data-test-subj': 'exceptionListAction-view',
-        render: () => {
-          return (
-            <EuiLink color="primary" href="#" target="_blank" external>
-              {i18n.VIEW_LIST_DETAIL_ACTION}
-            </EuiLink>
-          );
-        },
-      },
-    ]
-  },
+  //  Uncomment once exception list details view is available
+  // {
+  //   name: 'Actions',
+  //   actions: [
+  //     {
+  //       'data-test-subj': 'exceptionListAction-view',
+  //       render: () => {
+  //         return (
+  //           <EuiLink color="primary" href="#" target="_blank" external>
+  //             {i18n.VIEW_LIST_DETAIL_ACTION}
+  //           </EuiLink>
+  //         );
+  //       },
+  //     },
+  //   ],
+  // },
 ];
 
 const ExceptionsAddToListsComponent: React.FC<ExceptionsAddToListsComponentProps> = ({
   addExceptionToRule,
   ruleName,
-  dispatch
+  dispatch,
 }): JSX.Element => {
   const { http, notifications } = useKibana().services;
   const [_, setSelection] = useState<ExceptionListSchema[]>([]);
@@ -81,39 +88,33 @@ const ExceptionsAddToListsComponent: React.FC<ExceptionsAddToListsComponentProps
     />
   );
 
-  const [loadingLists, lists] =
-    useExceptionLists({
-      errorMessage: i18n.ERROR_EXCEPTION_LISTS,
-      filterOptions: undefined,
-      http,
-      namespaceTypes: ['single', 'agnostic'],
-      notifications,
-      initialPagination: {
-        page: 1,
-        perPage: 2000,
-        total: 0,
-      },
-      hideLists: ALL_ENDPOINT_ARTIFACT_LIST_IDS,
-    });
+  const [loadingLists, lists] = useExceptionLists({
+    errorMessage: i18n.ERROR_EXCEPTION_LISTS,
+    filterOptions: undefined,
+    http,
+    namespaceTypes: ['single', 'agnostic'],
+    notifications,
+    initialPagination: {
+      page: 1,
+      perPage: 2000,
+      total: 0,
+    },
+    hideLists: ALL_ENDPOINT_ARTIFACT_LIST_IDS,
+  });
 
   useEffect(() => {
-    if(loadingLists) {
-      setMessage((
-        <EuiEmptyPrompt
-          icon={<EuiLoadingLogo logo="logoKibana" size="m" />}
-        />
-      ));
+    if (loadingLists) {
+      setMessage(<EuiEmptyPrompt icon={<EuiLoadingLogo logo="logoKibana" size="m" />} />);
       setListsToDisplay([]);
     } else {
       setListsToDisplay(lists.filter((list) => list.type === 'detection'));
     }
   }, [setMessage, loadingLists, lists]);
 
-
-  /** 
+  /**
    * Reducer action dispatchers
-  * */ 
-   const setAddExceptionToRule = useCallback(
+   * */
+  const setAddExceptionToRule = useCallback(
     (addExceptionToRule: boolean): void => {
       dispatch({
         type: 'setAddExceptionToRule',
@@ -133,24 +134,50 @@ const ExceptionsAddToListsComponent: React.FC<ExceptionsAddToListsComponentProps
     [dispatch]
   );
 
-  const handleRadioChange = useCallback((id: string) => {
-    if (id === 'add_to_rule') {
-      setAddExceptionToRule(true);
-    } else {
-      setAddExceptionToRule(false)
-    }
-  }, [setAddExceptionToRule]);
-
-  const RADIO_OPTIONS = useMemo(() => ([
-    {
-      id: 'add_to_rule',
-      label: i18n.ADD_TO_RULE_RADIO_OPTION(ruleName),
+  const handleRadioChange = useCallback(
+    (id: string) => {
+      if (id === 'add_to_rule') {
+        setAddExceptionToRule(true);
+      } else {
+        setAddExceptionToRule(false);
+      }
     },
-    {
-      id: 'add_to_lists',
-      label: i18n.ADD_TO_LISTS_OPTION,
-    }
-  ]), [ruleName]);
+    [setAddExceptionToRule]
+  );
+
+  const RADIO_OPTIONS = useMemo(
+    () => [
+      {
+        id: 'add_to_rule',
+        label: i18n.ADD_TO_RULE_RADIO_OPTION(ruleName),
+      },
+      {
+        id: 'add_to_lists',
+        label: (
+          <EuiFlexGroup alignItems="center" gutterSize="s" responsive={false}>
+            <EuiFlexItem grow={false}>
+              <EuiText>{i18n.ADD_TO_LISTS_OPTION}</EuiText>
+            </EuiFlexItem>
+
+            <EuiFlexItem grow={false}>
+              <EuiIconTip
+                content={
+                  listsToDisplay.length === 0
+                    ? i18n.ADD_TO_LISTS_OPTION_DISABLED_TOOLTIP
+                    : i18n.ADD_TO_LISTS_OPTION_TOOLTIP
+                }
+                title={i18n.ADD_TO_LISTS_OPTION_TOOLTIP_TITLE}
+                position="top"
+                type="iInCircle"
+              />
+            </EuiFlexItem>
+          </EuiFlexGroup>
+        ),
+        disabled: listsToDisplay.length === 0,
+      },
+    ],
+    [listsToDisplay.length, ruleName]
+  );
 
   const selectionValue = {
     onSelectionChange: (selection: ExceptionListSchema[]) => {
@@ -161,11 +188,11 @@ const ExceptionsAddToListsComponent: React.FC<ExceptionsAddToListsComponentProps
   };
 
   return (
-   <EuiPanel paddingSize="none" hasShadow={false}>
+    <EuiPanel paddingSize="none" hasShadow={false}>
       <SectionHeader size="xs">
         <h3>{i18n.ADD_TO_LISTS_SECTION_TITLE}</h3>
       </SectionHeader>
-      <EuiSpacer size='s' />
+      <EuiSpacer size="s" />
       <EuiRadioGroup
         options={RADIO_OPTIONS}
         idSelected={addExceptionToRule ? 'add_to_rule' : 'add_to_lists'}
@@ -174,11 +201,11 @@ const ExceptionsAddToListsComponent: React.FC<ExceptionsAddToListsComponentProps
       />
       {!addExceptionToRule && (
         <>
-          <EuiSpacer size='s' />
+          <EuiSpacer size="s" />
           <EuiPanel color="subdued" borderRadius="none" hasShadow={false}>
             <>
-              <EuiText size='s'>{i18n.ADD_TO_LISTS_DESCRIPTION}</EuiText>
-              <EuiSpacer size='s' />
+              <EuiText size="s">{i18n.ADD_TO_LISTS_DESCRIPTION}</EuiText>
+              <EuiSpacer size="s" />
               <EuiFlexGroup>
                 <EuiFlexItem>
                   <EuiText data-test-subj="fields-showing" size="xs">
@@ -186,7 +213,7 @@ const ExceptionsAddToListsComponent: React.FC<ExceptionsAddToListsComponentProps
                   </EuiText>
                 </EuiFlexItem>
               </EuiFlexGroup>
-              <EuiSpacer size='s' />
+              <EuiSpacer size="s" />
               <EuiInMemoryTable<ExceptionListSchema>
                 compressed
                 tableCaption="List of exception lists"
@@ -199,9 +226,7 @@ const ExceptionsAddToListsComponent: React.FC<ExceptionsAddToListsComponentProps
                   ...pagination,
                   pageSizeOptions: [5, 10, 0],
                 }}
-                onTableChange={({ page: { index } }) =>
-                  setPagination({ pageIndex: index })
-                }
+                onTableChange={({ page: { index } }) => setPagination({ pageIndex: index })}
                 sorting={true}
                 selection={selectionValue}
                 isSelectable={true}
@@ -210,7 +235,7 @@ const ExceptionsAddToListsComponent: React.FC<ExceptionsAddToListsComponentProps
           </EuiPanel>
         </>
       )}
-   </EuiPanel>
+    </EuiPanel>
   );
 };
 

@@ -9,7 +9,7 @@
 
 /* eslint-disable complexity */
 
-import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { memo, useState, useCallback, useEffect, useMemo, useReducer } from 'react';
 import styled, { css } from 'styled-components';
 import {
   EuiButton,
@@ -28,12 +28,13 @@ import {
   EuiFlyoutFooter,
 } from '@elastic/eui';
 
-import type {
+import {
   ExceptionListType,
   OsTypeArray,
   OsType,
   ExceptionListItemSchema,
   CreateExceptionListItemSchema,
+  ExceptionListTypeEnum,
 } from '@kbn/securitysolution-io-ts-list-types';
 import { getExceptionBuilderComponentLazy } from '@kbn/lists-plugin/public';
 import type { DataViewBase } from '@kbn/es-query';
@@ -66,6 +67,13 @@ import {
 import { Loader } from '../../loader';
 import type { ErrorInfo } from '../error_callout';
 import { ErrorCallout } from '../error_callout';
+import { ExceptionsFlyoutMeta } from '../common/exception_flyout_meta';
+import type { State } from '../common/reducer';
+import { createExceptionItemsReducer } from '../common/reducer';
+import { ExceptionsConditions } from '../common/exception_flyout_conditions';
+import { ExceptionsAddToLists } from '../common/exception_flyout_lists_option';
+import { ExceptionsFlyoutComments } from '../common/exception_flyout_comments';
+import { ExceptionItemsFlyoutAlertOptions } from '../common/exception_flyout_alerts_option';
 
 interface EditExceptionFlyoutProps {
   ruleName: string;
@@ -85,15 +93,11 @@ const FlyoutHeader = styled(EuiFlyoutHeader)`
   `}
 `;
 
-const FlyoutSubtitle = styled.div`
+const FlyoutBodySection = styled(EuiFlyoutBody)`
   ${({ theme }) => css`
-    color: ${theme.eui.euiColorMediumShade};
-  `}
-`;
-
-const FlyoutBodySection = styled.section`
-  ${({ theme }) => css`
-    padding: ${theme.eui.euiSizeS} ${theme.eui.euiSizeL};
+    &.builder-section {
+      overflow-y: scroll;
+    }
   `}
 `;
 
@@ -111,6 +115,21 @@ const FlyoutFooterGroup = styled(EuiFlexGroup)`
   `}
 `;
 
+const initialState: State = {
+  exceptionItems: [],
+  exceptionItemMeta: { name: '' },
+  newComment: '',
+  errorsExist: false,
+  closeSingleAlert: false,
+  bulkCloseAlerts: false,
+  disableBulkClose: false,
+  bulkCloseIndex: undefined,
+  selectedListsToAddTo: [],
+  selectedOs: undefined,
+  addExceptionToRule: true,
+  exceptionListsToAddTo: [],
+};
+
 export const EditExceptionFlyout = memo(function EditExceptionFlyout({
   ruleName,
   ruleId,
@@ -122,7 +141,7 @@ export const EditExceptionFlyout = memo(function EditExceptionFlyout({
   onConfirm,
   onRuleChange,
 }: EditExceptionFlyoutProps) {
-  const { http, unifiedSearch, data } = useKibana().services;
+  const { http, data } = useKibana().services;
   const [comment, setComment] = useState('');
   const [errorsExist, setErrorExists] = useState(false);
   const { rule: maybeRule, loading: isRuleLoading } = useRuleAsync(ruleId);
@@ -172,6 +191,24 @@ export const EditExceptionFlyout = memo(function EditExceptionFlyout({
     (): DataViewBase | null => (hasDataViewId ? dataViewIndexPatterns : indexIndexPatterns),
     [hasDataViewId, dataViewIndexPatterns, indexIndexPatterns]
   );
+
+  const [
+    {
+      exceptionItemMeta: { name: exceptionItemName },
+      exceptionItems,
+      selectedOs,
+      addExceptionToRule,
+      newComment,
+      disableBulkClose,
+      bulkCloseAlerts,
+      closeSingleAlert,
+    },
+    dispatch,
+  ] = useReducer(createExceptionItemsReducer(), {
+    ...initialState,
+    exceptionItemMeta: { name: exceptionItem.name },
+    exceptionItems: [exceptionItem],
+  });
 
   const handleExceptionUpdateError = useCallback(
     (error: Error, statusCode: number | null, message: string | null) => {
@@ -253,27 +290,6 @@ export const EditExceptionFlyout = memo(function EditExceptionFlyout({
     [exceptionItemsToAdd, hasVersionConflict, errorsExist]
   );
 
-  const handleBuilderOnChange = useCallback(
-    ({
-      exceptionItems,
-      errorExists,
-    }: {
-      exceptionItems: Array<ExceptionListItemSchema | CreateExceptionListItemSchema>;
-      errorExists: boolean;
-    }) => {
-      setExceptionItemsToAdd(exceptionItems);
-      setErrorExists(errorExists);
-    },
-    [setExceptionItemsToAdd]
-  );
-
-  const onCommentChange = useCallback(
-    (value: string) => {
-      setComment(value);
-    },
-    [setComment]
-  );
-
   const onBulkCloseAlertCheckboxChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setShouldBulkCloseAlert(event.currentTarget.checked);
@@ -316,40 +332,17 @@ export const EditExceptionFlyout = memo(function EditExceptionFlyout({
     signalIndexName,
   ]);
 
-  const isRuleEQLSequenceStatement = useMemo((): boolean => {
-    if (maybeRule != null) {
-      return isEqlRule(maybeRule.type) && hasEqlSequenceQuery(maybeRule.query);
-    }
-    return false;
-  }, [maybeRule]);
-
-  const osDisplay = (osTypes: OsTypeArray): string => {
-    const translateOS = (currentOs: OsType): string => {
-      return currentOs === 'linux'
-        ? sharedI18n.OPERATING_SYSTEM_LINUX
-        : currentOs === 'macos'
-        ? sharedI18n.OPERATING_SYSTEM_MAC
-        : sharedI18n.OPERATING_SYSTEM_WINDOWS;
-    };
-    return osTypes
-      .reduce((osString, currentOs) => {
-        return `${translateOS(currentOs)}, ${osString}`;
-      }, '')
-      .slice(0, -2);
-  };
+  const editExceptionMessage =
+    exceptionListType === 'endpoint'
+      ? i18n.EDIT_ENDPOINT_EXCEPTION_TITLE
+      : i18n.EDIT_EXCEPTION_TITLE;
 
   return (
     <EuiFlyout size="l" onClose={onCancel} data-test-subj="edit-exception-flyout">
       <FlyoutHeader>
         <EuiTitle>
-          <h2 data-test-subj="exception-flyout-title">
-            {exceptionListType === 'endpoint'
-              ? i18n.EDIT_ENDPOINT_EXCEPTION_TITLE
-              : i18n.EDIT_EXCEPTION_TITLE}
-          </h2>
+          <h2 data-test-subj="exception-flyout-title">{editExceptionMessage}</h2>
         </EuiTitle>
-        <EuiSpacer size="xs" />
-        <FlyoutSubtitle className="eui-textTruncate" title={ruleName} />
         <EuiSpacer size="m" />
       </FlyoutHeader>
       {(addExceptionIsLoading || isIndexPatternLoading || isSignalIndexLoading) && (
@@ -361,62 +354,50 @@ export const EditExceptionFlyout = memo(function EditExceptionFlyout({
         !isIndexPatternLoading &&
         !isRuleLoading &&
         !mlJobLoading && (
-          <EuiFlyoutBody>
-            <FlyoutBodySection className="builder-section">
-              {isRuleEQLSequenceStatement && (
-                <>
-                  <EuiCallOut
-                    data-test-subj="eql-sequence-callout"
-                    title={i18n.EDIT_EXCEPTION_SEQUENCE_WARNING}
-                  />
-                  <EuiSpacer />
-                </>
-              )}
-              <EuiText>{i18n.EXCEPTION_BUILDER_INFO}</EuiText>
-              <EuiSpacer />
-              {exceptionListType === 'endpoint' && (
-                <>
-                  <EuiText size="xs">
-                    <dl>
-                      <dt>{sharedI18n.OPERATING_SYSTEM_LABEL}</dt>
-                      <dd>{osDisplay(exceptionItem.os_types)}</dd>
-                    </dl>
-                  </EuiText>
-                  <EuiSpacer />
-                </>
-              )}
-              {getExceptionBuilderComponentLazy({
-                allowLargeValueLists:
-                  !isEqlRule(maybeRule?.type) &&
-                  !isThresholdRule(maybeRule?.type) &&
-                  !isNewTermsRule(maybeRule?.type),
-                httpService: http,
-                autocompleteService: unifiedSearch.autocomplete,
-                exceptionListItems: [exceptionItem],
-                listType: exceptionListType,
-                listId: exceptionItem.list_id,
-                listNamespaceType: exceptionItem.namespace_type,
-                listTypeSpecificIndexPatternFilter: filterIndexPatterns,
-                ruleName,
-                isOrDisabled: true,
-                isAndDisabled: false,
-                osTypes: exceptionItem.os_types,
-                isNestedDisabled: false,
-                dataTestSubj: 'edit-exception-builder',
-                idAria: 'edit-exception-builder',
-                onChange: handleBuilderOnChange,
-                indexPatterns: indexPattern,
-              })}
-
-              <EuiSpacer />
-
-              <ExceptionItemComments
-                exceptionItemComments={exceptionItem.comments}
-                newCommentValue={comment}
-                newCommentOnChange={onCommentChange}
-              />
-            </FlyoutBodySection>
+          <FlyoutBodySection>
+            <ExceptionsFlyoutMeta exceptionItemName={exceptionItemName} dispatch={dispatch} />
             <EuiHorizontalRule />
+            <ExceptionsConditions
+              exceptionItemName={exceptionItemName}
+              allowLargeValueLists={
+                !isEqlRule(maybeRule?.type) &&
+                !isThresholdRule(maybeRule?.type) &&
+                !isNewTermsRule(maybeRule?.type)
+              }
+              exceptionListItems={exceptionItems}
+              indexPatterns={indexPattern}
+              maybeRule={maybeRule}
+              dispatch={dispatch}
+              handleFilterIndexPatterns={filterIndexPatterns}
+              selectedOs={selectedOs}
+              showOsTypeOptions={exceptionListType === ExceptionListTypeEnum.ENDPOINT}
+              exceptionListType={exceptionListType}
+              isEdit
+            />
+
+            {exceptionListType !== ExceptionListTypeEnum.ENDPOINT && (
+              <>
+                <EuiHorizontalRule />
+                <ExceptionsAddToLists
+                  addExceptionToRule={addExceptionToRule}
+                  ruleName={maybeRule?.name}
+                  dispatch={dispatch}
+                />
+              </>
+            )}
+            <>
+              <EuiHorizontalRule />
+              <ExceptionItemsFlyoutAlertOptions
+                exceptionListType={exceptionListType}
+                shouldCloseSingleAlert={closeSingleAlert}
+                shouldBulkCloseAlert={bulkCloseAlerts}
+                disableBulkClose={disableBulkClose}
+                dispatch={dispatch}
+                exceptionListItems={exceptionItems}
+                alertData={undefined}
+                alertStatus={undefined}
+              />
+            </>
             <FlyoutCheckboxesSection>
               <EuiFormRow fullWidth>
                 <EuiCheckbox
@@ -430,16 +411,14 @@ export const EditExceptionFlyout = memo(function EditExceptionFlyout({
                   disabled={shouldDisableBulkClose}
                 />
               </EuiFormRow>
-              {exceptionListType === 'endpoint' && (
-                <>
-                  <EuiSpacer size="s" />
-                  <EuiText data-test-subj="edit-exception-endpoint-text" color="subdued" size="s">
-                    {i18n.ENDPOINT_QUARANTINE_TEXT}
-                  </EuiText>
-                </>
-              )}
             </FlyoutCheckboxesSection>
-          </EuiFlyoutBody>
+            <EuiHorizontalRule />
+            <ExceptionsFlyoutComments
+              existingComments={exceptionItem.comments}
+              newComment={newComment}
+              dispatch={dispatch}
+            />
+          </FlyoutBodySection>
         )}
 
       <EuiFlyoutFooter>

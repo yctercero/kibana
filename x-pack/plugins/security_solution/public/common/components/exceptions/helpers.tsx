@@ -22,7 +22,9 @@ import type {
   ExceptionListType,
   ExceptionListItemSchema,
   CreateExceptionListItemSchema,
+  CreateRuleExceptionListItemSchema,
   UpdateExceptionListItemSchema,
+  ExceptionListSchema
 } from '@kbn/securitysolution-io-ts-list-types';
 import {
   comment,
@@ -54,7 +56,7 @@ import { ALERT_ORIGINAL_EVENT } from '../../../../common/field_maps/field_names'
  * @param exceptionItems new or existing ExceptionItem[]
  * @param name new exception item name
  */
- export const enrichNewExceptionItemsWithName = (
+export const enrichNewExceptionItemsWithName = (
   exceptionItems: Array<ExceptionListItemSchema | CreateExceptionListItemSchema>,
   name: string
 ): Array<ExceptionListItemSchema | CreateExceptionListItemSchema> => {
@@ -64,6 +66,39 @@ import { ALERT_ORIGINAL_EVENT } from '../../../../common/field_maps/field_names'
       name,
     };
   });
+};
+
+/**
+ * Adds user defined name to all new exceptionItems
+ * @param exceptionItems new or existing ExceptionItem[]
+ * @param name new exception item name
+ */
+export const enrichRuleExceptions = (
+  exceptionItems: Array<ExceptionListItemSchema | CreateRuleExceptionListItemSchema>
+): Array<ExceptionListItemSchema | CreateRuleExceptionListItemSchema> => {
+  return exceptionItems.map((item: ExceptionListItemSchema | CreateRuleExceptionListItemSchema) => {
+    const entries = item.entries.map(({ id, ...rest }) => ({ ...rest }));
+    return {
+      ...item,
+      entries,
+      namespace_type: 'single',
+    };
+  });
+};
+
+/**
+ * Adds user defined name to all new exceptionItems
+ * @param exceptionItems new or existing ExceptionItem[]
+ * @param name new exception item name
+ */
+export const enrichSharedExceptions = (
+  lists: ExceptionListSchema[],
+  exceptionItems: Array<ExceptionListItemSchema | CreateExceptionListItemSchema>
+): Array<ExceptionListItemSchema | CreateExceptionListItemSchema> => {
+  return lists.reduce((items, list) => {
+    const updatedItems = exceptionItems.map((item) => ({ ...item, list_id: list.list_id }));
+    return [...items, ...updatedItems];
+  }, []);
 };
 
 export const filterIndexPatterns = (

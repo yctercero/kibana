@@ -29,7 +29,7 @@ import { getExceptionBuilderComponentLazy } from '@kbn/lists-plugin/public';
 import type { OnChangeProps } from '@kbn/lists-plugin/public';
 import { useTestIdGenerator } from '../../../../hooks/use_test_id_generator';
 import type { PolicyData } from '../../../../../../common/endpoint/types';
-import { AddExceptionComments } from '../../../../../common/components/exceptions/add_exception_comments';
+import { ExceptionItemComments } from '../../../../../common/components/exceptions/common/exception_item_comments';
 import { useFetchIndex } from '../../../../../common/containers/source';
 import { Loader } from '../../../../../common/components/loader';
 import { useLicense } from '../../../../../common/hooks/use_license';
@@ -316,7 +316,7 @@ export const EventFiltersForm: React.FC<ArtifactFormComponentProps & { allowSele
     );
     const commentsInputMemo = useMemo(
       () => (
-        <AddExceptionComments
+        <ExceptionItemComments
           exceptionItemComments={existingComments}
           newCommentValue={newComment}
           newCommentOnChange={handleOnChangeComment}

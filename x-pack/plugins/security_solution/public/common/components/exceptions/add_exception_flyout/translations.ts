@@ -25,20 +25,6 @@ export const ADD_ENDPOINT_EXCEPTION = i18n.translate(
   }
 );
 
-export const ADD_EXCEPTION_ERROR = i18n.translate(
-  'xpack.securitySolution.exceptions.createExceptionItem.error',
-  {
-    defaultMessage: 'Failed to add exception',
-  }
-);
-
-export const ADD_EXCEPTION_SUCCESS = i18n.translate(
-  'xpack.securitySolution.exceptions.createExceptionItem.success',
-  {
-    defaultMessage: 'Successfully added exception',
-  }
-);
-
 export const ADD_EXCEPTION_FETCH_ERROR_TITLE = i18n.translate(
   'xpack.securitySolution.exceptions.createExceptionItem.fetchError.title',
   {

@@ -229,7 +229,7 @@ export const ExceptionBuilderComponent = ({
         },
         ...exceptions.slice(index + 1),
       ];
-
+      console.log({updatedExceptions})
       setUpdateExceptions(updatedExceptions);
     },
     [setUpdateExceptions, exceptions]
@@ -361,6 +361,7 @@ export const ExceptionBuilderComponent = ({
 
   // Bubble up changes to parent
   useEffect(() => {
+    console.log({errorExists, exceptions, filtered:filterExceptionItems(exceptions) })
     onChange({
       errorExists: errorExists > 0,
       exceptionItems: filterExceptionItems(exceptions),

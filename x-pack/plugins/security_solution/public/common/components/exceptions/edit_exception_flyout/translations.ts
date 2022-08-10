@@ -21,7 +21,7 @@ export const EDIT_EXCEPTION_SAVE_BUTTON = i18n.translate(
 export const EDIT_EXCEPTION_TITLE = i18n.translate(
   'xpack.securitySolution.exceptions.editException.editExceptionTitle',
   {
-    defaultMessage: 'Edit Rule Exception',
+    defaultMessage: 'Edit rule exception',
   }
 );
 
@@ -84,10 +84,4 @@ export const VERSION_CONFLICT_ERROR_DESCRIPTION = i18n.translate(
   }
 );
 
-export const EDIT_EXCEPTION_SEQUENCE_WARNING = i18n.translate(
-  'xpack.securitySolution.exceptions.editException.sequenceWarning',
-  {
-    defaultMessage:
-      "This rule's query contains an EQL sequence statement. The exception modified will apply to all events in the sequence.",
-  }
-);
+

@@ -9,16 +9,16 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 import styled, { css } from 'styled-components';
 
 import { EuiTitle, EuiFormRow, EuiCheckbox, EuiSpacer, EuiText } from '@elastic/eui';
-import { ExceptionListType } from '@kbn/securitysolution-io-ts-list-types';
-import { ExceptionsBuilderExceptionItem } from '@kbn/securitysolution-list-utils';
+import type { ExceptionListType } from '@kbn/securitysolution-io-ts-list-types';
+import type { ExceptionsBuilderExceptionItem } from '@kbn/securitysolution-list-utils';
 
 import { useSignalIndex } from '../../../../detections/containers/detection_engine/alerts/use_signal_index';
-import { Status } from '../../../../../common/detection_engine/schemas/common/schemas';
+import type { Status } from '../../../../../common/detection_engine/schemas/common/schemas';
 import { useFetchIndex } from '../../../containers/source';
 import { entryHasListType, entryHasNonEcsType } from '../helpers';
 import * as i18n from './translations';
-import { AlertData } from '../types';
-import { Action } from './reducer';
+import type { AlertData } from '../types';
+import type { Action } from './reducer';
 
 const FlyoutCheckboxesSection = styled.section`
   overflow-y: inherit;
@@ -29,7 +29,7 @@ const FlyoutCheckboxesSection = styled.section`
 `;
 
 const SectionHeader = styled(EuiTitle)`
-  ${({ theme }) => css`
+  ${() => css`
     font-weight: ${({ theme }) => theme.eui.euiFontWeightSemiBold};
   `}
 `;
@@ -42,7 +42,7 @@ interface ExceptionsFlyoutMetaComponentProps {
   disableBulkClose: boolean;
   alertData: AlertData | undefined;
   alertStatus: Status | undefined;
-  dispatch:  React.Dispatch<Action>;
+  dispatch: React.Dispatch<Action>;
 }
 
 const ExceptionItemsFlyoutAlertOptionsComponent: React.FC<ExceptionsFlyoutMetaComponentProps> = ({
@@ -53,7 +53,7 @@ const ExceptionItemsFlyoutAlertOptionsComponent: React.FC<ExceptionsFlyoutMetaCo
   disableBulkClose,
   alertData,
   alertStatus,
-  dispatch
+  dispatch,
 }): JSX.Element => {
   const { loading: isSignalIndexLoading, signalIndexName } = useSignalIndex();
   const memoSignalIndexName = useMemo(
@@ -61,12 +61,12 @@ const ExceptionItemsFlyoutAlertOptionsComponent: React.FC<ExceptionsFlyoutMetaCo
     [signalIndexName]
   );
   const [isSignalIndexPatternLoading, { indexPatterns: signalIndexPatterns }] =
-  useFetchIndex(memoSignalIndexName);
+    useFetchIndex(memoSignalIndexName);
 
-  /** 
+  /**
    * Reducer action dispatchers
-   * */ 
-   const setBulkCloseIndex = useCallback(
+   * */
+  const setBulkCloseIndex = useCallback(
     (bulkCloseIndex: string[] | undefined): void => {
       dispatch({
         type: 'setBulkCloseIndex',
@@ -76,7 +76,7 @@ const ExceptionItemsFlyoutAlertOptionsComponent: React.FC<ExceptionsFlyoutMetaCo
     [dispatch]
   );
 
-   const setCloseSingleAlert = useCallback(
+  const setCloseSingleAlert = useCallback(
     (close: boolean): void => {
       dispatch({
         type: 'setCloseSingleAlert',
@@ -108,6 +108,7 @@ const ExceptionItemsFlyoutAlertOptionsComponent: React.FC<ExceptionsFlyoutMetaCo
 
   const handleBulkCloseCheckbox = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>): void => {
+      console.log('BULK', event.currentTarget.checked)
       setBulkCloseAlerts(event.currentTarget.checked);
     },
     [setBulkCloseAlerts]
@@ -121,14 +122,16 @@ const ExceptionItemsFlyoutAlertOptionsComponent: React.FC<ExceptionsFlyoutMetaCo
   );
 
   useEffect(() => {
-    setBulkCloseIndex(shouldBulkCloseAlert && memoSignalIndexName != null ? memoSignalIndexName : undefined)
-  }, [memoSignalIndexName, shouldBulkCloseAlert])
+    setBulkCloseIndex(
+      shouldBulkCloseAlert && memoSignalIndexName != null ? memoSignalIndexName : undefined
+    );
+  }, [memoSignalIndexName, setBulkCloseIndex, shouldBulkCloseAlert]);
 
   useEffect((): void => {
     if (disableBulkClose === true) {
       setBulkCloseAlerts(false);
     }
-  }, [disableBulkClose]);
+  }, [disableBulkClose, setBulkCloseAlerts]);
 
   useEffect((): void => {
     if (isSignalIndexPatternLoading === false && isSignalIndexLoading === false) {
@@ -151,7 +154,7 @@ const ExceptionItemsFlyoutAlertOptionsComponent: React.FC<ExceptionsFlyoutMetaCo
       <SectionHeader size="xs">
         <h3>{i18n.CLOSE_ALERTS_SECTION_TITLE}</h3>
       </SectionHeader>
-      <EuiSpacer size='s' />
+      <EuiSpacer size="s" />
       {alertData != null && alertStatus !== 'closed' && (
         <EuiFormRow fullWidth>
           <EuiCheckbox
@@ -168,9 +171,7 @@ const ExceptionItemsFlyoutAlertOptionsComponent: React.FC<ExceptionsFlyoutMetaCo
         <EuiCheckbox
           data-test-subj="bulk-close-alert-on-add-add-exception-checkbox"
           id="bulk-close-alert-on-add-add-exception-checkbox"
-          label={
-            disableBulkClose ? i18n.BULK_CLOSE_LABEL_DISABLED : i18n.BULK_CLOSE_LABEL
-          }
+          label={disableBulkClose ? i18n.BULK_CLOSE_LABEL_DISABLED : i18n.BULK_CLOSE_LABEL}
           checked={shouldBulkCloseAlert}
           onChange={handleBulkCloseCheckbox}
           disabled={disableBulkClose || isSignalIndexLoading || isSignalIndexPatternLoading}
@@ -188,6 +189,8 @@ const ExceptionItemsFlyoutAlertOptionsComponent: React.FC<ExceptionsFlyoutMetaCo
   );
 };
 
-export const ExceptionItemsFlyoutAlertOptions = React.memo(ExceptionItemsFlyoutAlertOptionsComponent);
+export const ExceptionItemsFlyoutAlertOptions = React.memo(
+  ExceptionItemsFlyoutAlertOptionsComponent
+);
 
 ExceptionItemsFlyoutAlertOptions.displayName = 'ExceptionItemsFlyoutAlertOptions';

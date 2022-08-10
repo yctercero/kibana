@@ -6,7 +6,7 @@
  */
 
 import React, { useCallback, useEffect, useReducer, useState } from 'react';
-import { EuiSpacer } from '@elastic/eui';
+import { EuiSpacer, EuiPanel } from '@elastic/eui';
 import uuid from 'uuid';
 
 import type {
@@ -20,7 +20,6 @@ import * as i18n from '../translations';
 import { useStateToaster } from '../../toasters';
 import { useUserData } from '../../../../detections/components/user_info';
 import { useKibana } from '../../../lib/kibana';
-import { Panel } from '../../panel';
 import { Loader } from '../../loader';
 import { ExceptionsViewerHeader } from './exceptions_viewer_header';
 import type { ExceptionListItemIdentifiers, Filter } from '../types';
@@ -29,7 +28,7 @@ import { allExceptionItemsReducer } from './reducer';
 
 import { ExceptionsViewerPagination } from './exceptions_pagination';
 import { ExceptionsViewerUtility } from './exceptions_utility';
-import { ExceptionsViewerItems } from './exceptions_viewer_items';
+import { ExceptionItemsViewer } from './exceptions_viewer_items';
 import { EditExceptionFlyout } from '../edit_exception_flyout';
 import { AddExceptionFlyout } from '../add_exception_flyout';
 
@@ -362,31 +361,34 @@ const ExceptionsViewerComponent = ({
         />
       )}
 
-      <Panel loading={isInitLoading || loadingList}>
+      <EuiPanel hasBorder={false} hasShadow={false}>
         {(isInitLoading || loadingList) && (
           <Loader data-test-subj="loadingPanelAllRulesTable" overlay size="xl" />
         )}
+        {!showEmpty && (
+          <>
+            <ExceptionsViewerHeader
+              isInitLoading={isInitLoading}
+              supportedListTypes={supportedListTypes}
+              detectionsListItems={totalDetectionsItems}
+              endpointListItems={totalEndpointItems}
+              onFilterChange={handleFilterChange}
+              onAddExceptionClick={handleAddException}
+            />
 
-        <ExceptionsViewerHeader
-          isInitLoading={isInitLoading}
-          supportedListTypes={supportedListTypes}
-          detectionsListItems={totalDetectionsItems}
-          endpointListItems={totalEndpointItems}
-          onFilterChange={handleFilterChange}
-          onAddExceptionClick={handleAddException}
-        />
+            <EuiSpacer size="l" />
 
-        <EuiSpacer size="l" />
+            <ExceptionsViewerUtility
+              pagination={pagination}
+              showEndpointListsOnly={showEndpointListsOnly}
+              showDetectionsListsOnly={showDetectionsListsOnly}
+              onRefreshClick={handleFetchList}
+              ruleSettingsUrl={ruleSettingsUrl}
+            />
+          </>
+        )}
 
-        <ExceptionsViewerUtility
-          pagination={pagination}
-          showEndpointListsOnly={showEndpointListsOnly}
-          showDetectionsListsOnly={showDetectionsListsOnly}
-          onRefreshClick={handleFetchList}
-          ruleSettingsUrl={ruleSettingsUrl}
-        />
-
-        <ExceptionsViewerItems
+        <ExceptionItemsViewer
           disableActions={!canUserCRUD || !hasIndexWrite}
           showEmpty={showEmpty}
           showNoResults={showNoResults}
@@ -395,13 +397,16 @@ const ExceptionsViewerComponent = ({
           loadingItemIds={loadingItemIds}
           onDeleteException={handleDeleteException}
           onEditExceptionItem={handleEditException}
+          onCreateExceptionListItem={handleAddException}
         />
 
-        <ExceptionsViewerPagination
-          onPaginationChange={handleFilterChange}
-          pagination={pagination}
-        />
-      </Panel>
+        {!showEmpty && (
+          <ExceptionsViewerPagination
+            onPaginationChange={handleFilterChange}
+            pagination={pagination}
+          />
+        )}
+      </EuiPanel>
     </>
   );
 };

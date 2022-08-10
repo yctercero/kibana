@@ -21,7 +21,7 @@ export interface State {
   bulkCloseAlerts: boolean;
   disableBulkClose: boolean;
   bulkCloseIndex: string[] | undefined;
-  selectedListsToAddTo: any[];
+  selectedListsToAddTo: ExceptionListSchema[];
   selectedOs: OsTypeArray | undefined;
   addExceptionToRule: boolean;
   exceptionListsToAddTo: ExceptionListSchema[];
@@ -62,7 +62,7 @@ export type Action =
     }
   | {
       type: 'setSelectedListsToAddTo';
-      selectedLists: any[];
+      selectedLists: ExceptionListSchema[];
     }
   | {
       type: 'setSelectedOsOptions';

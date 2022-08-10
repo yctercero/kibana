@@ -32,9 +32,8 @@ import type {
 import { ExceptionListTypeEnum } from '@kbn/securitysolution-io-ts-list-types';
 import { ENDPOINT_LIST_ID } from '@kbn/securitysolution-list-constants';
 
-import { isEqlRule, isThresholdRule } from '../../../../../common/detection_engine/utils';
+import { isEqlRule, isNewTermsRule, isThresholdRule } from '../../../../../common/detection_engine/utils';
 import type { Status } from '../../../../../common/detection_engine/schemas/common/schemas';
-import * as i18nCommon from '../../../translations';
 import * as i18n from './translations';
 import * as sharedI18n from '../translations';
 import { useAppToasts } from '../../../hooks/use_app_toasts';
@@ -49,6 +48,8 @@ import {
   defaultEndpointExceptionItems,
   retrieveAlertOsTypes,
   filterIndexPatterns,
+  enrichRuleExceptions,
+  enrichSharedExceptions,
 } from '../helpers';
 import { ErrorCallout } from '../error_callout';
 import type { AlertData } from '../types';
@@ -60,6 +61,8 @@ import { ExceptionsConditions } from '../common/exception_flyout_conditions';
 import { ExceptionItemsFlyoutAlertOptions } from '../common/exception_flyout_alerts_option';
 import { ExceptionsFlyoutComments } from '../common/exception_flyout_comments';
 import { ExceptionsAddToLists } from '../common/exception_flyout_lists_option';
+import { useAddRuleException } from '../use_add_rule_exception';
+import { useCloseAlertsFromExceptions } from '../use_close_alerts';
 
 export interface AddExceptionFlyoutProps {
   ruleId: string;
@@ -133,6 +136,9 @@ export const AddExceptionFlyout = memo(function AddExceptionFlyout({
   } = useFetchExceptionFlyoutData({
     ruleId,
   });
+  const [isAddRuleExceptionLoading, addRuleExceptions] = useAddRuleException();
+  const [isClosingAlerts, closeAlerts] = useCloseAlertsFromExceptions();
+  const [isAddingExceptions, addSharedExceptions] = useAddOrUpdateException();
 
   const [
     {
@@ -144,13 +150,14 @@ export const AddExceptionFlyout = memo(function AddExceptionFlyout({
       closeSingleAlert,
       bulkCloseIndex,
       addExceptionToRule,
+      exceptionListsToAddTo,
       newComment,
       errorsExist,
     },
     dispatch,
   ] = useReducer(createExceptionItemsReducer(), { ...initialState });
 
-  const { addError, addSuccess, addWarning } = useAppToasts();
+  const { addError, addSuccess } = useAppToasts();
 
   const hasAlertData = useMemo((): boolean => {
     return alertData !== undefined;
@@ -203,36 +210,14 @@ export const AddExceptionFlyout = memo(function AddExceptionFlyout({
     [addError, onCancel]
   );
 
-  const onError = useCallback(
-    (error: Error): void => {
-      addError(error, { title: i18n.ADD_EXCEPTION_ERROR });
-      onCancel();
-    },
-    [addError, onCancel]
-  );
+  const onError = useCallback((): void => {
+    onCancel();
+  }, [onCancel]);
 
-  const onSuccess = useCallback(
-    (updated: number, conflicts: number): void => {
-      handleRuleChange(true);
-      addSuccess(i18n.ADD_EXCEPTION_SUCCESS);
-      onConfirm(closeSingleAlert, bulkCloseAlerts);
-      if (conflicts > 0) {
-        addWarning({
-          title: i18nCommon.UPDATE_ALERT_STATUS_FAILED(conflicts),
-          text: i18nCommon.UPDATE_ALERT_STATUS_FAILED_DETAILED(updated, conflicts),
-        });
-      }
-    },
-    [addSuccess, addWarning, onConfirm, bulkCloseAlerts, closeSingleAlert, handleRuleChange]
-  );
-
-  const [{ isLoading: addExceptionIsLoading }, addOrUpdateExceptionItems] = useAddOrUpdateException(
-    {
-      http,
-      onSuccess,
-      onError,
-    }
-  );
+  const onSuccess = useCallback((): void => {
+    handleRuleChange(true);
+    onConfirm(closeSingleAlert, bulkCloseAlerts);
+  }, [onConfirm, bulkCloseAlerts, closeSingleAlert, handleRuleChange]);
 
   const osTypesSelection = useMemo((): OsTypeArray => {
     return hasAlertData ? retrieveAlertOsTypes(alertData) : selectedOs ? [...selectedOs] : [];
@@ -246,45 +231,75 @@ export const AddExceptionFlyout = memo(function AddExceptionFlyout({
       newComment !== ''
         ? enrichNewExceptionItemsWithComments(exceptionItems, [{ comment: newComment }])
         : exceptionItems;
-    if (exceptionListType === 'endpoint') {
-      const osTypes = osTypesSelection;
-      enriched = lowercaseHashValues(enrichExceptionItemsWithOS(enriched, osTypes));
-    }
 
+    // enrichments that apply to all
     if (exceptionItemName.trim() !== '') {
       enriched = enrichNewExceptionItemsWithName(exceptionItems, exceptionItemName);
     }
 
+    // enrichments that are list type specific
+    if (exceptionListType === 'endpoint') {
+      const osTypes = osTypesSelection;
+      enriched = lowercaseHashValues(enrichExceptionItemsWithOS(enriched, osTypes));
+    } else if (addExceptionToRule) {
+      enriched = enrichRuleExceptions(enriched);
+    } else {
+      enriched = enrichSharedExceptions(exceptionListsToAddTo, enriched);
+      console.log({exceptionListsToAddTo, enriched})
+    }
+
     return enriched;
-  }, [newComment, exceptionItems, exceptionListType, osTypesSelection, exceptionItemName]);
+  }, [
+    newComment,
+    exceptionItems,
+    exceptionItemName,
+    exceptionListType,
+    addExceptionToRule,
+    osTypesSelection,
+    exceptionListsToAddTo,
+  ]);
 
-  const onAddExceptionConfirm = useCallback((): void => {
-    if (addOrUpdateExceptionItems != null) {
-      const alertIdToClose = closeSingleAlert && alertData ? alertData._id : undefined;
+  const handleOnSubmit = useCallback(async (): Promise<void> => {
+    try {
+      const items = enrichExceptionItems();
 
-      addOrUpdateExceptionItems(
-        maybeRule?.rule_id ?? '',
-        enrichExceptionItems(),
-        alertIdToClose,
-        bulkCloseIndex
-      );
+      if (addExceptionToRule && addRuleExceptions != null) {
+        await addRuleExceptions(items, maybeRule?.id, maybeRule?.name);
+      } else if (!addExceptionToRule && addSharedExceptions != null) {
+        await addSharedExceptions(items);
+      }
+
+      if (closeAlerts != null && (bulkCloseAlerts || closeSingleAlert)) {
+        const alertIdToClose = closeSingleAlert && alertData ? alertData._id : undefined;
+        await closeAlerts(maybeRule?.rule_id ?? '', items, alertIdToClose, bulkCloseIndex);
+      }
+    } catch {
+      onError();
     }
   }, [
-    addOrUpdateExceptionItems,
-    maybeRule,
-    enrichExceptionItems,
-    closeSingleAlert,
-    bulkCloseAlerts,
+    addExceptionToRule,
+    addRuleExceptions,
+    addSharedExceptions,
     alertData,
+    bulkCloseAlerts,
     bulkCloseIndex,
+    closeAlerts,
+    closeSingleAlert,
+    enrichExceptionItems,
+    maybeRule?.id,
+    maybeRule?.name,
+    maybeRule?.rule_id,
+    onError,
   ]);
 
   const isSubmitButtonDisabled = useMemo(
     (): boolean =>
-      errorsExist != null ||
+      isAddRuleExceptionLoading ||
+      isAddingExceptions ||
+      exceptionItemName.trim() === '' ||
       exceptionItems.every((item) => item.entries.length === 0) ||
       errorsExist,
-    [errorsExist, exceptionItems]
+    [isAddRuleExceptionLoading, isAddingExceptions, exceptionItemName, exceptionItems, errorsExist]
   );
 
   const addExceptionMessage =
@@ -325,7 +340,11 @@ export const AddExceptionFlyout = memo(function AddExceptionFlyout({
           <EuiHorizontalRule />
           <ExceptionsConditions
             exceptionItemName={exceptionItemName}
-            allowLargeValueLists={!isEqlRule(maybeRule?.type) && !isThresholdRule(maybeRule?.type)}
+            allowLargeValueLists={
+              !isEqlRule(maybeRule?.type) &&
+              !isThresholdRule(maybeRule?.type) &&
+              !isNewTermsRule(maybeRule?.type)
+            }
             exceptionListItems={exceptionItems}
             indexPatterns={indexPatterns}
             maybeRule={maybeRule}
@@ -335,6 +354,8 @@ export const AddExceptionFlyout = memo(function AddExceptionFlyout({
             showOsTypeOptions={
               exceptionListType === ExceptionListTypeEnum.ENDPOINT && !hasAlertData
             }
+            isEndpointException={exceptionListType === ExceptionListTypeEnum.ENDPOINT}
+            isEdit={false}
           />
           {exceptionListType !== ExceptionListTypeEnum.ENDPOINT && (
             <>
@@ -352,7 +373,7 @@ export const AddExceptionFlyout = memo(function AddExceptionFlyout({
               <ExceptionItemsFlyoutAlertOptions
                 exceptionListType={exceptionListType}
                 shouldCloseSingleAlert={closeSingleAlert}
-                bulkCloseAlerts={bulkCloseAlerts}
+                shouldBulkCloseAlert={bulkCloseAlerts}
                 disableBulkClose={disableBulkClose}
                 dispatch={dispatch}
                 exceptionListItems={exceptionItems}
@@ -373,8 +394,8 @@ export const AddExceptionFlyout = memo(function AddExceptionFlyout({
 
           <EuiButton
             data-test-subj="add-exception-confirm-button"
-            onClick={onAddExceptionConfirm}
-            isLoading={addExceptionIsLoading}
+            onClick={handleOnSubmit}
+            isLoading={isAddRuleExceptionLoading || isClosingAlerts || isAddingExceptions}
             isDisabled={isSubmitButtonDisabled}
             fill
           >

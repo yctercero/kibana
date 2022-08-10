@@ -38,10 +38,18 @@ export const EXCEPTION_BUILDER_INFO = i18n.translate(
 );
 
 export const ADD_EXCEPTION_SEQUENCE_WARNING = i18n.translate(
-  'xpack.securitySolution.exceptions.common.sequenceWarning',
+  'xpack.securitySolution.exceptions.common.sequenceWarningAdd',
   {
     defaultMessage:
       "This rule's query contains an EQL sequence statement. The exception created will apply to all events in the sequence.",
+  }
+);
+
+export const EDIT_EXCEPTION_SEQUENCE_WARNING = i18n.translate(
+  'xpack.securitySolution.exceptions.common.sequenceWarningEdit',
+  {
+    defaultMessage:
+      "This rule's query contains an EQL sequence statement. The exception modified will apply to all events in the sequence.",
   }
 );
 
@@ -101,6 +109,20 @@ export const ADD_TO_LISTS_OPTION = i18n.translate(
   'xpack.securitySolution.exceptions.common.addToListsOptionLabel',
   {
     defaultMessage: 'Add to shared exception lists',
+  }
+);
+
+export const ADD_TO_LISTS_OPTION_TOOLTIP = i18n.translate(
+  'xpack.securitySolution.exceptions.common.addToListsTooltip',
+  {
+    defaultMessage: 'Shared exception list is a group of exceptions. Select this option if you’d like to add this exception to shared exception lists.',
+  }
+);
+
+export const ADD_TO_LISTS_OPTION_TOOLTIP_TITLE = i18n.translate(
+  'xpack.securitySolution.exceptions.common.addToListsTooltipTitle',
+  {
+    defaultMessage: 'Add to shared exception list',
   }
 );
 

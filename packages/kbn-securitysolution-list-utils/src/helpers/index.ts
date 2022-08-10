@@ -11,6 +11,7 @@ import { addIdToItem, removeIdFromItem } from '@kbn/securitysolution-utils';
 import { validate } from '@kbn/securitysolution-io-ts-utils';
 import {
   CreateExceptionListItemSchema,
+  CreateRuleExceptionListItemSchema,
   EntriesArray,
   Entry,
   EntryNested,
@@ -22,6 +23,7 @@ import {
   ListOperatorTypeEnum as OperatorTypeEnum,
   OsTypeArray,
   createExceptionListItemSchema,
+  createRuleExceptionListItemSchema,
   entriesList,
   entriesNested,
   entry,
@@ -65,59 +67,68 @@ export const isEntryNested = (item: BuilderEntry): item is EntryNested => {
 
 export const filterExceptionItems = (
   exceptions: ExceptionsBuilderExceptionItem[]
-): Array<ExceptionListItemSchema | CreateExceptionListItemSchema> => {
-  return exceptions.reduce<Array<ExceptionListItemSchema | CreateExceptionListItemSchema>>(
-    (acc, exception) => {
-      const entries = exception.entries.reduce<BuilderEntry[]>((nestedAcc, singleEntry) => {
-        const strippedSingleEntry = removeIdFromItem(singleEntry);
+): Array<
+  ExceptionListItemSchema | CreateExceptionListItemSchema | CreateRuleExceptionListItemSchema
+> => {
+  return exceptions.reduce<
+    Array<
+      ExceptionListItemSchema | CreateExceptionListItemSchema | CreateRuleExceptionListItemSchema
+    >
+  >((acc, exception) => {
+    const entries = exception.entries.reduce<BuilderEntry[]>((nestedAcc, singleEntry) => {
+      const strippedSingleEntry = removeIdFromItem(singleEntry);
 
-        if (entriesNested.is(strippedSingleEntry)) {
-          const nestedEntriesArray = strippedSingleEntry.entries.filter((singleNestedEntry) => {
-            const noIdSingleNestedEntry = removeIdFromItem(singleNestedEntry);
-            const [validatedNestedEntry] = validate(noIdSingleNestedEntry, nestedEntryItem);
-            return validatedNestedEntry != null;
-          });
-          const noIdNestedEntries = nestedEntriesArray.map((singleNestedEntry) =>
-            removeIdFromItem(singleNestedEntry)
-          );
+      if (entriesNested.is(strippedSingleEntry)) {
+        const nestedEntriesArray = strippedSingleEntry.entries.filter((singleNestedEntry) => {
+          const noIdSingleNestedEntry = removeIdFromItem(singleNestedEntry);
+          const [validatedNestedEntry] = validate(noIdSingleNestedEntry, nestedEntryItem);
+          return validatedNestedEntry != null;
+        });
+        const noIdNestedEntries = nestedEntriesArray.map((singleNestedEntry) =>
+          removeIdFromItem(singleNestedEntry)
+        );
 
-          const [validatedNestedEntry] = validate(
-            { ...strippedSingleEntry, entries: noIdNestedEntries },
-            entriesNested
-          );
+        const [validatedNestedEntry] = validate(
+          { ...strippedSingleEntry, entries: noIdNestedEntries },
+          entriesNested
+        );
 
-          if (validatedNestedEntry != null) {
-            return [...nestedAcc, { ...singleEntry, entries: nestedEntriesArray }];
-          }
-          return nestedAcc;
-        } else {
-          const [validatedEntry] = validate(strippedSingleEntry, entry);
-
-          if (validatedEntry != null) {
-            return [...nestedAcc, singleEntry];
-          }
-          return nestedAcc;
+        if (validatedNestedEntry != null) {
+          return [...nestedAcc, { ...singleEntry, entries: nestedEntriesArray }];
         }
-      }, []);
-
-      if (entries.length === 0) {
-        return acc;
-      }
-
-      const item = { ...exception, entries };
-
-      if (exceptionListItemSchema.is(item)) {
-        return [...acc, item];
-      } else if (createExceptionListItemSchema.is(item)) {
-        const { meta, ...rest } = item;
-        const itemSansMetaId: CreateExceptionListItemSchema = { ...rest, meta: undefined };
-        return [...acc, itemSansMetaId];
+        return nestedAcc;
       } else {
-        return acc;
+        const [validatedEntry] = validate(strippedSingleEntry, entry);
+
+        if (validatedEntry != null) {
+          return [...nestedAcc, singleEntry];
+        }
+        return nestedAcc;
       }
-    },
-    []
-  );
+    }, []);
+
+    if (entries.length === 0) {
+      return acc;
+    }
+
+    const item = { ...exception, entries };
+
+    if (exceptionListItemSchema.is(item)) {
+      return [...acc, item];
+    } else if (
+      createExceptionListItemSchema.is(item) ||
+      createRuleExceptionListItemSchema.is(item)
+    ) {
+      const { meta, ...rest } = item;
+      const itemSansMetaId: CreateExceptionListItemSchema | CreateRuleExceptionListItemSchema = {
+        ...rest,
+        meta: undefined,
+      };
+      return [...acc, itemSansMetaId];
+    } else {
+      return acc;
+    }
+  }, []);
 };
 
 export const addIdToEntries = (entries: EntriesArray): EntriesArray => {

@@ -13,6 +13,7 @@ import type {
   CreateExceptionListItemSchema,
   ExceptionListItemSchema,
   ExceptionListType,
+  OsType,
   OsTypeArray,
 } from '@kbn/securitysolution-io-ts-list-types';
 import { ExceptionListTypeEnum } from '@kbn/securitysolution-io-ts-list-types';
@@ -63,6 +64,8 @@ interface ExceptionsFlyoutMetaComponentProps {
   showOsTypeOptions: boolean;
   selectedOs: OsTypeArray | undefined;
   isEndpointException: boolean;
+  isEdit: boolean;
+  exceptionListType?: ExceptionListType;
   handleFilterIndexPatterns: (
     patterns: DataViewBase,
     type: ExceptionListType,
@@ -79,8 +82,10 @@ const ExceptionsConditionsComponent: React.FC<ExceptionsFlyoutMetaComponentProps
   maybeRule,
   dispatch,
   handleFilterIndexPatterns,
+  exceptionListType,
   showOsTypeOptions,
   selectedOs,
+  isEdit,
 }): JSX.Element => {
   const { http, unifiedSearch } = useKibana().services;
 
@@ -160,6 +165,49 @@ const ExceptionsConditionsComponent: React.FC<ExceptionsFlyoutMetaComponentProps
     return showOsTypeOptions && selectedOs === undefined;
   }, [showOsTypeOptions, selectedOs]);
 
+  const osDisplay = (osTypes: OsTypeArray): string => {
+    const translateOS = (currentOs: OsType): string => {
+      return currentOs === 'linux'
+        ? sharedI18n.OPERATING_SYSTEM_LINUX
+        : currentOs === 'macos'
+        ? sharedI18n.OPERATING_SYSTEM_MAC
+        : sharedI18n.OPERATING_SYSTEM_WINDOWS;
+    };
+    return osTypes
+      .reduce((osString, currentOs) => {
+        return `${translateOS(currentOs)}, ${osString}`;
+      }, '')
+      .slice(0, -2);
+  };
+
+  const listType = useMemo(() => {
+    const defaultType = isEndpointException
+      ? ExceptionListTypeEnum.ENDPOINT
+      : ExceptionListTypeEnum.DETECTION;
+
+    return isEdit && exceptionListType != null ? exceptionListType : defaultType;
+  }, [exceptionListType, isEdit, isEndpointException]);
+
+  const listId = useMemo(() => {
+    const defaultValue = isEndpointException ? ENDPOINT_LIST_ID : undefined;
+
+    return isEdit ? exceptionListItems[0].list_id : defaultValue;
+  }, [exceptionListItems, isEdit, isEndpointException]);
+
+  const listNamespaceType = useMemo(() => {
+    const defaultValue = isEndpointException ? 'agnostic' : undefined;
+
+    return isEdit ? exceptionListItems[0].namespace_type : defaultValue;
+  }, [exceptionListItems, isEdit, isEndpointException]);
+
+  const eqlCalloutWarning = useMemo((): string => {
+    return isEdit ? i18n.EDIT_EXCEPTION_SEQUENCE_WARNING : i18n.ADD_EXCEPTION_SEQUENCE_WARNING;
+  }, [isEdit]);
+
+  const osTypes = useMemo(() => {
+    return isEdit ? exceptionListItems[0].os_types : selectedOs;
+  }, [exceptionListItems, isEdit, selectedOs]);
+
   return (
     <>
       <SectionHeader size="xs">
@@ -167,17 +215,14 @@ const ExceptionsConditionsComponent: React.FC<ExceptionsFlyoutMetaComponentProps
       </SectionHeader>
       {isRuleEQLSequenceStatement && (
         <>
-          <EuiCallOut
-            data-test-subj="eql-sequence-callout"
-            title={i18n.ADD_EXCEPTION_SEQUENCE_WARNING}
-          />
+          <EuiCallOut data-test-subj="eql-sequence-callout" title={eqlCalloutWarning} />
           <EuiSpacer />
         </>
       )}
       <EuiSpacer size="s" />
       <EuiText size="s">{i18n.EXCEPTION_BUILDER_INFO}</EuiText>
       <EuiSpacer size="s" />
-      {showOsTypeOptions && (
+      {showOsTypeOptions && !isEdit && (
         <>
           <EuiFormRow label={sharedI18n.OPERATING_SYSTEM_LABEL}>
             <EuiComboBox
@@ -193,17 +238,26 @@ const ExceptionsConditionsComponent: React.FC<ExceptionsFlyoutMetaComponentProps
           <EuiSpacer size="l" />
         </>
       )}
+      {showOsTypeOptions && isEdit && (
+        <>
+          <EuiText size="xs">
+            <dl>
+              <dt>{sharedI18n.OPERATING_SYSTEM_LABEL}</dt>
+              <dd>{osDisplay(osTypes)}</dd>
+            </dl>
+          </EuiText>
+          <EuiSpacer />
+        </>
+      )}
       {getExceptionBuilderComponentLazy({
         allowLargeValueLists,
         httpService: http,
         autocompleteService: unifiedSearch.autocomplete,
         exceptionListItems,
-        listType: isEndpointException
-          ? ExceptionListTypeEnum.ENDPOINT
-          : ExceptionListTypeEnum.DETECTION,
-        osTypes: selectedOs,
-        listId: isEndpointException ? ENDPOINT_LIST_ID : undefined,
-        listNamespaceType: isEndpointException ? 'agnostic' : undefined,
+        listType,
+        osTypes,
+        listId,
+        listNamespaceType,
         listTypeSpecificIndexPatternFilter: handleFilterIndexPatterns,
         exceptionItemName,
         indexPatterns,
