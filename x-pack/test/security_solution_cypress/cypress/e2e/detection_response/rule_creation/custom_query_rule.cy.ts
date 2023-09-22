@@ -21,7 +21,7 @@ import {
   fillDefineMinimumCustomRule,
   waitForAlertsToPopulate,
 } from '../../../tasks/create_new_rule';
-import { login, visit } from '../../../tasks/login';
+import { login } from '../../../tasks/login';
 import {
   confirmAlertSuppressionDetails,
   confirmRuleDetailsAbout,
@@ -29,7 +29,8 @@ import {
   confirmRuleDetailsSchedule,
   waitForTheRuleToBeExecuted,
 } from '../../../tasks/rule_details';
-import { RULE_CREATION } from '../../../urls/navigation';
+import { visitWithTimeRange } from '../../../tasks/navigation';
+import { CREATE_RULE_URL } from '../../../urls/navigation';
 
 describe('Create custom query rule', { tags: ['@ess', '@serverless'] }, () => {
   beforeEach(() => {
@@ -40,7 +41,7 @@ describe('Create custom query rule', { tags: ['@ess', '@serverless'] }, () => {
     beforeEach(() => {
       deleteAlertsAndRules();
       login();
-      visit(RULE_CREATION);
+      visitWithTimeRange(CREATE_RULE_URL);
     });
 
     it('Creates and enables a rule', function () {

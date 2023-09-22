@@ -9,6 +9,7 @@ import {
   AlertSuppression,
   RuleResponse,
 } from '@kbn/security-solution-plugin/common/api/detection_engine';
+import { ROLES } from '@kbn/security-solution-plugin/common/test';
 import type { Exception } from '../objects/exception';
 import { PAGE_CONTENT_SPINNER } from '../screens/common/page';
 import { RULE_STATUS } from '../screens/create_new_rule';
@@ -73,6 +74,7 @@ import {
   SUPPRESS_ALERTS_FOR,
   SUPPRESS_ALERTS_MISSING,
 } from '../screens/rule_details';
+import { RuleDetailsTabs, ruleDetailsUrl } from '../urls/rule_details';
 import {
   addExceptionConditions,
   addExceptionFlyoutItemName,
@@ -80,6 +82,16 @@ import {
   submitNewExceptionItem,
 } from './exceptions';
 import { addsFields, closeFieldsBrowser, filterFieldsBrowser } from './fields_browser';
+import { visit } from './navigation';
+
+interface VisitRuleDetailsPageOptions {
+  tab?: RuleDetailsTabs;
+  role?: ROLES;
+}
+
+export function visitRuleDetailsPage(ruleId: string, options?: VisitRuleDetailsPageOptions): void {
+  visit(ruleDetailsUrl(ruleId, options?.tab), { role: options?.role });
+}
 
 export const enablesRule = () => {
   // Rules get enabled via _bulk_action endpoint
