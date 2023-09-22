@@ -14,6 +14,7 @@ import type {
   ThreatTechnique,
 } from '@kbn/securitysolution-io-ts-alerting-types';
 import type {
+  AlertSuppression,
   EqlRuleCreateProps,
   MachineLearningRuleCreateProps,
   NewTermsRuleCreateProps,
@@ -110,6 +111,13 @@ import {
   RULE_INDICES,
   ALERTS_INDEX_BUTTON,
   INVESTIGATIONS_INPUT,
+  AUTHOR_INPUT,
+  LICENSE_INPUT,
+  TIMELINE_TEMPLATE,
+  TIMELINE_TEMPLATE_INPUT,
+  ALERT_SUPPRESSION_FIELDS,
+  ALERT_SUPPRESSION_MISSING_FIELDS,
+  ALERT_SUPPRESSION_TOGGLE,
 } from '../screens/create_new_rule';
 import {
   INDEX_SELECTOR,
@@ -127,29 +135,44 @@ import { waitForAlerts } from './alerts';
 import { refreshPage } from './security_header';
 import { EMPTY_ALERT_TABLE } from '../screens/alerts';
 
-export const createAndEnableRuleOnly = () => {
-  cy.get(CREATE_AND_ENABLE_BTN).click({ force: true });
+export const fillTimelineTemplate = (rule: RuleCreateProps) => {
+  cy.get(TIMELINE_TEMPLATE).click();
+  cy.get(TIMELINE_TEMPLATE_INPUT).type(`${rule.timeline_title}{enter}`);
+};
+
+export const createEnabledRule = () => {
+  cy.get(CREATE_AND_ENABLE_BTN).click();
   cy.get(CREATE_AND_ENABLE_BTN).should('not.exist');
 };
 
-export const createAndEnableRule = () => {
-  cy.get(CREATE_AND_ENABLE_BTN).click({ force: true });
-  cy.get(CREATE_AND_ENABLE_BTN).should('not.exist');
+export const createDisabledRule = () => {
+  cy.get(CREATE_WITHOUT_ENABLING_BTN).click();
+  cy.get(CREATE_WITHOUT_ENABLING_BTN).should('not.exist');
+};
+
+export const createEnabledRuleGoToRuleDetails = () => {
+  createEnabledRule();
   cy.get(BACK_TO_RULES_TABLE).click({ force: true });
 };
 
-export const createRuleWithoutEnabling = () => {
-  cy.get(CREATE_WITHOUT_ENABLING_BTN).click({ force: true });
-  cy.get(CREATE_WITHOUT_ENABLING_BTN).should('not.exist');
+export const createDisabledRuleGoToRuleDetails = () => {
+  createDisabledRule();
   cy.get(BACK_TO_RULES_TABLE).click({ force: true });
   cy.get(BACK_TO_RULES_TABLE).should('not.exist');
 };
 
+export const fillAuthor = (authors: string[]) => {
+  authors.forEach((author) => {
+    cy.get(AUTHOR_INPUT).type(`${author}{enter}`);
+  });
+  return authors;
+};
+
 export const fillAboutRule = (rule: RuleCreateProps) => {
-  cy.get(RULE_NAME_INPUT).clear({ force: true });
-  cy.get(RULE_NAME_INPUT).type(rule.name, { force: true });
-  cy.get(RULE_DESCRIPTION_INPUT).clear({ force: true });
-  cy.get(RULE_DESCRIPTION_INPUT).type(rule.description, { force: true });
+  cy.get(RULE_NAME_INPUT).clear();
+  cy.get(RULE_NAME_INPUT).type(rule.name);
+  cy.get(RULE_DESCRIPTION_INPUT).clear();
+  cy.get(RULE_DESCRIPTION_INPUT).type(rule.description);
 
   if (rule.severity) {
     fillSeverity(rule.severity);
@@ -160,7 +183,7 @@ export const fillAboutRule = (rule: RuleCreateProps) => {
   if (rule.tags) {
     fillRuleTags(rule.tags);
   }
-  cy.get(ADVANCED_SETTINGS_BTN).click({ force: true });
+  cy.get(ADVANCED_SETTINGS_BTN).click();
 
   if (rule.references) {
     fillReferenceUrls(rule.references);
@@ -173,18 +196,31 @@ export const fillAboutRule = (rule: RuleCreateProps) => {
   if (rule.threat) {
     fillMitre(rule.threat);
   }
+
+  if (rule.investigation_fields) {
+    fillCustomInvestigationFields(rule.investigation_fields.field_names);
+  }
+
   if (rule.note) {
     fillNote(rule.note);
+  }
+
+  if (rule.author) {
+    fillAuthor(rule.author);
+  }
+
+  if (rule.license) {
+    cy.get(LICENSE_INPUT).type(`${rule.license}{enter}`);
   }
 };
 
 export const expandAdvancedSettings = () => {
-  cy.get(ADVANCED_SETTINGS_BTN).click({ force: true });
+  cy.get(ADVANCED_SETTINGS_BTN).click();
 };
 
 export const fillNote = (note: string = ruleFields.investigationGuide) => {
-  cy.get(INVESTIGATION_NOTES_TEXTAREA).clear({ force: true });
-  cy.get(INVESTIGATION_NOTES_TEXTAREA).type(note, { force: true });
+  cy.get(INVESTIGATION_NOTES_TEXTAREA).clear();
+  cy.get(INVESTIGATION_NOTES_TEXTAREA).type(note);
 
   return note;
 };
@@ -303,17 +339,17 @@ export const fillCustomInvestigationFields = (
   fields: string[] = ruleFields.investigationFields.field_names
 ) => {
   fields.forEach((field) => {
-    cy.get(INVESTIGATIONS_INPUT).type(`${field}{enter}`, { force: true });
+    cy.get(INVESTIGATIONS_INPUT).type(`${field}{enter}`);
   });
   return fields;
 };
 
 export const fillAboutRuleMinimumAndContinue = (rule: RuleCreateProps) => {
-  cy.get(RULE_NAME_INPUT).clear({ force: true });
-  cy.get(RULE_NAME_INPUT).type(rule.name, { force: true });
-  cy.get(RULE_DESCRIPTION_INPUT).clear({ force: true });
-  cy.get(RULE_DESCRIPTION_INPUT).type(rule.description, { force: true });
-  getAboutContinueButton().should('exist').click({ force: true });
+  cy.get(RULE_NAME_INPUT).clear();
+  cy.get(RULE_NAME_INPUT).type(rule.name);
+  cy.get(RULE_DESCRIPTION_INPUT).clear();
+  cy.get(RULE_DESCRIPTION_INPUT).type(rule.description);
+  getAboutContinueButton().should('exist').click();
 };
 
 export const fillAboutRuleAndContinue = (rule: RuleCreateProps) => {
@@ -392,7 +428,19 @@ export const removeAlertsIndex = () => {
   });
 };
 
-export const fillDefineCustomRuleAndContinue = (rule: QueryRuleCreateProps) => {
+export const fillAlertSuppression = (suppression: AlertSuppression) => {
+  suppression.group_by.forEach((field) => {
+    cy.get(ALERT_SUPPRESSION_FIELDS).type(`${field}{downarrow}{enter}`);
+  });
+
+  cy.get(ALERT_SUPPRESSION_TOGGLE).click();
+
+  cy.get(
+    `${ALERT_SUPPRESSION_MISSING_FIELDS} label[for="${suppression.missing_fields_strategy}"]`
+  ).click();
+};
+
+export const fillDefineMinimumCustomRule = (rule: QueryRuleCreateProps) => {
   if (rule.data_view_id !== undefined) {
     cy.get(DATA_VIEW_OPTION).click();
     cy.get(DATA_VIEW_COMBO_BOX).type(`${rule.data_view_id}{enter}`);
@@ -400,12 +448,19 @@ export const fillDefineCustomRuleAndContinue = (rule: QueryRuleCreateProps) => {
   cy.get(CUSTOM_QUERY_INPUT)
     .first()
     .type(rule.query || '');
+};
+
+export const fillDefineCustomRuleAndContinue = (rule: QueryRuleCreateProps) => {
+  fillDefineMinimumCustomRule(rule);
   cy.get(DEFINE_CONTINUE_BUTTON).should('exist').click({ force: true });
 };
 
 export const fillScheduleRuleAndContinue = (rule: RuleCreateProps) => {
   if (rule.interval) {
+    console.log('interval', rule.interval);
     const intervalNumber = rule.interval.slice(0, rule.interval.length - 1);
+    console.log('intervalNumber', intervalNumber);
+
     const intervalType = rule.interval.charAt(rule.interval.length - 1);
     cy.get(RUNS_EVERY_INTERVAL).type('{selectall}');
     cy.get(RUNS_EVERY_INTERVAL).type(intervalNumber);
@@ -416,6 +471,7 @@ export const fillScheduleRuleAndContinue = (rule: RuleCreateProps) => {
     const additionalLookback = getHumanizedDuration(rule.from, rule.interval ?? '5m');
     const additionalLookbackNumber = additionalLookback.slice(0, additionalLookback.length - 1);
     const additionalLookbackType = additionalLookback.charAt(additionalLookback.length - 1);
+    console.log('additionalLookbackNumber', additionalLookbackNumber);
     cy.get(LOOK_BACK_INTERVAL).type('{selectAll}');
     cy.get(LOOK_BACK_INTERVAL).type(additionalLookbackNumber);
 

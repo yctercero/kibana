@@ -59,7 +59,7 @@ export const ruleFields: RuleFields = {
     '-*elastic-cloud-logs-*',
   ],
   falsePositives: ['False1', 'False2'],
-  investigationGuide: '# test markdown',
+  investigationGuide: 'test markdown',
   investigationFields: {
     field_names: ['agent.hostname'],
   },

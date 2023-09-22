@@ -13,6 +13,9 @@ export const ABOUT_EDIT_TAB = '[data-test-subj="edit-rule-about-tab"]';
 
 export const ACTIONS_EDIT_TAB = '[data-test-subj="edit-rule-actions-tab"]';
 
+export const AUTHOR_INPUT =
+  '[data-test-subj="detectionEngineStepAboutRuleAuthor"] [data-test-subj="comboBoxSearchInput"]';
+
 export const ADD_FALSE_POSITIVE_BTN =
   '[data-test-subj="detectionEngineStepAboutRuleFalsePositives"] .euiButtonEmpty__text';
 
@@ -22,8 +25,14 @@ export const ADD_REFERENCE_URL_BTN =
 export const ALERT_SUPPRESSION_FIELDS =
   '[data-test-subj="alertSuppressionInput"] [data-test-subj="comboBoxInput"]';
 
+export const ALERT_SUPPRESSION_TOGGLE =
+  '[data-test-subj="alertSuppressionInput"] [data-test-subj="comboBoxToggleListButton"]';
+
 export const ALERT_SUPPRESSION_DURATION_OPTIONS =
   '[data-test-subj="alertSuppressionDuration"] [data-test-subj="groupByDurationOptions"]';
+
+export const ALERT_SUPPRESSION_MISSING_FIELDS =
+  '[data-test-subj="suppressionMissingFieldsOptions"]';
 
 export const ANOMALY_THRESHOLD_INPUT = '[data-test-subj="anomalyThresholdSlider"] .euiFieldNumber';
 
@@ -38,6 +47,10 @@ export const CREATE_WITHOUT_ENABLING_BTN = '[data-test-subj="create-enabled-fals
 export const CUSTOM_QUERY_INPUT = '[data-test-subj="queryInput"]';
 
 export const CUSTOM_QUERY_BAR = '[data-test-subj="detectionEngineStepDefineRuleQueryBar"]';
+
+export const TIMELINE_TEMPLATE = '[data-test-subj="detectionEngineStepDefineRuleTimeline"]';
+
+export const TIMELINE_TEMPLATE_INPUT = '[data-test-subj="timeline-super-select-search-box"]';
 
 export const THREAT_MAPPING_COMBO_BOX_INPUT =
   '[data-test-subj="threatMatchInput"] [data-test-subj="fieldAutocompleteComboBox"]';
@@ -105,6 +118,9 @@ export const INVESTIGATION_NOTES_TEXTAREA =
 
 export const FALSE_POSITIVES_INPUT =
   '[data-test-subj="detectionEngineStepAboutRuleFalsePositives"] input';
+
+export const LICENSE_INPUT =
+  '[data-test-subj="detectionEngineStepAboutRuleLicense"] [data-test-subj="input"]';
 
 export const LOOK_BACK_INTERVAL =
   '[data-test-subj="detectionEngineStepScheduleRuleFrom"] [data-test-subj="interval"]';

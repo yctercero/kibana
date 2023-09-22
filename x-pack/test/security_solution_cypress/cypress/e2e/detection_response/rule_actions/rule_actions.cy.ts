@@ -17,7 +17,7 @@ import {
   deleteDataView,
 } from '../../../tasks/common';
 import {
-  createAndEnableRule,
+  createEnabledRuleGoToRuleDetails,
   fillAboutRuleAndContinue,
   fillDefineCustomRuleAndContinue,
   fillRuleAction,
@@ -58,7 +58,7 @@ describe(
       fillAboutRuleAndContinue(rule);
       fillScheduleRuleAndContinue(rule);
       fillRuleAction(actions);
-      createAndEnableRule();
+      createEnabledRuleGoToRuleDetails();
 
       goToRuleDetailsOf(rule.name);
 

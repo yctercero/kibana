@@ -75,7 +75,11 @@ export const FrequencyDescription: React.FC<{ frequency?: RuleActionFrequency }>
     ),
   };
 
-  return <DescriptionLine>{messagesByUnit[unit] || i18n.PERIODICALLY}</DescriptionLine>;
+  return (
+    <DescriptionLine data-test-subj="ruleActionsDetailsConnectorFrequency">
+      {messagesByUnit[unit] || i18n.PERIODICALLY}
+    </DescriptionLine>
+  );
 };
 
 interface NotificationActionProps {
@@ -108,7 +112,9 @@ export function NotificationAction({
           </EuiToolTip>
         </EuiFlexItem>
         <EuiFlexItem>
-          <EuiText size="s">{connectorName}</EuiText>
+          <EuiText size="s" data-test-subj="ruleActionsDetailsConnectorName">
+            {connectorName}
+          </EuiText>
           <EuiFlexGroup alignItems="center" gutterSize="xs" component="span" responsive={false}>
             <EuiSpacer size="xs" />
             <EuiFlexItem grow={false}>

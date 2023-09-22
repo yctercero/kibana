@@ -5,6 +5,10 @@
  * 2.0.
  */
 
+import {
+  AlertSuppression,
+  RuleResponse,
+} from '@kbn/security-solution-plugin/common/api/detection_engine';
 import type { Exception } from '../objects/exception';
 import { PAGE_CONTENT_SPINNER } from '../screens/common/page';
 import { RULE_STATUS } from '../screens/create_new_rule';
@@ -33,6 +37,41 @@ import {
   EXCEPTIONS_TAB_EXPIRED_FILTER,
   EXCEPTIONS_TAB_ACTIVE_FILTER,
   RULE_NAME_HEADER,
+  ABOUT_RULE_DESCRIPTION,
+  ABOUT_DETAILS,
+  SEVERITY_DETAILS,
+  RISK_SCORE_DETAILS,
+  REFERENCE_URLS_DETAILS,
+  THREAT_TACTIC,
+  THREAT_TECHNIQUE,
+  THREAT_SUBTECHNIQUE,
+  FALSE_POSITIVES_DETAILS,
+  TAGS_DETAILS,
+  INVESTIGATION_NOTES_TOGGLE,
+  ABOUT_INVESTIGATION_NOTES,
+  AUTHOR_DETAILS,
+  BUILDING_BLOCK_DETAILS,
+  BUILDING_BLOCK_TEXT_DETAILS,
+  SEVERITY_OVERRIDE_DETAILS,
+  RISK_SCORE_OVERRIDE_DETAILS,
+  removeExternalLinkText,
+  INVESTIGATION_FIELDS_DETAILS,
+  TIMESTAMP_OVERRIDE_DETAILS,
+  RULE_DETAILS_TOGGLE,
+  CUSTOM_QUERY_DETAILS,
+  RULE_TYPE_DETAILS,
+  TIMELINE_TEMPLATE_DETAILS,
+  DATA_VIEW_DETAILS,
+  THRESHOLD_DETAILS,
+  SCHEDULE_DETAILS,
+  RUNS_EVERY_DETAILS,
+  ADDITIONAL_LOOK_BACK_DETAILS,
+  ACTION_DETAILS,
+  ACTION_DETAILS_CONNECTOR_NAME,
+  ACTION_DETAILS_CONNECTOR_FREQUENCY,
+  SUPPRESS_ALERTS_BY,
+  SUPPRESS_ALERTS_FOR,
+  SUPPRESS_ALERTS_MISSING,
 } from '../screens/rule_details';
 import {
   addExceptionConditions,
@@ -157,4 +196,188 @@ export const hasIndexPatterns = (indexPatterns: string) => {
 
 export const goToRuleEditSettings = () => {
   cy.get(EDIT_RULE_SETTINGS_LINK).click();
+};
+
+export const confirmRuleDetailsAbout = (rule: RuleResponse) => {
+  cy.get(ABOUT_RULE_DESCRIPTION).should('have.text', rule.description);
+
+  if (rule.note) {
+    cy.get(INVESTIGATION_NOTES_TOGGLE).click();
+    cy.get(ABOUT_INVESTIGATION_NOTES).should('have.text', rule.note);
+    cy.get(RULE_DETAILS_TOGGLE).click();
+  }
+
+  cy.get(ABOUT_DETAILS).within(() => {
+    if (rule.author && rule.author.length) {
+      getDetails(AUTHOR_DETAILS).should('have.text', rule.author.join(''));
+    }
+    if (rule.building_block_type === 'default') {
+      getDetails(BUILDING_BLOCK_DETAILS).should('have.text', BUILDING_BLOCK_TEXT_DETAILS);
+    }
+
+    getDetails(SEVERITY_DETAILS)
+      .invoke('text')
+      .then((text) => {
+        cy.wrap(text.toLowerCase()).should('equal', rule.severity);
+      });
+
+    if (rule.severity_mapping && rule.severity_mapping.length) {
+      getDetails(SEVERITY_OVERRIDE_DETAILS).should(
+        'have.text',
+        `${rule.severity_mapping[0].field}${rule.severity_mapping[0].severity}`
+      );
+    }
+
+    getDetails(RISK_SCORE_DETAILS).should('have.text', rule.risk_score);
+
+    if (rule.risk_score_mapping && rule.risk_score_mapping.length) {
+      getDetails(RISK_SCORE_OVERRIDE_DETAILS).should(
+        'have.text',
+        `${rule.risk_score_mapping?.[0].field}kibana.alert.risk_score`
+      );
+    }
+
+    if (rule.references && rule.references.length) {
+      getDetails(REFERENCE_URLS_DETAILS).should((details) => {
+        expect(removeExternalLinkText(details.text())).equal(rule.references.join(''));
+      });
+    }
+
+    if (rule.false_positives && rule.false_positives.length) {
+      getDetails(FALSE_POSITIVES_DETAILS).should('have.text', rule.false_positives.join(''));
+    }
+
+    if (rule.investigation_fields) {
+      getDetails(INVESTIGATION_FIELDS_DETAILS).should(
+        'have.text',
+        rule.investigation_fields.field_names.join('')
+      );
+    }
+
+    if (rule.timestamp_override) {
+      getDetails(TIMESTAMP_OVERRIDE_DETAILS).should('have.text', rule.timestamp_override);
+    }
+
+    if (rule.tags && rule.tags.length) {
+      getDetails(TAGS_DETAILS).should('have.text', rule.tags.join(''));
+    }
+  });
+
+  if (rule.threat && rule.threat.length) {
+    rule.threat.forEach((attack, index) => {
+      const tactic = attack.tactic;
+
+      cy.get(THREAT_TACTIC).should('contain', `${tactic.name} (${tactic.id})`);
+
+      if (attack.technique) {
+        attack.technique.forEach((threatTechnique) => {
+          cy.get(THREAT_TECHNIQUE).should(
+            'contain',
+            `${threatTechnique.name} (${threatTechnique.id})`
+          );
+
+          if (threatTechnique.subtechnique) {
+            threatTechnique.subtechnique.forEach((threatSubtechnique) => {
+              cy.get(THREAT_SUBTECHNIQUE).should(
+                'contain',
+                `${threatSubtechnique.name} (${threatSubtechnique.id})`
+              );
+            });
+          }
+        });
+      }
+    });
+  }
+};
+
+const RULE_TYPE = {
+  query: 'Query',
+  eql: 'Event Correlation',
+  threat_match: 'Indicator match',
+  saved_query: 'Saved query',
+  threshold: 'Threshold',
+  machine_learning: 'Machine Learning',
+  new_terms: 'New Terms',
+};
+
+export const confirmAlertSuppressionDetails = (suppression: AlertSuppression) => {
+  cy.get(DEFINITION_DETAILS).within(() => {
+    getDetails(SUPPRESS_ALERTS_BY).should('have.text', suppression.group_by.join(''));
+    if (suppression.duration) {
+      getDetails(SUPPRESS_ALERTS_FOR).should(
+        'have.text',
+        `${suppression.duration.value}${suppression.duration.unit}`
+      );
+    } else {
+      getDetails(SUPPRESS_ALERTS_FOR).should('have.text', 'One rule execution');
+    }
+
+    if (suppression.missing_fields_strategy === 'suppress') {
+      getDetails(SUPPRESS_ALERTS_MISSING).should(
+        'have.text',
+        'Suppress and group alerts for events with missing fields'
+      );
+    } else {
+      getDetails(SUPPRESS_ALERTS_MISSING).should(
+        'have.text',
+        'Do not suppress alerts for events with missing fields'
+      );
+    }
+  });
+};
+
+export const confirmRuleDetailsDefinition = (rule: RuleResponse) => {
+  cy.get(DEFINITION_DETAILS).within(() => {
+    if (rule.data_view_id) {
+      getDetails(DATA_VIEW_DETAILS).should('have.text', rule.data_view_id);
+    } else {
+      getDetails(INDEX_PATTERNS_DETAILS).should('have.text', rule.index.join(''));
+    }
+    getDetails(CUSTOM_QUERY_DETAILS).should('have.text', rule.query);
+    getDetails(RULE_TYPE_DETAILS).should('have.text', RULE_TYPE[rule.type]);
+    if (rule.timeline_title) {
+      getDetails(TIMELINE_TEMPLATE_DETAILS).should('have.text', rule.timeline_title);
+    } else {
+      getDetails(TIMELINE_TEMPLATE_DETAILS).should('have.text', 'None');
+    }
+
+    if (rule.alert_suppression) {
+      getDetails(SUPPRESS_ALERTS_BY).should('have.text', rule.alert_suppression.group_by.join(''));
+      if (rule.alert_suppression.duration) {
+        getDetails(SUPPRESS_ALERTS_FOR).should(
+          'have.text',
+          `${rule.alert_suppression.duration.value}${rule.alert_suppression.duration.unit}`
+        );
+      } else {
+        getDetails(SUPPRESS_ALERTS_FOR).should('have.text', 'One rule execution');
+      }
+
+      if (rule.alert_suppression.missing_fields_strategy === 'suppress') {
+        getDetails(SUPPRESS_ALERTS_MISSING).should(
+          'have.text',
+          'Suppress and group alerts for events with missing fields'
+        );
+      } else {
+        getDetails(SUPPRESS_ALERTS_MISSING).should(
+          'have.text',
+          'Do not suppress alerts for events with missing fields'
+        );
+      }
+    }
+  });
+};
+
+export const confirmRuleDetailsSchedule = (rule: RuleResponse) => {
+  const lookbackTime = rule.from.slice(4);
+  cy.get(SCHEDULE_DETAILS).within(() => {
+    getDetails(RUNS_EVERY_DETAILS).should('have.text', rule.interval);
+    getDetails(ADDITIONAL_LOOK_BACK_DETAILS).should('have.text', lookbackTime);
+  });
+};
+
+export const confirmRuleDetailsActions = (name: string, frequency: string) => {
+  cy.get(ACTION_DETAILS).within(() => {
+    cy.get(ACTION_DETAILS_CONNECTOR_NAME).should('have.text', name);
+    getDetails(ACTION_DETAILS_CONNECTOR_FREQUENCY).should('have.text', frequency);
+  });
 };

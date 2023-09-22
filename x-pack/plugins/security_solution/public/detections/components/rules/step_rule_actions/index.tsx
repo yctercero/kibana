@@ -136,7 +136,7 @@ const StepRuleActionsComponent: FC<StepRuleActionsProps> = ({
 
   return (
     <>
-      <StepContentWrapper addPadding={!isUpdateView}>
+      <StepContentWrapper data-test-subj="actionsRule" addPadding={!isUpdateView}>
         <Form form={form} data-test-subj="stepRuleActions">
           <EuiForm>{displayActionsDropDown}</EuiForm>
         </Form>

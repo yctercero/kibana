@@ -54,8 +54,8 @@ import {
 } from '../../../tasks/alerts_detection_rules';
 import { postDataView } from '../../../tasks/common';
 import {
-  createAndEnableRule,
-  createRuleWithoutEnabling,
+  createEnabledRuleGoToRuleDetails,
+  createDisabledRuleGoToRuleDetails,
   fillAboutRuleAndContinue,
   fillDefineCustomRuleAndContinue,
   fillScheduleRuleAndContinue,
@@ -95,7 +95,7 @@ describe('Custom query rules', { tags: ['@ess', '@serverless', '@brokenInServerl
       fillDefineCustomRuleAndContinue(rule);
       fillAboutRuleAndContinue(rule);
       fillScheduleRuleAndContinue(rule);
-      createAndEnableRule();
+      createEnabledRuleGoToRuleDetails();
 
       cy.get(CUSTOM_RULES_BTN).should('have.text', 'Custom rules (1)');
 
@@ -159,7 +159,7 @@ describe('Custom query rules', { tags: ['@ess', '@serverless', '@brokenInServerl
       cy.get(ABOUT_CONTINUE_BTN).should('exist').click();
 
       fillScheduleRuleAndContinue(rule);
-      createRuleWithoutEnabling();
+      createDisabledRuleGoToRuleDetails();
 
       goToRuleDetailsOf(rule.name);
 

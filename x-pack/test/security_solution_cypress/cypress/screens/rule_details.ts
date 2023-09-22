@@ -23,6 +23,12 @@ export const ANOMALY_SCORE_DETAILS = 'Anomaly score';
 
 export const CUSTOM_QUERY_DETAILS = 'Custom query';
 
+export const SUPPRESS_ALERTS_BY = 'Suppress alerts by';
+
+export const SUPPRESS_ALERTS_FOR = 'Suppress alerts for';
+
+export const SUPPRESS_ALERTS_MISSING = 'If a suppression field is missing';
+
 export const SAVED_QUERY_NAME_DETAILS = 'Saved query name';
 
 export const SAVED_QUERY_DETAILS = /^Saved query$/;
@@ -48,6 +54,8 @@ export const EXCEPTIONS_ITEM_CONTAINER = '[data-test-subj="exceptionsContainer"]
 
 export const FALSE_POSITIVES_DETAILS = 'False positive examples';
 
+export const INVESTIGATION_FIELDS_DETAILS = 'Custom highlighted fields';
+
 export const INDEX_PATTERNS_DETAILS = 'Index patterns';
 
 export const ENDPOINT_EXCEPTIONS_TAB = 'a[data-test-subj="navigation-endpoint_exceptions"]';
@@ -65,6 +73,8 @@ export const INTEGRATION_STATUS = '[data-test-subj="statusBadge"]';
 export const INVESTIGATION_NOTES_MARKDOWN = 'test markdown';
 
 export const INVESTIGATION_NOTES_TOGGLE = '[data-test-subj="stepAboutDetailsToggle-notes"]';
+
+export const RULE_DETAILS_TOGGLE = '[data-test-subj="stepAboutDetailsToggle-details"]';
 
 export const MACHINE_LEARNING_JOB_ID = '[data-test-subj="machineLearningJob"]';
 
@@ -87,6 +97,13 @@ export const RULE_NAME_HEADER = '[data-test-subj="header-page-title"]';
 export const RULE_NAME_OVERRIDE_DETAILS = 'Rule name override';
 
 export const RISK_SCORE_DETAILS = 'Risk score';
+
+export const AUTHOR_DETAILS = 'Author';
+
+export const BUILDING_BLOCK_DETAILS = 'Building block';
+
+export const BUILDING_BLOCK_TEXT_DETAILS =
+  'All generated alerts will be marked as "building block" alerts';
 
 export const INDICATOR_PREFIX_OVERRIDE = 'Indicator prefix override';
 
@@ -111,6 +128,8 @@ export const SCHEDULE_DETAILS =
   '[data-test-subj=schedule] [data-test-subj="listItemColumnStepRuleDescription"]';
 
 export const SEVERITY_DETAILS = 'Severity';
+
+export const SEVERITY_OVERRIDE_DETAILS = 'Severity override';
 
 export const TAGS_DETAILS = 'Tags';
 
@@ -147,3 +166,11 @@ export const BACK_TO_RULES_TABLE =
 
 export const HIGHLIGHTED_ROWS_IN_TABLE =
   '[data-test-subj="euiDataGridBody"] .alertsTableHighlightedRow';
+
+export const ACTION_DETAILS =
+  '[data-test-subj=actionsRule] [data-test-subj="listItemColumnStepRuleDescription"]';
+
+export const ACTION_DETAILS_CONNECTOR_NAME = '[data-test-subj=ruleActionsDetailsConnectorName]';
+
+export const ACTION_DETAILS_CONNECTOR_FREQUENCY =
+  '[data-test-subj=ruleActionsDetailsConnectorFrequency]';
