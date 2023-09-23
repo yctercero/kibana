@@ -5,6 +5,10 @@
  * 2.0.
  */
 
+import {
+  AlertSuppressionDurationEnum,
+  AlertSuppressionMissingFieldsStrategy,
+} from '@kbn/security-solution-plugin/common/api/detection_engine';
 import { getSimpleCustomQueryRule } from '../../../objects/rule';
 import { ALERTS_COUNT, ALERT_GRID_CELL } from '../../../screens/alerts';
 import { DEFINE_CONTINUE_BUTTON } from '../../../screens/create_new_rule';
@@ -74,7 +78,7 @@ describe('Create custom query rule', { tags: ['@ess', '@serverless'] }, () => {
           ...getSimpleCustomQueryRule(),
           alert_suppression: {
             group_by: ['agent.name'],
-            missing_fields_strategy: 'suppress',
+            missing_fields_strategy: AlertSuppressionMissingFieldsStrategy.Suppress,
           },
         };
 
@@ -94,9 +98,9 @@ describe('Create custom query rule', { tags: ['@ess', '@serverless'] }, () => {
         const rule = {
           ...getSimpleCustomQueryRule(),
           alert_suppression: {
-            duration: { unit: 'm', value: 5 },
+            duration: { unit: AlertSuppressionDurationEnum.m, value: 5 },
             group_by: ['agent.name'],
-            missing_fields_strategy: 'doNotSuppress',
+            missing_fields_strategy: AlertSuppressionMissingFieldsStrategy.DoNotSuppress,
           },
         };
 

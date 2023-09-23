@@ -28,13 +28,14 @@ import {
   fillFrom,
   importSavedQuery,
 } from '../../../tasks/create_new_rule';
-import { login, visit } from '../../../tasks/login';
+import { login } from '../../../tasks/login';
+import { visitWithTimeRange } from '../../../tasks/navigation';
 import {
   confirmRuleDetailsAbout,
   confirmRuleDetailsDefinition,
   confirmRuleDetailsSchedule,
 } from '../../../tasks/rule_details';
-import { RULE_CREATION } from '../../../urls/navigation';
+import { CREATE_RULE_URL } from '../../../urls/navigation';
 
 // This test is meant to test touching all the common various components in rule creation
 // to ensure we don't miss any changes that maybe affect one of these more obscure UI components
@@ -64,7 +65,7 @@ describe('Common rule creation components', { tags: ['@ess', '@serverless'] }, (
       })
       .as('timelineId');
     login();
-    visit(RULE_CREATION);
+    visitWithTimeRange(CREATE_RULE_URL);
   });
 
   it('Creates and enables a rule', function () {

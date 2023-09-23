@@ -36,6 +36,12 @@ export const AlertSuppressionGroupBy = LimitedSizeArray({
   maxSize: 3,
 });
 
+export enum AlertSuppressionDurationEnum {
+  s = 's',
+  m = 'm',
+  h = 'h',
+}
+
 export const AlertSuppressionDuration = t.type({
   value: PositiveIntegerGreaterThanZero,
   unit: t.keyof({
