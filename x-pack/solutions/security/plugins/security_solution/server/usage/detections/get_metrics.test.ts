@@ -62,7 +62,7 @@ describe('Detections Usage and Metrics', () => {
       expect(result).toEqual<DetectionMetrics>(getInitialDetectionMetrics());
     });
 
-    it('returns information with rule, alerts and cases', async () => {
+    it('returns information with rule, alerts, exceptions and cases', async () => {
       esClient.search.mockResponseOnce(getEventLogAllRules());
       esClient.search.mockResponseOnce(getEventLogElasticRules());
       esClient.search.mockResponseOnce(getElasticLogCustomRules());
@@ -110,6 +110,10 @@ describe('Detections Usage and Metrics', () => {
               has_alert_suppression_per_rule_execution: false,
               has_alert_suppression_per_time_period: false,
               alert_suppression_fields_count: 0,
+              has_shared_detection_exception_list: true,
+              has_endpoint_exception_list: true,
+              has_rule_default_exception_list: false,
+              total_linked_exception_lists: 2,
             },
           ],
           detection_rule_usage: {
@@ -125,6 +129,13 @@ describe('Detections Usage and Metrics', () => {
               notifications_disabled: 0,
               legacy_investigation_fields: 0,
               alert_suppression: initialAlertSuppression,
+              exceptions: {
+                enabled_rules_with_exceptions: 0,
+                disabled_rules_with_exceptions: 1,
+                has_shared_detection_exception_list: 1,
+                has_rule_default_list: 0,
+                has_endpoint_list: 1,
+              },
             },
             elastic_total: {
               alerts: 3400,
@@ -137,6 +148,13 @@ describe('Detections Usage and Metrics', () => {
               notifications_disabled: 0,
               legacy_investigation_fields: 0,
               alert_suppression: initialAlertSuppression,
+              exceptions: {
+                enabled_rules_with_exceptions: 0,
+                disabled_rules_with_exceptions: 0,
+                has_shared_detection_exception_list: 0,
+                has_rule_default_list: 0,
+                has_endpoint_list: 0,
+              },
             },
           },
         },
@@ -185,6 +203,13 @@ describe('Detections Usage and Metrics', () => {
               notifications_disabled: 0,
               legacy_investigation_fields: 0,
               alert_suppression: initialAlertSuppression,
+              exceptions: {
+                enabled_rules_with_exceptions: 0,
+                disabled_rules_with_exceptions: 0,
+                has_shared_detection_exception_list: 0,
+                has_rule_default_list: 0,
+                has_endpoint_list: 0,
+              },
             },
             query: {
               alerts: 800,
@@ -197,13 +222,20 @@ describe('Detections Usage and Metrics', () => {
               notifications_disabled: 0,
               legacy_investigation_fields: 0,
               alert_suppression: initialAlertSuppression,
+              exceptions: {
+                enabled_rules_with_exceptions: 0,
+                disabled_rules_with_exceptions: 0,
+                has_shared_detection_exception_list: 0,
+                has_rule_default_list: 0,
+                has_endpoint_list: 0,
+              },
             },
           },
         },
       });
     });
 
-    it('returns information with rule, no alerts and no cases', async () => {
+    it('returns information with rule, no alerts, no exceptions and no cases', async () => {
       esClient.search.mockResponseOnce(getEventLogAllRules());
       esClient.search.mockResponseOnce(getEventLogElasticRules());
       esClient.search.mockResponseOnce(getElasticLogCustomRules());
@@ -251,6 +283,10 @@ describe('Detections Usage and Metrics', () => {
               has_alert_suppression_missing_fields_strategy_do_not_suppress: false,
               has_alert_suppression_per_rule_execution: false,
               has_alert_suppression_per_time_period: false,
+              has_shared_detection_exception_list: false,
+              has_endpoint_exception_list: false,
+              has_rule_default_exception_list: false,
+              total_linked_exception_lists: 0,
             },
           ],
           detection_rule_usage: {
@@ -266,6 +302,13 @@ describe('Detections Usage and Metrics', () => {
               notifications_disabled: 0,
               legacy_investigation_fields: 0,
               alert_suppression: initialAlertSuppression,
+              exceptions: {
+                enabled_rules_with_exceptions: 0,
+                disabled_rules_with_exceptions: 0,
+                has_shared_detection_exception_list: 0,
+                has_rule_default_list: 0,
+                has_endpoint_list: 0,
+              },
             },
             query: {
               alerts: 0,
@@ -278,6 +321,13 @@ describe('Detections Usage and Metrics', () => {
               notifications_disabled: 0,
               legacy_investigation_fields: 0,
               alert_suppression: initialAlertSuppression,
+              exceptions: {
+                enabled_rules_with_exceptions: 0,
+                disabled_rules_with_exceptions: 0,
+                has_shared_detection_exception_list: 0,
+                has_rule_default_list: 0,
+                has_endpoint_list: 0,
+              },
             },
           },
         },

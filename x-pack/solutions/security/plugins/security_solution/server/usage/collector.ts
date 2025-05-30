@@ -14,6 +14,10 @@ import { getEndpointMetrics } from './endpoint/get_metrics';
 import { getDashboardMetrics } from './dashboards/get_dashboards_metrics';
 import { riskEngineMetricsSchema } from './risk_engine/schema';
 import { getRiskEngineMetrics } from './risk_engine/get_risk_engine_metrics';
+import { exceptionsMetricsSchema } from './exceptions/schema';
+import { getExceptionsMetrics } from './exceptions/get_metrics';
+import { getValueListsMetrics } from './value_lists/get_metrics';
+import { valueListsMetricsSchema } from './value_lists/schema';
 
 export type RegisterCollector = (deps: CollectorDependencies) => void;
 
@@ -22,6 +26,8 @@ export interface UsageData {
   endpointMetrics: {};
   dashboardMetrics: DashboardMetrics;
   riskEngineMetrics: {};
+  exceptionsMetrics: {};
+  valueListsMetrics: {};
 }
 
 export const registerCollector: RegisterCollector = ({
@@ -154,6 +160,41 @@ export const registerCollector: RegisterCollector = ({
                   },
                 },
               },
+              exceptions: {
+                enabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description: 'Number of enabled query rules configured with an exception list',
+                  },
+                },
+                disabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description: 'Number of disabled query rules configured with an exception list',
+                  },
+                },
+                has_shared_detection_exception_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled query rules that have any type of exception list linked.',
+                  },
+                },
+                has_rule_default_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled query rules that have a rule default exception list linked.',
+                  },
+                },
+                has_endpoint_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled query rules that have a rule endpoint exception list linked.',
+                  },
+                },
+              },
             },
             threshold: {
               enabled: {
@@ -262,6 +303,43 @@ export const registerCollector: RegisterCollector = ({
                   },
                 },
               },
+              exceptions: {
+                enabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled threshold rules configured with an exception list',
+                  },
+                },
+                disabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of disabled threshold rules configured with an exception list',
+                  },
+                },
+                has_shared_detection_exception_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled threshold rules that have any type of exception list linked.',
+                  },
+                },
+                has_rule_default_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled threshold rules that have a rule default exception list linked.',
+                  },
+                },
+                has_endpoint_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled threshold rules that have a rule endpoint exception list linked.',
+                  },
+                },
+              },
             },
             eql: {
               enabled: { type: 'long', _meta: { description: 'Number of eql rules enabled' } },
@@ -355,6 +433,41 @@ export const registerCollector: RegisterCollector = ({
                   _meta: {
                     description:
                       'Number of eql rules configured do not suppress alerts with missing fields',
+                  },
+                },
+              },
+              exceptions: {
+                enabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description: 'Number of enabled eql rules configured with an exception list',
+                  },
+                },
+                disabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description: 'Number of disabled eql rules configured with an exception list',
+                  },
+                },
+                has_shared_detection_exception_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled eql rules that have any type of exception list linked.',
+                  },
+                },
+                has_rule_default_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled eql rules that have a rule default exception list linked.',
+                  },
+                },
+                has_endpoint_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled eql rules that have a rule endpoint exception list linked.',
                   },
                 },
               },
@@ -468,6 +581,43 @@ export const registerCollector: RegisterCollector = ({
                   },
                 },
               },
+              exceptions: {
+                enabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled machine_learning rules configured with an exception list',
+                  },
+                },
+                disabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of disabled machine_learning rules configured with an exception list',
+                  },
+                },
+                has_shared_detection_exception_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled machine_learning rules that have any type of exception list linked.',
+                  },
+                },
+                has_rule_default_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled machine_learning rules that have a rule default exception list linked.',
+                  },
+                },
+                has_endpoint_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled machine_learning rules that have a rule endpoint exception list linked.',
+                  },
+                },
+              },
             },
             threat_match: {
               enabled: {
@@ -574,6 +724,43 @@ export const registerCollector: RegisterCollector = ({
                   _meta: {
                     description:
                       'Number of threat_match rules configured do not suppress alerts with missing fields',
+                  },
+                },
+              },
+              exceptions: {
+                enabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled threat_match rules configured with an exception list',
+                  },
+                },
+                disabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of disabled threat_match rules configured with an exception list',
+                  },
+                },
+                has_shared_detection_exception_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled threat_match rules that have any type of exception list linked.',
+                  },
+                },
+                has_rule_default_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled threat_match rules that have a rule default exception list linked.',
+                  },
+                },
+                has_endpoint_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled threat_match rules that have a rule endpoint exception list linked.',
                   },
                 },
               },
@@ -685,6 +872,43 @@ export const registerCollector: RegisterCollector = ({
                   },
                 },
               },
+              exceptions: {
+                enabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled new_terms rules configured with an exception list',
+                  },
+                },
+                disabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of disabled new_terms rules configured with an exception list',
+                  },
+                },
+                has_shared_detection_exception_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled new_terms rules that have any type of exception list linked.',
+                  },
+                },
+                has_rule_default_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled new_terms rules that have a rule default exception list linked.',
+                  },
+                },
+                has_endpoint_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled new_terms rules that have a rule endpoint exception list linked.',
+                  },
+                },
+              },
             },
             esql: {
               enabled: {
@@ -789,6 +1013,41 @@ export const registerCollector: RegisterCollector = ({
                   },
                 },
               },
+              exceptions: {
+                enabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description: 'Number of enabled esql rules configured with an exception list',
+                  },
+                },
+                disabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description: 'Number of disabled esql rules configured with an exception list',
+                  },
+                },
+                has_shared_detection_exception_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled esql rules that have any type of exception list linked.',
+                  },
+                },
+                has_rule_default_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled esql rules that have a rule default exception list linked.',
+                  },
+                },
+                has_endpoint_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled esql rules that have a rule endpoint exception list linked.',
+                  },
+                },
+              },
             },
             elastic_total: {
               enabled: { type: 'long', _meta: { description: 'Number of elastic rules enabled' } },
@@ -890,6 +1149,43 @@ export const registerCollector: RegisterCollector = ({
                   },
                 },
               },
+              exceptions: {
+                enabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled elastic rules configured with an exception list',
+                  },
+                },
+                disabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of disabled elastic rules configured with an exception list',
+                  },
+                },
+                has_shared_detection_exception_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled elastic rules that have any type of exception list linked.',
+                  },
+                },
+                has_rule_default_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled elastic rules that have a rule default exception list linked.',
+                  },
+                },
+                has_endpoint_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled elastic rules that have a rule endpoint exception list linked.',
+                  },
+                },
+              },
             },
             custom_total: {
               enabled: { type: 'long', _meta: { description: 'Number of custom rules enabled' } },
@@ -987,6 +1283,42 @@ export const registerCollector: RegisterCollector = ({
                   },
                 },
               },
+              exceptions: {
+                enabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description: 'Number of enabled custom rules configured with an exception list',
+                  },
+                },
+                disabled_rules_with_exceptions: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of disabled custom rules configured with an exception list',
+                  },
+                },
+                has_shared_detection_exception_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled custom rules that have any type of exception list linked.',
+                  },
+                },
+                has_rule_default_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled custom rules that have a rule default exception list linked.',
+                  },
+                },
+                has_endpoint_list: {
+                  type: 'long',
+                  _meta: {
+                    description:
+                      'Number of enabled custom rules that have a rule endpoint exception list linked.',
+                  },
+                },
+              },
             },
           },
           detection_rule_detail: {
@@ -1036,6 +1368,10 @@ export const registerCollector: RegisterCollector = ({
               has_notification: {
                 type: 'boolean',
                 _meta: { description: 'True if this rule has a notification' },
+              },
+              has_shared_detection_exception_list: {
+                type: 'boolean',
+                _meta: { description: 'True if this rule has a linked exception list' },
               },
             },
           },
@@ -3746,33 +4082,45 @@ export const registerCollector: RegisterCollector = ({
         },
       },
       riskEngineMetrics: riskEngineMetricsSchema,
+      exceptionsMetrics: exceptionsMetricsSchema,
+      valueListsMetrics: valueListsMetricsSchema,
     },
     isReady: () => true,
     fetch: async ({ esClient }: CollectorFetchContext): Promise<UsageData> => {
       const savedObjectsClient = await getInternalSavedObjectsClient(core);
-      const [detectionMetrics, endpointMetrics, dashboardMetrics, riskEngineMetrics] =
-        await Promise.allSettled([
-          getDetectionsMetrics({
-            eventLogIndex,
-            signalsIndex,
-            esClient,
-            savedObjectsClient,
-            logger,
-            mlClient: ml,
-            legacySignalsIndex,
-          }),
-          getEndpointMetrics({ esClient, logger }),
-          getDashboardMetrics({
-            savedObjectsClient,
-            logger,
-          }),
-          getRiskEngineMetrics({ esClient, logger, riskEngineIndexPatterns }),
-        ]);
+      const [
+        detectionMetrics,
+        endpointMetrics,
+        dashboardMetrics,
+        riskEngineMetrics,
+        exceptionsMetrics,
+        valueListsMetrics,
+      ] = await Promise.allSettled([
+        getDetectionsMetrics({
+          eventLogIndex,
+          signalsIndex,
+          esClient,
+          savedObjectsClient,
+          logger,
+          mlClient: ml,
+          legacySignalsIndex,
+        }),
+        getEndpointMetrics({ esClient, logger }),
+        getDashboardMetrics({
+          savedObjectsClient,
+          logger,
+        }),
+        getRiskEngineMetrics({ esClient, logger, riskEngineIndexPatterns }),
+        getExceptionsMetrics({ esClient, logger, savedObjectsClient }),
+        getValueListsMetrics({ esClient, logger }),
+      ]);
       return {
         detectionMetrics: detectionMetrics.status === 'fulfilled' ? detectionMetrics.value : {},
         endpointMetrics: endpointMetrics.status === 'fulfilled' ? endpointMetrics.value : {},
         dashboardMetrics: dashboardMetrics.status === 'fulfilled' ? dashboardMetrics.value : {},
         riskEngineMetrics: riskEngineMetrics.status === 'fulfilled' ? riskEngineMetrics.value : {},
+        exceptionsMetrics: exceptionsMetrics.status === 'fulfilled' ? exceptionsMetrics.value : {},
+        valueListsMetrics: valueListsMetrics.status === 'fulfilled' ? valueListsMetrics.value : {},
       };
     },
   });

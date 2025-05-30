@@ -19,6 +19,14 @@ export interface AlertSuppressionUsage {
   does_not_suppress_missing_fields: number;
 }
 
+export interface RuleExceptionsUsage {
+  enabled_rules_with_exceptions: number;
+  disabled_rules_with_exceptions: number;
+  has_shared_detection_exception_list: number;
+  has_rule_default_list: number;
+  has_endpoint_list: number;
+}
+
 export interface FeatureTypeUsage {
   enabled: number;
   disabled: number;
@@ -30,6 +38,7 @@ export interface FeatureTypeUsage {
   notifications_disabled: number;
   legacy_investigation_fields: number;
   alert_suppression: AlertSuppressionUsage;
+  exceptions: RuleExceptionsUsage;
 }
 
 export interface RulesTypeUsage {
@@ -74,6 +83,10 @@ export interface RuleMetric {
   has_alert_suppression_per_time_period: boolean;
   has_alert_suppression_missing_fields_strategy_do_not_suppress: boolean;
   alert_suppression_fields_count: number;
+  has_shared_detection_exception_list: boolean;
+  has_endpoint_exception_list: boolean;
+  has_rule_default_exception_list: boolean;
+  total_linked_exception_lists: number;
 }
 
 /**

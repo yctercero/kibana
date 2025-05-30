@@ -7,6 +7,7 @@
 
 import type { CoreSetup, Logger } from '@kbn/core/server';
 import type { SanitizedRule } from '@kbn/alerting-plugin/common';
+import type { ExceptionList, ExceptionListItem } from '@kbn/securitysolution-exceptions-common/api';
 import type { RuleParams } from '../lib/detection_engine/rule_schema';
 import type { SetupPlugins } from '../plugin';
 
@@ -73,6 +74,26 @@ export type RuleSearchResult = Omit<
 };
 
 export type RuleStatus = 'running' | 'succeeded' | 'partial failure' | 'failed';
+
+export type ExceptionListsSearchResult = Omit<
+  ExceptionList,
+  'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt'
+> & {
+  createdBy: string | null;
+  updatedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ExceptionItemsSearchResult = Omit<
+  ExceptionListItem,
+  'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt'
+> & {
+  createdBy: string | null;
+  updatedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
 
 export interface CountCardinality {
   doc_count: number;

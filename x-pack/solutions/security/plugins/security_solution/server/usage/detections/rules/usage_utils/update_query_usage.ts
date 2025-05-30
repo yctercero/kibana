@@ -8,6 +8,7 @@
 import type { RulesTypeUsage, RuleMetric, FeatureTypeUsage } from '../types';
 import { getNotificationsEnabledDisabled } from './get_notifications_enabled_disabled';
 import { updateAlertSuppressionUsage } from './update_alert_suppression_usage';
+import { updateRuleUsageExceptionsUsage } from './update_exceptions_usage';
 
 export interface UpdateQueryUsageOptions {
   ruleType: keyof RulesTypeUsage;
@@ -49,5 +50,6 @@ export const updateQueryUsage = ({
       ? usage[ruleType].legacy_investigation_fields + 1
       : usage[ruleType].legacy_investigation_fields,
     alert_suppression: updateAlertSuppressionUsage({ usage: usage[ruleType], detectionRuleMetric }),
+    exceptions: updateRuleUsageExceptionsUsage({ usage: usage[ruleType], detectionRuleMetric }),
   };
 };

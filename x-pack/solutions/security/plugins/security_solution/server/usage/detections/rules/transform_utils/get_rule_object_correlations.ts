@@ -9,6 +9,7 @@ import type { SavedObjectsFindResult } from '@kbn/core/server';
 import type { RuleMetric } from '../types';
 import type { RuleSearchResult } from '../../../types';
 import { getAlertSuppressionUsage } from '../usage_utils/get_alert_suppression_usage';
+import { getExceptionsUsage } from '../usage_utils/get_exceptions_usage';
 
 export interface RuleObjectCorrelationsOptions {
   ruleResults: Array<SavedObjectsFindResult<RuleSearchResult>>;
@@ -49,6 +50,13 @@ export const getRuleObjectCorrelations = ({
       alertSuppressionFieldsCount,
     } = getAlertSuppressionUsage(attributes);
 
+    const {
+      hasEndpointExceptionList,
+      hasRuleDefaultExceptionList,
+      hasSharedExceptionList,
+      totalLinkedExceptionLists,
+    } = getExceptionsUsage(attributes);
+
     return {
       rule_name: attributes.name,
       rule_id: attributes.params.ruleId,
@@ -69,6 +77,10 @@ export const getRuleObjectCorrelations = ({
       has_alert_suppression_missing_fields_strategy_do_not_suppress:
         hasAlertSuppressionMissingFieldsStrategyDoNotSuppress,
       alert_suppression_fields_count: alertSuppressionFieldsCount,
+      has_shared_detection_exception_list: hasSharedExceptionList,
+      has_endpoint_exception_list: hasEndpointExceptionList,
+      has_rule_default_exception_list: hasRuleDefaultExceptionList,
+      total_linked_exception_lists: totalLinkedExceptionLists,
     };
   });
 };
