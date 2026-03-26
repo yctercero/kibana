@@ -47,13 +47,18 @@ paths:
                 - name
                 - description
                 - type
-              example:
-                list_id: simple_list
-                tags: [draft malware]
-                type: detection
-                os_types: [linux]
-                description: Different description
-                name: Updated exception list name
+            examples:
+              byListId:
+                summary: Update by `list_id`
+                description: Include `_version` from the last GET to avoid conflicting updates.
+                value:
+                  list_id: simple_list
+                  type: detection
+                  name: Updated exception list name
+                  description: Different description
+                  tags: [draft, malware]
+                  os_types: [linux]
+                  _version: WzExLDFd
       responses:
         200:
           description: Successful response
@@ -130,8 +135,8 @@ paths:
               examples:
                 notFound:
                   value:
-                    message": 'exception list id: "foo" does not exist'
-                    status_code": 404
+                    message: 'exception list id: "foo" does not exist'
+                    status_code: 404
         500:
           description: Internal server error response
           content:

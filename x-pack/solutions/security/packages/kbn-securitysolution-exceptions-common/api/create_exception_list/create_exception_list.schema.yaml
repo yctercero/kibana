@@ -20,14 +20,6 @@ paths:
           application/json:
             schema:
               type: object
-              example:
-                list_id: simple_list
-                type: detection
-                name: Sample Detection Exception List
-                description: This is a sample detection type exception list.
-                namespace_type: single
-                tags: [malware]
-                os_types: [linux]
               properties:
                 list_id:
                   $ref: '../model/exception_list_common.schema.yaml#/components/schemas/ExceptionListHumanId'
@@ -54,6 +46,28 @@ paths:
                 - name
                 - description
                 - type
+            examples:
+              detectionList:
+                summary: Detection exception list (space-scoped)
+                description: Optional `list_id`; omit to let the server generate one.
+                value:
+                  list_id: simple_list
+                  type: detection
+                  name: Sample Detection Exception List
+                  description: This is a sample detection type exception list.
+                  namespace_type: single
+                  tags: [malware]
+                  os_types: [linux]
+              endpointList:
+                summary: Endpoint exception list
+                value:
+                  list_id: endpoint_list
+                  type: endpoint
+                  name: Sample Endpoint Exception List
+                  description: This is a sample endpoint type exception list.
+                  namespace_type: single
+                  tags: [malware]
+                  os_types: [linux]
       responses:
         200:
           description: Successful response

@@ -30,6 +30,26 @@ paths:
                 - $ref: '#/components/schemas/UpdateExceptionListItemBlocklistWindows'
                 - $ref: '#/components/schemas/UpdateExceptionListItemBlocklistLinux'
                 - $ref: '#/components/schemas/UpdateExceptionListItemBlocklistMac'
+            examples:
+              updateByItemId:
+                summary: Update item by `item_id`
+                description: Replace `entries` and metadata; include `_version` from the last GET when enforcing optimistic concurrency.
+                value:
+                  item_id: simple_list_item
+                  list_id: simple_list
+                  type: simple
+                  name: Updated name
+                  description: Updated description
+                  entries:
+                    - type: match
+                      field: host.name
+                      value: rock01
+                      operator: included
+                  namespace_type: single
+                  os_types: []
+                  tags: []
+                  comments: []
+                  _version: WzEyLDFd
       responses:
         200:
           description: Successful response
